@@ -15,7 +15,7 @@ export default function Home() {
       description: "Built a smart task management app with AI categorization in just 1 hour",
       tech: ["Next.js", "OpenAI", "Tailwind"],
       duration: "1 hour",
-      status: "completed"
+      status: "completed" as const
     },
     {
       id: 2,
@@ -23,7 +23,7 @@ export default function Home() {
       description: "Full-featured chat application with WebSocket connections and user presence",
       tech: ["React", "Socket.io", "Node.js"],
       duration: "1 hour",
-      status: "completed"
+      status: "completed" as const
     },
     {
       id: 3,
@@ -31,7 +31,7 @@ export default function Home() {
       description: "Beautiful weather app with location-based forecasts and interactive maps",
       tech: ["Vue.js", "Weather API", "Mapbox"],
       duration: "1 hour",
-      status: "in-progress"
+      status: "in-progress" as const
     }
   ];
 
