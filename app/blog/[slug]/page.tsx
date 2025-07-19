@@ -5,6 +5,16 @@ import Link from 'next/link';
 import { Calendar, Clock, ArrowLeft, ExternalLink, Github } from 'lucide-react';
 import { notFound } from 'next/navigation';
 
+export async function generateStaticParams() {
+  // For static export, we need to define all possible slug values
+  // This would typically fetch from your Notion database
+  // For now, returning the mock data slugs
+  return [
+    { slug: 'hour-1-task-manager' },
+    // Add more slugs as you create more blog posts
+  ];
+}
+
 // This would be replaced with actual Notion API calls
 async function getBlogPost(slug: string) {
   // Mock data - replace with Notion API
