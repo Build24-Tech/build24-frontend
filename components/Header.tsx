@@ -35,7 +35,16 @@ export default function Header() {
               About
             </Link>
             <Button asChild variant="outline" className="border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black">
-              <Link href="/subscribe">Subscribe</Link>
+              <Link href="/login" className="flex items-center gap-2">
+                <Image 
+                  src="/domain.light.svg" 
+                  alt="Login" 
+                  width={16} 
+                  height={16}
+                  className="w-4 h-4"
+                />
+                Login
+              </Link>
             </Button>
           </nav>
 
@@ -74,8 +83,15 @@ export default function Header() {
                 About
               </Link>
               <Button asChild variant="outline" className="border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black w-fit">
-                <Link href="/subscribe" onClick={() => setIsMenuOpen(false)}>
-                  Subscribe
+                <Link href="/login" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2">
+                  <Image 
+                    src="/domain.light.svg" 
+                    alt="Login" 
+                    width={16} 
+                    height={16}
+                    className="w-4 h-4"
+                  />
+                  Login
                 </Link>
               </Button>
             </nav>
