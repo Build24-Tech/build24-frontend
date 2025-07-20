@@ -6,6 +6,7 @@ import { ArrowRight, Clock, Code, Lightbulb, Zap } from 'lucide-react';
 import Header from '@/components/Header';
 import Newsletter from '@/components/Newsletter';
 import ProjectCard from '@/components/ProjectCard';
+import Image from 'next/image';
 
 export default function Home() {
   const featuredProjects = [
@@ -50,7 +51,16 @@ export default function Home() {
             </div>
             
             <h1 className="text-5xl sm:text-7xl font-bold mb-6 leading-tight">
-              Build<span className="text-yellow-400">24</span>
+              <div className="flex items-center justify-center gap-4">
+                <Image 
+                  src="/build24_logo_light.svg" 
+                  alt="Build24 Logo" 
+                  width={80} 
+                  height={80}
+                  className="w-16 h-16 sm:w-20 sm:h-20"
+                />
+                Build<span className="text-yellow-400">24</span>
+              </div>
             </h1>
             
             <p className="text-xl sm:text-2xl text-gray-300 mb-8 leading-relaxed">

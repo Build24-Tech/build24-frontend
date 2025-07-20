@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import Image from 'next/image';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -13,7 +14,16 @@ export default function Header() {
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href="/" className="text-2xl font-bold text-yellow-400">
-            Build24
+            <div className="flex items-center gap-2">
+              <Image 
+                src="/build24_logo_light.svg" 
+                alt="Build24 Logo" 
+                width={32} 
+                height={32}
+                className="w-8 h-8"
+              />
+              Build24
+            </div>
           </Link>
           
           {/* Desktop Navigation */}
