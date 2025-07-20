@@ -18,7 +18,7 @@ export default function Header() {
               src="/domain.light.svg" 
               alt="Build24" 
               width={180} 
-              height={80}
+              height={180}
               className="w-10 h-10"
             />
           </Link>
