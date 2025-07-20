@@ -19,7 +19,7 @@ export default function Header() {
               alt="Build24" 
               width={180} 
               height={180}
-              className="w-10 h-10"
+              className="w-[180px] h-[80px]"
             />
           </Link>
           
