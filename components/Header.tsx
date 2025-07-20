@@ -35,7 +35,7 @@ export default function Header() {
               About
             </Link>
             <Button asChild variant="outline" className="border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black">
-              <Link href="/login" className="flex items-center gap-2">
+              <Link href="/login" className="flex items-center gap-2 bg-black">
                 Login
               </Link>
             </Button>
