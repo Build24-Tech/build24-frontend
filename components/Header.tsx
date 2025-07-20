@@ -36,13 +36,6 @@ export default function Header() {
             </Link>
             <Button asChild variant="outline" className="border-yellow-400 text-yellow-400 hover:bg-yellow-400 hover:text-black">
               <Link href="/login" className="flex items-center gap-2">
-                <Image 
-                  src="/domain.light.svg" 
-                  alt="Login" 
-                  width={16} 
-                  height={16}
-                  className="w-4 h-4"
-                />
                 Login
               </Link>
             </Button>
