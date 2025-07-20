@@ -51,15 +51,14 @@ export default function Home() {
             </div>
             
             <h1 className="text-5xl sm:text-7xl font-bold mb-6 leading-tight">
-              <div className="flex items-center justify-center gap-4">
+              <div className="flex items-center justify-center">
                 <Image 
                   src="/build24_logo_light.svg" 
-                  alt="Build24 Logo" 
-                  width={80} 
-                  height={80}
-                  className="w-16 h-16 sm:w-20 sm:h-20"
+                  alt="Build24" 
+                  width={120} 
+                  height={120}
+                  className="w-24 h-24 sm:w-30 sm:h-30"
                 />
-                Build<span className="text-yellow-400">24</span>
               </div>
             </h1>
             
@@ -70,8 +69,14 @@ export default function Home() {
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Button asChild className="bg-yellow-400 text-black hover:bg-yellow-500 text-lg px-8 py-6 h-auto">
-                <Link href="/blog">
-                  Read the Journey <ArrowRight className="ml-2 w-5 h-5" />
+                <Link href="/" className="block">
+                  <Image 
+                    src="/build24_logo_light.svg" 
+                    alt="Build24" 
+                    width={32} 
+                    height={32}
+                    className="w-8 h-8"
+                  />
                 </Link>
               </Button>
               <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800 text-lg px-8 py-6 h-auto">
