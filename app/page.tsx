@@ -215,7 +215,7 @@ export default function Home() {
                   className="w-8 h-8"
                 />
               </Link>
-              <p className="text-gray-400 mt-1">24 projects in 24 hours</p>
+              <p className="text-gray-400 mt-1">copyright Genius App</p>
             </div>
             <div className="flex gap-6">
               <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
