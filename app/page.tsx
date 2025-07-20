@@ -206,8 +206,14 @@ export default function Home() {
         <div className="container mx-auto px-4">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="mb-4 sm:mb-0">
-              <Link href="/" className="text-2xl font-bold text-yellow-400">
-                Build24
+              <Link href="/" className="flex items-center">
+                <Image 
+                  src="/build24_logo_light.svg" 
+                  alt="Build24" 
+                  width={32} 
+                  height={32}
+                  className="w-8 h-8"
+                />
               </Link>
               <p className="text-gray-400 mt-1">24 projects in 24 hours</p>
             </div>
@@ -220,6 +226,9 @@ export default function Home() {
               </Link>
               <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
                 About
+              </Link>
+              <Link href="/login" className="text-gray-400 hover:text-white transition-colors">
+                Login
               </Link>
             </div>
           </div>
