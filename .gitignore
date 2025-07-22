@@ -24,8 +24,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Environment variables
-.env.*
+# environment variables
+.env
+.env.local*
 !.env.example
 
 # typescript

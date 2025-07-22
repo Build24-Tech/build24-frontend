@@ -1,5 +1,7 @@
 # Todo List
 
+- [x] Implement Testimonials Section
+
 This file tracks the development tasks for the Build24 project. Work on the first open item exclusively.
 
 ## Open Tasks

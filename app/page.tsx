@@ -6,6 +6,8 @@ import { ArrowRight, Clock, Code, Lightbulb, Zap } from 'lucide-react';
 import Header from '@/components/Header';
 import Newsletter from '@/components/Newsletter';
 import ProjectCard from '@/components/ProjectCard';
+import ProjectCardYellow from '@/components/ProjectCardYellow';
+
 import Image from 'next/image';
 
 export default function Home() {
@@ -13,25 +15,25 @@ export default function Home() {
     {
       id: 1,
       title: "AI-Powered Task Manager",
-      description: "Built a smart task management app with AI categorization in just 1 hour",
-      tech: ["Next.js", "OpenAI", "Tailwind"],
-      duration: "1 hour",
+      description: "Built a smart task management app with AI categorization.",
+      tech: ["Next.js", "OpenAI", "Tailwind CSS"],
+      duration: "24 hours",
       status: "completed" as const
     },
     {
       id: 2,
       title: "Real-time Chat App",
-      description: "Full-featured chat application with WebSocket connections and user presence",
+      description: "Full-featured chat application with WebSocket connections.",
       tech: ["React", "Socket.io", "Node.js"],
-      duration: "1 hour",
+      duration: "24 hours",
       status: "completed" as const
     },
     {
       id: 3,
       title: "Weather Dashboard",
-      description: "Beautiful weather app with location-based forecasts and interactive maps",
+      description: "Beautiful weather app with location-based forecasts.",
       tech: ["Vue.js", "Weather API", "Mapbox"],
-      duration: "1 hour",
+      duration: "18 hours",
       status: "in-progress" as const
     }
   ];
@@ -54,7 +56,7 @@ export default function Home() {
             </h1>
             
             <p className="text-xl sm:text-2xl text-gray-300 mb-12 leading-relaxed">
-              One idea. One day. No excuses.
+              One product idea. Built in 24 hours. Documented in public.
             </p>
 
             <div className="mt-12">
@@ -95,25 +97,32 @@ export default function Home() {
       </section>
 
       {/* Featured Projects */}
-      <section className="py-20">
+      <section className="py-20 bg-black">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Featured Projects</h2>
+            <h4 className="text-sm uppercase tracking-wider text-gray-400 mb-2">HERE TO SERVE</h4>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Empowering our people</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              From AI tools to Chrome extensions and mobile apps — Build24 documents the real, raw journey of building 24 products in 100 days. No gatekeeping. No filler. Just daily lessons, shipped code, and honest insights.
+              From AI tools to Chrome extensions and mobile apps — Build24 documents the real, raw journey of building products in 24 hours. No gatekeeping. No filler. Just daily lessons, shipped code, and honest insights.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 relative overflow-hidden">
             {featuredProjects.map((project) => (
-              <ProjectCard key={project.id} project={project} />
+              <ProjectCardYellow key={project.id} project={project} />
             ))}
           </div>
           
-          <div className="text-center mt-12">
-            <Button asChild variant="outline" className="border-gray-600 text-white hover:bg-gray-800">
-              <Link href="/projects">View All Projects</Link>
-            </Button>
+          {/* Pagination dots */}
+          <div className="flex justify-center mt-10 gap-2">
+            {[1, 2, 3].map((num) => (
+              <button 
+                key={num} 
+                className={`w-8 h-8 rounded-full flex items-center justify-center text-xs ${num === 2 ? 'bg-[#E0FF4F] text-black' : 'bg-gray-800 text-white'}`}
+              >
+                {String(num).padStart(2, '0')}
+              </button>
+            ))}
           </div>
         </div>
       </section>
@@ -181,6 +190,8 @@ export default function Home() {
         </div>
       </section>
 
+      
+
       {/* Newsletter */}
       <Newsletter />
 
@@ -203,7 +214,7 @@ export default function Home() {
                   <span className="ml-3 text-3xl font-bold text-white">Build24</span>
                 </Link>
                 <p className="text-gray-400 mb-4 max-w-md">
-                  Build24 is no longer about quantity—it's about intensity. One product idea, built and documented in just 24 hours. A testament to radical transparency and rapid creation.
+                  Build24 is no longer about quantity. It’s about intensity. One product idea. Built in 24 hours. Documented in public.
                 </p>
                 <div className="flex gap-4">
                   <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
