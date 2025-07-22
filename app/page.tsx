@@ -41,47 +41,30 @@ export default function Home() {
       <Header />
       
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-20 sm:py-32">
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/10 via-transparent to-transparent"></div>
-        <div className="container mx-auto px-4 relative">
+      <section id="hero" className="relative bg-black text-white py-20 md:py-32">
+        <div className="absolute inset-0 bg-grid-gray-800/20 [mask-image:linear-gradient(to_bottom,white_5%,transparent_90%)]"></div>
+        <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
-            <div className="inline-flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/20 rounded-full px-4 py-2 mb-8">
-              <Zap className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-400 text-sm font-medium">24 Projects in 24 Hours</span>
-            </div>
-            
-            <h1 className="text-5xl sm:text-7xl font-bold mb-6 leading-tight">
-              <div className="flex items-center justify-center">
-                <Image 
-                  src="/build24_logo_light.svg" 
-                  alt="Build24" 
-                  width={120} 
-                  height={120}
-                  className="w-24 h-24 sm:w-30 sm:h-30"
-                />
-              </div>
-            </h1>
-            
-            <p className="text-xl sm:text-2xl text-gray-300 mb-8 leading-relaxed">
-              A coding marathon to build 24 unique projects in 24 hours. 
-              Follow the journey, learn from the process, and get inspired to build.
+            <p className="text-sm font-bold tracking-widest text-yellow-400 uppercase mb-4">
+              FROM IDEA TO PRODUCT. IN JUST 24 HOURS.
             </p>
             
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Button asChild className="bg-yellow-400 text-black hover:bg-yellow-500 text-lg px-8 py-6 h-auto">
-                <Link href="/" className="block">
-                  <Image 
-                    src="/build24_logo_light.svg" 
-                    alt="Build24" 
-                    width={32} 
-                    height={32}
-                    className="w-8 h-8"
-                  />
-                </Link>
-              </Button>
-              <Button variant="outline" className="border-gray-600 text-white hover:bg-gray-800 text-lg px-8 py-6 h-auto">
-                View Projects
-              </Button>
+            <h1 className="text-5xl sm:text-7xl font-bold mb-6 leading-tight">
+              Build fast. Ship faster.
+            </h1>
+            
+            <p className="text-xl sm:text-2xl text-gray-300 mb-12 leading-relaxed">
+              One idea. One day. No excuses.
+            </p>
+
+            <div className="mt-12">
+              <p className="text-lg text-gray-300 mb-6 max-w-3xl mx-auto">
+                Follow real-time product builds — from zero to launch — in just 24 hours.
+                Tools, code, insights, and chaos — everything shared in public.
+              </p>
+              <Link href="/subscribe" className="bg-yellow-400 text-black font-bold py-4 px-10 rounded-full text-xl hover:bg-yellow-300 transition-colors duration-300 inline-block">
+                Start your 24-hour build →
+              </Link>
             </div>
           </div>
         </div>
@@ -117,7 +100,7 @@ export default function Home() {
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-bold mb-4">Featured Projects</h2>
             <p className="text-gray-400 text-lg max-w-2xl mx-auto">
-              Each project built in exactly one hour. No preparation, just pure coding and creativity.
+              From AI tools to Chrome extensions and mobile apps — Build24 documents the real, raw journey of building 24 products in 100 days. No gatekeeping. No filler. Just daily lessons, shipped code, and honest insights.
             </p>
           </div>
           
@@ -213,25 +196,19 @@ export default function Home() {
                   <Image 
                     src="/build24_logo_light.svg" 
                     alt="Build24" 
-                    width={40} 
-                    height={40}
-                    className="w-10 h-10"
+                    width={120} 
+                    height={120}
+                    className="w-32 h-32"
                   />
-                  <span className="ml-3 text-xl font-bold text-white">Build24</span>
+                  <span className="ml-3 text-3xl font-bold text-white">Build24</span>
                 </Link>
                 <p className="text-gray-400 mb-4 max-w-md">
-                  A coding marathon to build 24 unique projects in 24 hours. 
-                  Follow the journey, learn from the process, and get inspired to build.
+                  Build24 is no longer about quantity—it's about intensity. One product idea, built and documented in just 24 hours. A testament to radical transparency and rapid creation.
                 </p>
                 <div className="flex gap-4">
                   <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
                     <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                       <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
-                    </svg>
-                  </Link>
-                  <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
-                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
-                      <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.041-3.439.219-.937 1.406-5.957 1.406-5.957s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.746-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001.012.001z"/>
                     </svg>
                   </Link>
                   <Link href="#" className="text-gray-400 hover:text-yellow-400 transition-colors">
@@ -244,7 +221,7 @@ export default function Home() {
               
               {/* Quick Links */}
               <div>
-                <h3 className="text-white font-semibold mb-4">Quick Links</h3>
+                <h3 className="text-white font-semibold mb-4">Navigate</h3>
                 <ul className="space-y-2">
                   <li>
                     <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
@@ -261,36 +238,26 @@ export default function Home() {
                       About
                     </Link>
                   </li>
-                  <li>
-                    <Link href="/login" className="text-gray-400 hover:text-white transition-colors">
-                      Login
-                    </Link>
-                  </li>
                 </ul>
               </div>
               
               {/* Resources */}
               <div>
-                <h3 className="text-white font-semibold mb-4">Resources</h3>
+                <h3 className="text-white font-semibold mb-4">Connect</h3>
                 <ul className="space-y-2">
                   <li>
                     <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                      Documentation
+                      GitHub Repos
                     </Link>
                   </li>
                   <li>
                     <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                      API Reference
+                      Join Discord
                     </Link>
                   </li>
                   <li>
                     <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                      Support
-                    </Link>
-                  </li>
-                  <li>
-                    <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                      Community
+                      Get in Touch
                     </Link>
                   </li>
                 </ul>
@@ -302,15 +269,8 @@ export default function Home() {
           <div className="border-t border-gray-800 py-6">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="flex items-center gap-4 mb-4 md:mb-0">
-                <Image 
-                  src="/domain.light.svg" 
-                  alt="Genius App" 
-                  width={24} 
-                  height={24}
-                  className="w-6 h-6"
-                />
-                <p className="text-gray-400">
-                  © {new Date().getFullYear()} Genius App. All rights reserved.
+                <p className="text-gray-400 text-sm">
+                  &copy; {new Date().getFullYear()} Build24. All rights reserved.
                 </p>
               </div>
               <div className="flex items-center gap-6 text-sm">
@@ -319,9 +279,6 @@ export default function Home() {
                 </Link>
                 <Link href="#" className="text-gray-400 hover:text-white transition-colors">
                   Terms of Service
-                </Link>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
-                  Cookie Policy
                 </Link>
               </div>
             </div>

@@ -24,15 +24,15 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env
-.env*.local
-
-# vercel
-.vercel
+# Environment variables
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
+
+# macOS
+.DS_Store
 next-env.d.ts
 
 # Local Netlify folder
