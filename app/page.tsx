@@ -73,25 +73,32 @@ export default function Home() {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 border-t border-gray-800">
+      <section className="py-12 bg-gradient-to-r from-yellow-500 to-yellow-400">
         <div className="container mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-yellow-400 mb-2">24</div>
-              <div className="text-gray-400">Projects</div>
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-2xl md:text-3xl font-bold text-black mb-6">
+              Start Building Today - No Cost, No Risk
+            </h2>
+            <div className="flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12">
+              <div className="text-center">
+                <div className="text-4xl font-bold text-black mb-1 line-through">$79/month</div>
+                <div className="text-lg text-gray-800">Regular Price</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-black mb-1">$0</div>
+                <div className="text-lg text-gray-800">Free Today</div>
+              </div>
+              <div className="text-center">
+                <div className="text-4xl font-bold text-black mb-1">$0</div>
+                <div className="text-lg text-gray-800">No Hidden Fees</div>
+              </div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-yellow-400 mb-2">24</div>
-              <div className="text-gray-400">Hours</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-yellow-400 mb-2">12</div>
-              <div className="text-gray-400">Technologies</div>
-            </div>
-            <div className="text-center">
-              <div className="text-3xl sm:text-4xl font-bold text-yellow-400 mb-2">∞</div>
-              <div className="text-gray-400">Learning</div>
-            </div>
+            <p className="mt-6 text-black/80">
+              Join thousands of developers building amazing products with our platform
+            </p>
+            <button className="mt-8 bg-black text-yellow-400 font-bold py-3 px-8 rounded-full hover:bg-gray-900 transition-colors duration-300">
+              Get Started Now - It's Free
+            </button>
           </div>
         </div>
       </section>
@@ -133,15 +140,16 @@ export default function Home() {
           <div className="max-w-4xl mx-auto">
             <div className="grid md:grid-cols-2 gap-12 items-center">
               <div>
-                <h2 className="text-3xl sm:text-4xl font-bold mb-6">The Challenge</h2>
+                <h2 className="text-3xl sm:text-4xl font-bold mb-6">The 24-Hour Build Challenge</h2>
                 <p className="text-gray-300 text-lg mb-6 leading-relaxed">
-                  Building 24 projects in 24 hours isn't just about coding fast—it's about 
-                  learning to think creatively under pressure, making quick decisions, and 
-                  embracing the beautiful chaos of rapid prototyping.
+                  Transform your idea into a working prototype in just 24 hours. This challenge 
+                  is about focused execution, making smart decisions under time pressure, and 
+                  bringing your vision to life in a single day.
                 </p>
                 <p className="text-gray-300 text-lg leading-relaxed">
-                  Each hour brings a new challenge, a new technology to explore, and a new 
-                  opportunity to push the boundaries of what's possible in 60 minutes.
+                  From concept to deployment, every minute counts. Learn how to prioritize features, 
+                  make quick iterations, and create something amazing in a single, intense 
+                  development sprint.
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-4">
