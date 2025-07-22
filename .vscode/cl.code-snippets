@@ -1,0 +1,10 @@
+{
+	"Print to console": {
+		"scope": "javascript,typescript,typescriptreact",
+		"prefix": "cl",
+		"body": [
+			"console.log('${1:error}', ${2:error});",
+		],
+		"description": "Log output to console"
+	}
+}

@@ -1,0 +1,20 @@
+{
+	"Create new component": {
+		"prefix": "ccom",
+		"scope": "javascript,typescript,typescriptreact",
+		"body": [
+			"type ${1:ComponentName}Type = {",
+			"  $2",
+			"}",
+			"export function ${1:ComponentName}(props: ${1:ComponentName}Type) {",
+			"  /** Visual state: props, state, custom hook, calculated variables in that order */",
+			"  /** Effect: useEffect handle the external interaction (asynchronous function) */",
+			"  /** Event handler: function handle user interaction */",
+			"  /** (Optional) Private function: reused logic inside this component or hook */",
+			"  /** Reactive variables and logic: use for render, it will be re-run by all re-rendering */",
+			"  return ($3)",
+			"}"
+		],
+		"description": "Create a component react"
+	}
+}

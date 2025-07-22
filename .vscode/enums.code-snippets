@@ -1,0 +1,12 @@
+{
+  "Create an alternative enum": {
+    "prefix": "enum-alt",
+    "scope": "typescript,typescriptreact",
+    "body": [
+      "const ${1:ENUM} = {$2} as const;",
+      "type ${1}E = ObjectType<typeof ${1}>;",
+      ""
+    ],
+    "description": "Create an alternative enum"
+  }
+}

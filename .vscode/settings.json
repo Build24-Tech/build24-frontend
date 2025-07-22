@@ -1,0 +1,27 @@
+{
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "editor.formatOnSave": true,
+  "[typescript]": {
+    "editor.tabSize": 2,
+    "editor.defaultFormatter": "vscode.typescript-language-features"
+  },
+  "editor.tabCompletion": "on",
+  "editor.tabSize": 2,
+  "files.eol": "\n",
+  "eslint.enable": true,
+  "eslint.debug": true,
+  "editor.autoClosingBrackets": "beforeWhitespace",
+  "editor.stickyScroll.enabled": true,
+  "eslint.format.enable": true,
+  "files.insertFinalNewline": true,
+  "search.showLineNumbers": true,
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  "typescript.suggest.includeAutomaticOptionalChainCompletions": true,
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "editor.formatOnSaveMode": "file",
+  "editor.inlineSuggest.enabled": true,
+  "emmet.triggerExpansionOnTab": true,
+}
