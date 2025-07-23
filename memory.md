@@ -15,3 +15,7 @@ This document records important decisions, recurring problems, and key configura
 ## Recurring Problems & Solutions
 
 - *(No recurring problems noted yet)*
+
+## Features Implemented
+
+- **SEO (2025-07-24)**: Added `robots.ts` and `sitemap.ts` to the `app` directory to programmatically generate `robots.txt` and `sitemap.xml`. The sitemap is dynamically generated from static pages and published Notion posts.
