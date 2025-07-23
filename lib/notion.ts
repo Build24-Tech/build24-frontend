@@ -1,93 +1,101 @@
-// Notion API integration for blog content
-// This would be replaced with actual Notion API calls
+import { Client } from "@notionhq/client";
+import { NotionToMarkdown } from "notion-to-md";
+import { PageObjectResponse } from "@notionhq/client/";
 
-export interface NotionPage {
+export const notion = new Client({ auth: process.env.NOTION_TOKEN });
+export const n2m = new NotionToMarkdown({ notionClient: notion });
+
+export interface Post {
   id: string;
   title: string;
   slug: string;
-  excerpt: string;
-  content: string;
-  publishedAt: string;
-  tags: string[];
-  hour?: number;
-  status: 'completed' | 'in-progress' | 'planned';
-  readTime: string;
-}
-
-export interface NotionProject {
-  id: string;
-  title: string;
+  coverImage?: string;
   description: string;
-  tech: string[];
-  duration: string;
-  status: 'completed' | 'in-progress' | 'planned';
-  demoUrl?: string;
-  githubUrl?: string;
-  hour: number;
+  date: string;
+  content: string;
+  author?: string;
+  tags?: string[];
+  category?: string;
 }
 
-// Mock functions - replace with actual Notion API calls
-export async function getPublishedPosts(): Promise<NotionPage[]> {
-  // This would make actual calls to Notion API
-  return [
-    {
-      id: 'hour-1-task-manager',
-      title: 'Hour 1: Building an AI-Powered Task Manager',
-      slug: 'hour-1-task-manager',
-      excerpt: 'Starting the Build24 challenge with a smart task management app that uses AI to categorize and prioritize tasks automatically.',
-      content: '<p>Full blog content here...</p>',
-      publishedAt: '2024-01-15',
-      readTime: '5 min read',
-      tags: ['AI', 'Next.js', 'OpenAI'],
-      hour: 1,
-      status: 'completed'
-    }
-  ];
+export async function getDatabaseStructure() {
+  const database = await notion.databases.retrieve({
+    database_id: process.env.NOTION_DATABASE_ID!,
+  });
+  return database;
 }
 
-export async function getPostBySlug(slug: string): Promise<NotionPage | null> {
-  const posts = await getPublishedPosts();
-  return posts.find(post => post.slug === slug) || null;
+export function getWordCount(content: string): number {
+  const cleanText = content
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleanText.split(" ").length;
 }
 
-export async function getAllProjects(): Promise<NotionProject[]> {
-  // This would make actual calls to Notion API
-  return [
-    {
-      id: '1',
-      title: 'AI-Powered Task Manager',
-      description: 'Smart task management app with AI categorization and priority scoring.',
-      tech: ['Next.js', 'OpenAI', 'Tailwind'],
-      duration: '1 hour',
-      status: 'completed',
-      hour: 1,
-      demoUrl: '#',
-      githubUrl: '#'
-    }
-  ];
+export async function fetchPublishedPosts() {
+  const posts = await notion.databases.query({
+    database_id: process.env.NOTION_DATABASE_ID!,
+    filter: {
+      and: [
+        {
+          property: "Status",
+          status: {
+            equals: "Published",
+          },
+        },
+      ],
+    },
+    sorts: [
+      {
+        property: "Published Date",
+        direction: "descending",
+      },
+    ],
+  });
+
+  return posts;
 }
 
-// Utility functions for Notion content processing
-export function processNotionContent(blocks: any[]): string {
-  // Process Notion blocks and convert to HTML
-  // This would include proper handling of rich text, images, code blocks, etc.
-  return blocks.map(block => {
-    switch (block.type) {
-      case 'paragraph':
-        return `<p>${block.paragraph.rich_text.map((text: any) => text.plain_text).join('')}</p>`;
-      case 'heading_2':
-        return `<h2>${block.heading_2.rich_text.map((text: any) => text.plain_text).join('')}</h2>`;
-      case 'code':
-        return `<pre><code>${block.code.rich_text.map((text: any) => text.plain_text).join('')}</code></pre>`;
-      default:
-        return '';
-    }
-  }).join('');
-}
+export async function getPost(pageId: string): Promise<Post | null> {
+  try {
+    const page = (await notion.pages.retrieve({
+      page_id: pageId,
+    })) as PageObjectResponse;
+    const mdBlocks = await n2m.pageToMarkdown(pageId);
+    const { parent: contentString } = n2m.toMarkdownString(mdBlocks);
 
-export function calculateReadTime(content: string): string {
-  const wordsPerMinute = 200;
-  const words = content.split(/\s+/).length;
-  const minutes = Math.ceil(words / wordsPerMinute);
-  return `${minutes} min read`;
+    // Get first paragraph for description (excluding empty lines)
+    const paragraphs = contentString
+      .split("\n")
+      .filter((line: string) => line.trim().length > 0);
+    const firstParagraph = paragraphs[0] || "";
+    const description =
+      firstParagraph.slice(0, 160) + (firstParagraph.length > 160 ? "..." : "");
+
+    const properties = page.properties as any;
+    const post: Post = {
+      id: page.id,
+      title: properties.Title.title[0]?.plain_text || "Untitled",
+      slug:
+        properties.Title.title[0]?.plain_text
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash
+          .replace(/^-+|-+$/g, "") || // Remove leading/trailing dashes
+        "untitled",
+      coverImage: properties["Featured Image"]?.url || undefined,
+      description,
+      date:
+        properties["Published Date"]?.date?.start || new Date().toISOString(),
+      content: contentString,
+      author: properties.Author?.people[0]?.name,
+      tags: properties.Tags?.multi_select?.map((tag: any) => tag.name) || [],
+      category: properties.Category?.select?.name,
+    };
+
+    return post;
+  } catch (error) {
+    console.error("Error getting post:", error);
+    return null;
+  }
 }
