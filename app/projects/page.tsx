@@ -1,7 +1,7 @@
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
 import ProjectCard from '@/components/ProjectCard';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Filter } from 'lucide-react';
 
 export default function ProjectsPage() {
@@ -62,7 +62,7 @@ export default function ProjectsPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-16">
@@ -70,7 +70,7 @@ export default function ProjectsPage() {
             All <span className="text-yellow-400">Projects</span>
           </h1>
           <p className="text-xl text-gray-400 max-w-2xl mx-auto">
-            Every project built during the Build24 challenge. From AI-powered apps to simple utilities, 
+            Every project built during the Build24 challenge. From AI-powered apps to simple utilities,
             each one completed in exactly 60 minutes.
           </p>
         </div>

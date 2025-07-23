@@ -1,10 +1,10 @@
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Header from '@/components/Header';
-import Link from 'next/link';
-import { Calendar, Clock, ArrowLeft, ExternalLink, Github } from 'lucide-react';
-import { notFound } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
+import { ArrowLeft, Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { notFound } from 'next/navigation';
 
 export async function generateStaticParams() {
   // Fetch all published posts from Notion to generate static params
@@ -13,7 +13,7 @@ export async function generateStaticParams() {
     const posts: Post[] = await Promise.all(
       response.results.map((page: any) => getPost(page.id))
     ).then(posts => posts.filter((post): post is Post => post !== null));
-    
+
     return posts.map(post => ({
       slug: post.slug
     }));
@@ -30,7 +30,7 @@ async function getBlogPost(slug: string): Promise<Post | null> {
     const posts: Post[] = await Promise.all(
       response.results.map((page: any) => getPost(page.id))
     ).then(posts => posts.filter((post): post is Post => post !== null));
-    
+
     return posts.find(post => post.slug === slug) || null;
   } catch (error) {
     console.error('Error fetching blog post:', error);
@@ -48,8 +48,8 @@ export default async function BlogPost({ params }: { params: { slug: string } })
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      
-      <article className="container mx-auto px-4 py-12">
+
+      <article className="mx-auto px-4">
         {/* Back to Blog */}
         <div className="mb-8">
           <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0">
@@ -69,11 +69,11 @@ export default async function BlogPost({ params }: { params: { slug: string } })
               </Badge>
             )}
           </div>
-          
+
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
             {post.title}
           </h1>
-          
+
           <div className="flex flex-wrap items-center gap-6 text-gray-400 mb-6">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4" />
@@ -85,13 +85,13 @@ export default async function BlogPost({ params }: { params: { slug: string } })
               </div>
             )}
           </div>
-          
+
           {post.tags && post.tags.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-8">
               {post.tags.map((tag: string, index: number) => (
-                <Badge 
-                  key={index} 
-                  variant="outline" 
+                <Badge
+                  key={index}
+                  variant="outline"
                   className="border-gray-600 text-gray-300"
                 >
                   {tag}
@@ -102,10 +102,19 @@ export default async function BlogPost({ params }: { params: { slug: string } })
         </header>
 
         {/* Article Content */}
-        <div 
-          className="prose prose-invert prose-lg max-w-none"
-          dangerouslySetInnerHTML={{ __html: post.content }}
-        />
+        {post.content ? (
+          <div
+            className="prose prose-invert prose-lg max-w-none"
+            dangerouslySetInnerHTML={{ __html: post.content }}
+          />
+        ) : (
+          <div className="prose prose-invert prose-lg max-w-none">
+            <div className="bg-gray-800 rounded-lg p-8 text-center">
+              <h3 className="text-xl font-medium mb-4">Content Unavailable</h3>
+              <p>We apologize, but the content for this article is currently unavailable.</p>
+            </div>
+          </div>
+        )}
 
         {/* Navigation */}
         <div className="flex justify-between items-center pt-12 mt-12 border-t border-gray-800">
