@@ -14,8 +14,14 @@ This document records important decisions, recurring problems, and key configura
 
 ## Recurring Problems & Solutions
 
-- *(No recurring problems noted yet)*
+- **API Error Handling (2025-07-24)**: Implemented comprehensive error handling for API calls with these principles:
+  - Always use try/catch blocks around API calls
+  - Handle specific error cases (404, network issues, authentication failures)
+  - Provide graceful UI fallbacks and default values for null/missing data
+  - Log errors appropriately without exposing sensitive information
 
 ## Features Implemented
 
 - **SEO (2025-07-24)**: Added `robots.ts` and `sitemap.ts` to the `app` directory to programmatically generate `robots.txt` and `sitemap.xml`. The sitemap is dynamically generated from static pages and published Notion posts.
+- **Blog Hero Section (2025-07-24)**: Updated the blog hero section with full-width yellow background and Build24 branding/content.
+- **Blog Error Handling (2025-07-24)**: Added proper error handling for blog content, with fallbacks for null data and user-friendly error messages.
