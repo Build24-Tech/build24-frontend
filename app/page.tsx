@@ -289,10 +289,10 @@ export default function Home() {
                 </p>
               </div>
               <div className="flex items-center gap-6 text-sm">
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                   Privacy Policy
                 </Link>
-                <Link href="#" className="text-gray-400 hover:text-white transition-colors">
+                <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
                   Terms of Service
                 </Link>
               </div>
