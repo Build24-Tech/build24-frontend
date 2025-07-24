@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 import { ArrowLeft, Calendar } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
@@ -73,6 +74,20 @@ export default async function BlogPost({ params }: { params: { slug: string } })
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
             {post.title}
           </h1>
+          
+          {/* Feature Image */}
+          {post.coverImage && (
+            <div className="mb-8 rounded-lg overflow-hidden relative aspect-[16/9]">
+              <Image 
+                src={post.coverImage} 
+                alt={`Cover image for ${post.title}`}
+                className="object-cover"
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                priority
+              />
+            </div>
+          )}
 
           <div className="flex flex-wrap items-center gap-6 text-gray-400 mb-6">
             <div className="flex items-center gap-2">
