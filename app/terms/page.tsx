@@ -82,7 +82,7 @@ export default function TermsPage() {
               If you have any questions regarding these Terms and Conditions, please contact us at:
             </p>
             <p className="mt-2">
-              Email: contact@build24.dev
+              Email: contact@build24.tech
             </p>
           </section>
         </div>

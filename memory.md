@@ -7,6 +7,9 @@ This document records important decisions, recurring problems, and key configura
 - **Package Manager**: pnpm
 - **Language**: TypeScript
 - **Framework**: Next.js
+- **Domain**: https://build24.tech
+- **Contact Email**: contact@build24.tech
+- **Brand**: Build24
 
 ## Key Decisions
 

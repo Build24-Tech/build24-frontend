@@ -126,7 +126,7 @@ export default function PrivacyPolicyPage() {
               If you have any questions or concerns about this Privacy Policy, please contact us at:
             </p>
             <p className="mt-2">
-              Email: contact@build24.dev
+              Email: contact@build24.tech
             </p>
           </section>
         </div>
