@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 import { ArrowRight, Calendar } from 'lucide-react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 export default async function BlogPage() {
@@ -35,7 +36,23 @@ export default async function BlogPage() {
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {blogPosts.map((post: Post) => (
               <Link href={`/blog/${post.slug || 'not-found'}`} key={post.id} className="block h-full">
-                <Card className="bg-gray-900 border-gray-700 hover:border-gray-600 transition-all duration-300 group h-full">
+                <Card className="bg-gray-900 border-gray-700 hover:border-gray-600 transition-all duration-300 group h-full flex flex-col">
+                  {/* Feature Image */}
+                  <div className="w-full aspect-video overflow-hidden relative">
+                    {post.coverImage ? (
+                      <Image 
+                        src={post.coverImage}
+                        alt={`Feature image for ${post.title}`}
+                        className="transition-transform duration-300 group-hover:scale-105 object-cover"
+                        fill
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-800">
+                        <span className="text-gray-500">No image</span>
+                      </div>
+                    )}
+                  </div>
                   <CardHeader>
                     <div className="flex items-start justify-between mb-2">
                       {post.category && (
