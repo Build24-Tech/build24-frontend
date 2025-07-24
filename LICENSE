@@ -1,0 +1,37 @@
+Build24 Community License
+Version 1.0, July 24, 2024
+
+Copyright (c) 2025 Khue Pham Minh
+
+IMPORTANT LEGAL DISCLAIMER: THIS DOCUMENT IS NOT LEGAL ADVICE. WE RECOMMEND YOU CONSULT WITH A QUALIFIED ATTORNEY TO FULLY UNDERSTAND YOUR RIGHTS AND OBLIGATIONS UNDER THIS LICENSE.
+
+Section 1: Definitions
+"License": Refers to the terms and conditions set forth in this document.
+
+"Software": Refers to the source code, files, and related assets of the Build24 project provided by the Copyright Holder.
+
+"Derivative Work": Refers to any product, application, or service created by you that uses, modifies, redistributes, or integrates this Software, in whole or in part.
+
+"End User": Refers to any individual or entity that registers for, accesses, or interacts with a Derivative Work.
+
+"Copyright Holder": Refers to the individual or entity named in the copyright notice at the beginning of this License.
+
+Section 2: Grant of Rights
+Subject to the terms and conditions of this License, the Copyright Holder hereby grants you a non-exclusive, worldwide, royalty-free, non-transferable license to use, copy, modify, merge, publish, and distribute copies of the Software, provided you adhere to the restrictions outlined in Section 3.
+
+You are permitted to use the Software to create Derivative Works for personal, educational, or small-scale commercial purposes.
+
+Section 3: Restrictions and Commercial Licensing Requirement
+End User Threshold: This License is only valid for Derivative Works that have fewer than 50,000 (fifty thousand) total End Users.
+
+Mandatory License Conversion: Upon a Derivative Work created by you reaching or exceeding the 50,000 End User threshold, your rights under this License will automatically terminate.
+
+Obligations upon Reaching the Threshold: Upon reaching the aforementioned threshold, you must immediately:
+a. Cease the distribution and offering of the Derivative Work to new End Users.
+b. Contact the Copyright Holder at javier@genuis.app to negotiate a separate commercial license agreement. Continued use of the Software for that Derivative Work is only permitted after a commercial agreement has been executed.
+
+Section 4: Disclaimer of Warranty
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+
+Section 5: Limitation of Liability
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
