@@ -29,6 +29,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Build24 - One product idea. Built in 24 hours. Documented in public.',
     description: 'Follow the journey of building 24 unique projects.',
+    images: [
+      '/og-image.png'
+    ]
   },
   robots: {
     index: true,
