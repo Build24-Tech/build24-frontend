@@ -8,18 +8,22 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export async function generateStaticParams() {
-  // Fetch all published posts from Notion to generate static params
+  // For static export, we need to generate all possible blog post slugs
   try {
     const response = await fetchPublishedPosts();
     const posts: Post[] = await Promise.all(
       response.results.map((page: any) => getPost(page.id))
     ).then(posts => posts.filter((post): post is Post => post !== null));
 
-    return posts.map(post => ({
+    const slugs = posts.map(post => ({
       slug: post.slug
     }));
+    
+    console.log('Generated static params for blog posts:', slugs);
+    return slugs;
   } catch (error) {
     console.error('Error generating static params:', error);
+    // Return empty array on error - this will cause 404 for all blog posts
     return [];
   }
 }
@@ -38,6 +42,9 @@ async function getBlogPost(slug: string): Promise<Post | null> {
     return null;
   }
 }
+
+// Allow dynamic params for development (will show 404 for non-existent posts)
+export const dynamicParams = true;
 
 export default async function BlogPost({ params }: { params: { slug: string } }) {
   const post = await getBlogPost(params.slug);

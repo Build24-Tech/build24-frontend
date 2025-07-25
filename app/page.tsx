@@ -61,8 +61,8 @@ export default function Home() {
                 Follow real-time product builds — from zero to launch — in just 24 hours.
                 Tools, code, insights, and chaos — everything shared in public.
               </p>
-              <Link href="/subscribe" className="bg-yellow-400 text-black font-bold py-4 px-10 rounded-full text-xl hover:bg-yellow-300 transition-colors duration-300 inline-block">
-                Start your 24-hour build →
+              <Link href="/login" className="bg-yellow-400 text-black font-bold py-4 px-10 rounded-full text-xl hover:bg-yellow-300 transition-colors duration-300 inline-block">
+                Join Build24 →
               </Link>
             </div>
           </div>

@@ -5,9 +5,11 @@ import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800">
@@ -35,14 +37,12 @@ export default function Header() {
               About
             </Link>
             <Button asChild variant="outline" className="border-yellow-400 text-black hover:bg-yellow-400 hover:text-black bg-yellow-400">
-              <a
-                href="https://forms.gle/gBBDNsvk5RTHE83z8"
+              <Link
+                href={user ? "/dashboard" : "/login"}
                 className="flex items-center gap-2"
-                target="_blank"
-                rel="noopener noreferrer"
               >
-                Subscribe
-              </a>
+                {user ? "Dashboard" : "Join"}
+              </Link>
             </Button>
           </nav>
 
@@ -81,22 +81,20 @@ export default function Header() {
                 About
               </Link>
               <Button asChild variant="default" className="w-fit bg-yellow-400 text-black hover:bg-yellow-500 hover:text-black">
-                <a
-                  href="https://forms.gle/gBBDNsvk5RTHE83z8"
+                <Link
+                  href={user ? "/dashboard" : "/login"}
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-2"
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   <Image
                     src="/domain.light.svg"
-                    alt="Subscribe"
+                    alt={user ? "Dashboard" : "Join"}
                     width={16}
                     height={16}
                     className="w-4 h-4"
                   />
-                  Subscribe
-                </a>
+                  {user ? "Dashboard" : "Join"}
+                </Link>
               </Button>
             </nav>
           </div>
