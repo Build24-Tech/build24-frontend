@@ -92,7 +92,7 @@ export default function LoginPage() {
         title: "Success",
         description: `Welcome back, ${user.displayName || user.email}!`,
       });
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       console.error(`${provider} login error:`, error);
       let errorMessage = `Failed to sign in with ${provider}`;
