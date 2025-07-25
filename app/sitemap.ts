@@ -1,5 +1,5 @@
-import { MetadataRoute } from 'next';
 import { fetchPublishedPosts, getPost } from '@/lib/notion';
+import { MetadataRoute } from 'next';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
@@ -15,7 +15,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .map((post) => ({
       url: `${baseUrl}/blog/${post!.slug}`,
       lastModified: new Date(post!.date),
-      changeFrequency: 'weekly',
+      changeFrequency: 'daily',
       priority: 0.8,
     }));
 
@@ -31,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticEntries: MetadataRoute.Sitemap = staticPages.map((page) => ({
     url: `${baseUrl}${page}`,
     lastModified: new Date(),
-    changeFrequency: 'monthly',
+    changeFrequency: 'weekly',
     priority: page === '' ? 1.0 : 0.7,
   }));
 
