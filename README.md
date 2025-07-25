@@ -107,7 +107,7 @@ The site is configured for static export and can be deployed to:
 
 ## License
 
-MIT License - feel free to use this template for your own projects.
+This project is licensed under the Community License - see the [LICENSE](LICENSE) file for details.
 
 ## Contributing
 
