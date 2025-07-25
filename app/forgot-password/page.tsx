@@ -1,25 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Mail } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Header from '@/components/Header';
+import { ArrowLeft, Mail } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  
+
   const { user, resetPassword } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
-  
+
   // Redirect if user is already authenticated
   useEffect(() => {
     if (user) {
@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
     } catch (error: any) {
       console.error('Reset password error:', error);
       let errorMessage = 'Failed to send reset email';
-      
+
       if (error.code === 'auth/user-not-found') {
         errorMessage = 'No account found with this email address';
       } else if (error.code === 'auth/invalid-email') {
@@ -57,7 +57,7 @@ export default function ForgotPasswordPage() {
       } else if (error.code === 'auth/too-many-requests') {
         errorMessage = 'Too many requests. Please try again later';
       }
-      
+
       toast({
         title: "Error",
         description: errorMessage,
@@ -71,7 +71,7 @@ export default function ForgotPasswordPage() {
   return (
     <div className="min-h-screen bg-black text-white">
       <Header />
-      
+
       <div className="container mx-auto px-4 py-12">
         {/* Back to Login */}
         <div className="mb-8">
@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
               Reset Your Password
             </h1>
             <p className="text-gray-400">
-              {emailSent 
+              {emailSent
                 ? "We've sent you a password reset link"
                 : "Enter your email to receive a password reset link"
               }
@@ -108,10 +108,10 @@ export default function ForgotPasswordPage() {
                   Check your email inbox and click the reset link to create a new password.
                 </p>
               </div>
-              
+
               <div className="text-sm text-gray-400">
-                Didn't receive the email?{' '}
-                <button 
+                Didn&apos;t receive the email?{' '}
+                <button
                   onClick={() => {
                     setEmailSent(false);
                     setEmail('');
@@ -121,7 +121,7 @@ export default function ForgotPasswordPage() {
                   Try again
                 </button>
               </div>
-              
+
               <div className="pt-4">
                 <Button asChild className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-bold">
                   <Link href="/login">
