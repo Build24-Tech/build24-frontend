@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import ProjectCard from '@/components/ProjectCard';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -61,8 +60,6 @@ export default function ProjectsPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
       <div className="container mx-auto px-4 py-12">
         {/* Header */}
         <div className="text-center mb-16">

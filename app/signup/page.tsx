@@ -11,7 +11,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { createUserProfile } from '@/lib/firestore';
 import { ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import Header from '@/components/Header';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -189,8 +188,6 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
       <div className="container mx-auto px-4 py-12">
         {/* Back to Home */}
         <div className="mb-8">

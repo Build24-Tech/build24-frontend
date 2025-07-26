@@ -1,6 +1,5 @@
 'use client';
 
-import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -115,8 +114,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
       <div className="container mx-auto px-4 py-12">
         {/* Back to Home */}
         <div className="mb-8">
