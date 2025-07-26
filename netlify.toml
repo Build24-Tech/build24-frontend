@@ -1,0 +1,6 @@
+[build]
+  command = "yarn cache clean && yarn install && yarn build"
+  # If you use Next.js static export, specify publish = "out"
+  # publish = "out"
+
+# Add additional Netlify settings/plugins here as needed
