@@ -1,11 +1,10 @@
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
-import Header from '@/components/Header';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function DashboardPage() {
   const { user, loading, logout } = useAuth();
@@ -44,8 +43,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-      
       <div className="container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
           <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
@@ -53,15 +50,15 @@ export default function DashboardPage() {
               <h1 className="text-3xl font-bold">
                 Welcome, <span className="text-yellow-400">{user.displayName || 'Builder'}</span>
               </h1>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="border-red-500 text-red-500 hover:bg-red-500/10"
                 onClick={handleLogout}
               >
                 Sign Out
               </Button>
             </div>
-            
+
             <div className="mb-8">
               <p className="text-gray-400">
                 This is your Build24 dashboard where you can track your progress and access exclusive content.
