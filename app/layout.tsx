@@ -2,6 +2,8 @@ import './globals.css';
 
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
 import { Space_Grotesk } from 'next/font/google';
 
@@ -57,7 +59,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${spaceGrotesk.variable} font-space-grotesk`}>
         <AuthProvider>
-          {children}
+          <Header />
+          <main>{children}</main>
+          <Footer />
           <Toaster />
         </AuthProvider>
       </body>
