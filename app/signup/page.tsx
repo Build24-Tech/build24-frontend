@@ -134,15 +134,6 @@ export default function SignupPage() {
   };
 
   const handleSocialSignup = async (provider: 'google' | 'github' | 'apple') => {
-    if (!agreeToPolicy) {
-      toast({
-        title: "Error",
-        description: "Please agree to the Terms of Service and Privacy Policy",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSocialLoading(provider);
     try {
       let user;
