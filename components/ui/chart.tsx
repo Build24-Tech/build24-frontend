@@ -102,21 +102,29 @@ ${colorConfig
 
 const ChartTooltip = RechartsPrimitive.Tooltip;
 
+interface ChartTooltipContentProps extends React.ComponentProps<'div'> {
+  active?: boolean;
+  payload?: any[];
+  hideLabel?: boolean;
+  hideIndicator?: boolean;
+  indicator?: 'line' | 'dot' | 'dashed';
+  label?: string | number;
+  labelFormatter?: (label: string | number, payload: any[]) => React.ReactNode;
+  labelClassName?: string;
+  formatter?: (value: any, name: string, entry: any, index: number) => React.ReactNode;
+  color?: string;
+  nameKey?: string;
+  labelKey?: string;
+}
+
 const ChartTooltipContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<typeof RechartsPrimitive.Tooltip> &
-    React.ComponentProps<'div'> & {
-      hideLabel?: boolean;
-      hideIndicator?: boolean;
-      indicator?: 'line' | 'dot' | 'dashed';
-      nameKey?: string;
-      labelKey?: string;
-    }
+  ChartTooltipContentProps
 >(
   (
     {
       active,
-      payload,
+      payload = [],
       className,
       indicator = 'dot',
       hideLabel = false,
@@ -134,7 +142,7 @@ const ChartTooltipContent = React.forwardRef<
     const { config } = useChart();
 
     const tooltipLabel = React.useMemo(() => {
-      if (hideLabel || !payload?.length) {
+      if (hideLabel || !payload || payload.length === 0) {
         return null;
       }
 
@@ -146,7 +154,7 @@ const ChartTooltipContent = React.forwardRef<
           ? config[label as keyof typeof config]?.label || label
           : itemConfig?.label;
 
-      if (labelFormatter) {
+      if (labelFormatter && typeof value === 'string') {
         return (
           <div className={cn('font-medium', labelClassName)}>
             {labelFormatter(value, payload)}
@@ -169,7 +177,7 @@ const ChartTooltipContent = React.forwardRef<
       labelKey,
     ]);
 
-    if (!active || !payload?.length) {
+    if (!active || !payload || payload.length === 0) {
       return null;
     }
 
@@ -185,10 +193,10 @@ const ChartTooltipContent = React.forwardRef<
       >
         {!nestLabel ? tooltipLabel : null}
         <div className="grid gap-1.5">
-          {payload.map((item, index) => {
+          {payload.map((item: any, index: number) => {
             const key = `${nameKey || item.name || item.dataKey || 'value'}`;
             const itemConfig = getPayloadConfigFromPayload(config, item, key);
-            const indicatorColor = color || item.payload.fill || item.color;
+            const indicatorColor = color || item.payload?.fill || item.color;
 
             return (
               <div
@@ -199,7 +207,7 @@ const ChartTooltipContent = React.forwardRef<
                 )}
               >
                 {formatter && item?.value !== undefined && item.name ? (
-                  formatter(item.value, item.name, item, index, item.payload)
+                  formatter(item.value, item.name, item, index)
                 ) : (
                   <>
                     {itemConfig?.icon ? (
@@ -260,19 +268,20 @@ const ChartLegend = RechartsPrimitive.Legend;
 
 const ChartLegendContent = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<'div'> &
-    Pick<RechartsPrimitive.LegendProps, 'payload' | 'verticalAlign'> & {
-      hideIcon?: boolean;
-      nameKey?: string;
-    }
+  React.ComponentProps<'div'> & {
+    payload?: any[];
+    verticalAlign?: 'top' | 'bottom' | 'middle';
+    hideIcon?: boolean;
+    nameKey?: string;
+  }
 >(
   (
-    { className, hideIcon = false, payload, verticalAlign = 'bottom', nameKey },
+    { className, hideIcon = false, payload = [], verticalAlign = 'bottom', nameKey },
     ref
   ) => {
     const { config } = useChart();
 
-    if (!payload?.length) {
+    if (!payload || payload.length === 0) {
       return null;
     }
 
@@ -285,7 +294,7 @@ const ChartLegendContent = React.forwardRef<
           className
         )}
       >
-        {payload.map((item) => {
+        {payload.map((item: any) => {
           const key = `${nameKey || item.dataKey || 'value'}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
 
