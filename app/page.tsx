@@ -40,8 +40,9 @@ export default function Home() {
       <Header />
 
       {/* Hero Section */}
-      <section id="hero" className="relative bg-black text-white py-20 md:py-32">
-        <div className="absolute inset-0 bg-grid-gray-800/20 [mask-image:linear-gradient(to_bottom,white_5%,transparent_90%)]"></div>
+      <section id="hero" className="relative bg-black text-white py-20 md:py-32 hero-glow">
+        <div className="absolute inset-0 bg-grid-gray-800/20 [mask-image:linear-gradient(to_bottom,white_5%,transparent_90%)] hero-glow-inner"></div>
+        <div className="absolute -inset-4 bg-yellow-400 rounded-full blur-3xl opacity-10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">
             <p className="text-sm font-bold tracking-widest text-yellow-400 uppercase mb-4">
