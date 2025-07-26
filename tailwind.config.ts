@@ -18,6 +18,7 @@ const config: Config = {
       },
       fontFamily: {
         sans: ['var(--font-space-grotesk)', ...defaultTheme.fontFamily.sans],
+        'space-grotesk': ['var(--font-space-grotesk)', ...defaultTheme.fontFamily.sans],
       },
       borderRadius: {
         lg: 'var(--radius)',

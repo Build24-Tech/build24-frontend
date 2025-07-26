@@ -59,7 +59,7 @@ export default function Home() {
             <div className="mt-12">
               <p className="text-lg text-gray-300 mb-6 max-w-3xl mx-auto">
                 Follow real-time product builds — from zero to launch — in just 24 hours.
-                Tools, code, insights, and chaos — everything shared in public.
+                <br />Tools, code, insights, and chaos — everything shared in public.
               </p>
               <Link href="/login" className="bg-yellow-400 text-black font-bold py-4 px-10 rounded-full text-xl hover:bg-yellow-300 transition-colors duration-300 inline-block">
                 Join Build24 →
