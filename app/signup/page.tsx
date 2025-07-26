@@ -1,16 +1,16 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth } from '@/contexts/AuthContext';
-import { createUserProfile } from '@/lib/firestore';
-import { ArrowLeft, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { createUserProfile } from '@/lib/firestore';
+import { ArrowLeft, Eye, EyeOff, UserPlus } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -134,15 +134,6 @@ export default function SignupPage() {
   };
 
   const handleSocialSignup = async (provider: 'google' | 'github' | 'apple') => {
-    if (!agreeToPolicy) {
-      toast({
-        title: "Error",
-        description: "Please agree to the Terms of Service and Privacy Policy",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setSocialLoading(provider);
     try {
       let user;
@@ -191,7 +182,7 @@ export default function SignupPage() {
       <div className="container mx-auto px-4 py-12">
         {/* Back to Home */}
         <div className="mb-8">
-          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0">
+          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2">
             <Link href="/" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Home
@@ -218,7 +209,7 @@ export default function SignupPage() {
             <Button
               onClick={() => handleSocialSignup('google')}
               disabled={socialLoading !== null}
-              className="w-full bg-white text-black hover:bg-gray-100 font-medium py-3"
+              className="w-full bg-white text-black hover:bg-gray-100 font-medium py-3 cursor-pointer"
             >
               {socialLoading === 'google' ? (
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />
@@ -236,7 +227,7 @@ export default function SignupPage() {
             <Button
               onClick={() => handleSocialSignup('github')}
               disabled={socialLoading !== null}
-              className="w-full bg-gray-800 text-white hover:bg-gray-700 font-medium py-3"
+              className="w-full bg-gray-800 text-white hover:bg-gray-700 font-medium py-3 cursor-pointer"
             >
               {socialLoading === 'github' ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -251,7 +242,7 @@ export default function SignupPage() {
             <Button
               onClick={() => handleSocialSignup('apple')}
               disabled={socialLoading !== null}
-              className="w-full bg-black border border-gray-600 text-white hover:bg-gray-900 font-medium py-3"
+              className="w-full bg-black border border-gray-600 text-white hover:bg-gray-900 font-medium py-3 cursor-pointer"
             >
               {socialLoading === 'apple' ? (
                 <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
@@ -395,7 +386,7 @@ export default function SignupPage() {
             <Button
               type="submit"
               disabled={loading}
-              className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-bold py-3 mt-6"
+              className="w-full bg-yellow-400 text-black hover:bg-yellow-300 font-bold py-3 mt-6 cursor-pointer"
             >
               {loading ? (
                 <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin mr-2" />

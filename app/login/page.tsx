@@ -117,7 +117,7 @@ export default function LoginPage() {
       <div className="container mx-auto px-4 py-12">
         {/* Back to Home */}
         <div className="mb-8">
-          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0">
+          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2">
             <Link href="/" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Home
