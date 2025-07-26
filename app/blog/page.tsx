@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import Hero from '@/components/blog/Hero';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -24,8 +23,6 @@ export default async function BlogPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
       <div className="w-full h-[400px]">
         <Hero />
       </div>

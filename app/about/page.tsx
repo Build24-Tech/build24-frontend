@@ -1,6 +1,5 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Header from '@/components/Header';
 import Newsletter from '@/components/Newsletter';
 import Link from 'next/link';
 import { Code, Clock, Target, Zap, Coffee, Lightbulb } from 'lucide-react';
@@ -38,9 +37,7 @@ export default function AboutPage() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-      
-      <div className="container mx-auto px-4 py-12">
+      <main className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="text-center mb-20">
           <h1 className="text-4xl sm:text-5xl font-bold mb-6">
@@ -186,7 +183,7 @@ export default function AboutPage() {
             </Button>
           </div>
         </div>
-      </div>
+      </main>
 
       <Newsletter />
     </div>

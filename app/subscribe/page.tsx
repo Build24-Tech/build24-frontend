@@ -1,4 +1,3 @@
-import Header from '@/components/Header';
 import Newsletter from '@/components/Newsletter';
 import { Mail, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,6 @@ import Link from 'next/link';
 export default function SubscribePage() {
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-      
       <div className="container mx-auto px-4 py-12">
         {/* Back to Home */}
         <div className="mb-8">
