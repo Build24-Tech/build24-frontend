@@ -15,6 +15,11 @@ export const metadata: Metadata = {
   title: 'Build24 - One product idea. Built in 24 hours. Documented in public.',
   description: 'Follow the journey of building 24 unique projects. A coding marathon exploring creativity, rapid prototyping, and the art of shipping fast.',
   keywords: ['coding challenge', 'rapid prototyping', 'web development', 'projects', 'programming'],
+  icons: {
+    icon: '/favicon.png',
+    shortcut: '/favicon.png',
+    apple: '/favicon.png',
+  },
   authors: [{ name: 'Build24' }],
   openGraph: {
     title: 'Build24 - One product idea. Built in 24 hours. Documented in public.',
