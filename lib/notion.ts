@@ -73,14 +73,27 @@ export async function getPost(pageId: string): Promise<Post | null> {
     const description =
       firstParagraph.slice(0, 160) + (firstParagraph.length > 160 ? "..." : "");
 
-    const properties = page.properties as any;
+        const properties = page.properties as any;
+    // Join all rich text segments for the complete title
+        const rawTitle = (properties.Title?.title ?? [])
+      .map((t: any) => t.plain_text)
+      .join(" ") // preserve spaces between rich text segments
+      .replace(/\s+/g, " ") // collapse consecutive whitespace
+      .trim();
+    const fullTitle = rawTitle
+      .replace(/\b\w\b/g, "") // remove single-letter words
+      .replace(/\s+/g, " ")
+      .trim() || "Untitled";
     const post: Post = {
       id: page.id,
-      title: properties.Title.title[0]?.plain_text || "Untitled",
+
+      
+
+      title: fullTitle,
       slug:
-        properties.Title.title[0]?.plain_text
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash
+        fullTitle
+          .replace(/[^a-zA-Z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash, preserve case
+          .replace(/-+/g, "-") // collapse multiple dashes
           .replace(/^-+|-+$/g, "") || // Remove leading/trailing dashes
         "untitled",
       coverImage: properties["Featured Image"]?.url || undefined,
