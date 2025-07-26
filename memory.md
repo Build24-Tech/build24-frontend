@@ -44,3 +44,10 @@ This document records important decisions, recurring problems, and key configura
   - Store user email preferences from signup form
   - Added login state handling to redirect authenticated users from auth pages
   - Updated "Join" button to "Dashboard" for logged-in users
+
+- **Footer Updates (2025-07-27)**: Enhanced footer with social links and improved layout:
+  - Restructured footer to 3 columns: brand, navigation/connect, CTA
+  - Placed CTA section side by side with connect column
+  - Added GitHub link (https://github.com/Build24-Tech) and Discord icon to social links
+  - Updated "Join Discord" link with placeholder invite URL
+  - Removed duplicate header/footer from homepage to use global layout

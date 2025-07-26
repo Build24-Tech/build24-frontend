@@ -2,11 +2,16 @@ import './globals.css';
 
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
-import { Inter, Space_Grotesk } from 'next/font/google';
+import { Space_Grotesk } from 'next/font/google';
 
-const inter = Inter({ subsets: ['latin'] });
-const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space-grotesk' });
+const spaceGrotesk = Space_Grotesk({
+  subsets: ['latin'],
+  variable: '--font-space-grotesk',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_BASE_URL || 'https://build24.tech'),
@@ -52,9 +57,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={`${spaceGrotesk.variable} font-sans`}>
+      <body className={`${spaceGrotesk.variable} font-space-grotesk`}>
         <AuthProvider>
-          {children}
+          <Header />
+          <main>{children}</main>
+          <Footer />
           <Toaster />
         </AuthProvider>
       </body>
