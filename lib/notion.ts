@@ -80,8 +80,9 @@ export async function getPost(pageId: string): Promise<Post | null> {
       .join(" ") // preserve spaces between rich text segments
       .replace(/\s+/g, " ") // collapse consecutive whitespace
       .trim();
+    // Process the title, preserving numbers while only removing single-letter words if necessary
     const fullTitle = rawTitle
-      .replace(/\b\w\b/g, "") // remove single-letter words
+      // .replace(/\b[a-zA-Z]\b/g, "") // Commented out: previously removed single-letter words including numbers
       .replace(/\s+/g, " ")
       .trim() || "Untitled";
     const post: Post = {
