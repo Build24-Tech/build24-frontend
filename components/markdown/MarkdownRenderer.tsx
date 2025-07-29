@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import rehypeRaw from 'rehype-raw';
-import remarkGfm from 'remark-gfm';
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
 import { cn } from '@/lib/utils';
 import { Image as ImageIcon } from 'lucide-react';
+import { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
+import rehypeRaw from 'rehype-raw';
+import remarkGfm from 'remark-gfm';
 
 interface MarkdownRendererProps {
   content: string;
@@ -54,7 +54,7 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
             }
 
             return (
-              <div className="relative">
+              <div className="relative flex items-center justify-center">
                 <img
                   src={src}
                   alt={alt || ''}
@@ -70,9 +70,6 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
                     <div className="animate-pulse w-full h-full bg-gray-700 rounded-lg"></div>
                   </div>
-                )}
-                {alt && (
-                  <p className="text-center text-sm text-gray-400 mt-2">{alt}</p>
                 )}
               </div>
             );

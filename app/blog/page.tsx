@@ -1,12 +1,12 @@
-import Hero from '@/components/blog/Hero';
 import ClientBlogWrapper from '@/components/blog/ClientBlogWrapper';
+import Hero from '@/components/blog/Hero';
 import { Button } from '@/components/ui/button';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 
 export default async function BlogPage() {
   // Fetch real data from Notion
   let blogPosts: Post[] = [];
-  
+
   try {
     const response = await fetchPublishedPosts();
     blogPosts = await Promise.all(
@@ -26,11 +26,11 @@ export default async function BlogPage() {
       <div className="container mx-auto px-4 py-12">
         {/* Blog Filter and Grid Components */}
         <ClientBlogWrapper initialPosts={blogPosts} />
-        
+
         {/* Load More Button */}
         {blogPosts.length > 0 && (
           <div className="text-center mt-12">
-            <Button className="bg-yellow-400 text-black hover:bg-yellow-500">
+            <Button className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer select-none">
               Load More Posts
             </Button>
           </div>

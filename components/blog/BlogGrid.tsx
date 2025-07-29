@@ -1,7 +1,7 @@
-import { Post } from '@/lib/notion';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Post } from '@/lib/notion';
 import { ArrowRight, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -21,7 +21,7 @@ export default function BlogGrid({ posts }: BlogGridProps) {
                 {/* Feature Image */}
                 <div className="w-full aspect-video overflow-hidden relative">
                   {post.coverImage ? (
-                    <Image 
+                    <Image
                       src={post.coverImage}
                       alt={`Feature image for ${post.title}`}
                       className="transition-transform duration-300 group-hover:scale-105 object-cover"
@@ -78,7 +78,7 @@ export default function BlogGrid({ posts }: BlogGridProps) {
                   </div>
 
                   <div className="mt-auto">
-                    <Button className="bg-black text-white hover:bg-gray-800 w-full">
+                    <Button className="bg-black text-white hover:bg-gray-800 w-full cursor-pointer select-none">
                       <span className="flex items-center gap-2">
                         Read More <ArrowRight className="w-4 h-4" />
                       </span>
