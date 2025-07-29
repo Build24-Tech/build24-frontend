@@ -1,4 +1,4 @@
-import Header from '@/components/Header';
+
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
@@ -60,12 +60,10 @@ export default async function BlogPost({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
-      <article className="mx-auto px-4">
+      <article className="container mx-auto px-4 pt-8">
         {/* Back to Blog */}
         <div className="mb-8">
-          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0">
+          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2">
             <Link href="/blog" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
