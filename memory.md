@@ -24,7 +24,7 @@ This document records important decisions, recurring problems, and key configura
   - Log errors appropriately without exposing sensitive information
 
 ## Features Implemented
-
+- **UI Components (2025-07-24)**: Button always has class `cursor-pointer` and `select-none`.
 - **SEO (2025-07-24)**: Added `robots.ts` and `sitemap.ts` to the `app` directory to programmatically generate `robots.txt` and `sitemap.xml`. The sitemap is dynamically generated from static pages and published Notion posts.
 - **Blog Hero Section (2025-07-24)**: Updated the blog hero section with full-width yellow background and Build24 branding/content.
 - **Blog Error Handling (2025-07-24)**: Added proper error handling for blog content, with fallbacks for null data and user-friendly error messages.
