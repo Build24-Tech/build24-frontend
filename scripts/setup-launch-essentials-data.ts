@@ -399,7 +399,7 @@ async function main() {
 
     console.log('✅ Launch Essentials data setup completed successfully!');
     console.log('\nNext steps:');
-    console.log('1. Update your Firestore security rules with the provided rules');
+    console.log('1. Update your Firestore security rules from firebase-rules/firestore-security-rules.js');
     console.log('2. Test the Firebase operations with your application');
     console.log('3. Add more frameworks and templates as needed');
 

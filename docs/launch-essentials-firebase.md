@@ -220,7 +220,7 @@ FIREBASE_APP_ID=your_app_id
 
 ### 3. Update Firestore Security Rules
 
-Copy the rules from `firestore-security-rules.js` to your Firebase console:
+Copy the rules from `firebase-rules/firestore-security-rules.js` to your Firebase console:
 
 1. Go to Firebase Console → Firestore Database → Rules
 2. Replace existing rules with the provided security rules

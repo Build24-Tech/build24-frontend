@@ -273,6 +273,11 @@ class FrameworkError extends Error {
 - **Yarn**: Primary package manager for dependency management and script execution
 - All development commands should use `yarn` instead of `npm`
 
+### Security Configuration
+- **Firebase Rules**: Security rules are stored in `firebase-rules/` folder and excluded from git
+- This prevents sensitive configuration from being committed to the repository
+- Rules must be manually deployed to Firebase console
+
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
