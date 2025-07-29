@@ -1,14 +1,14 @@
 import './globals.css';
 
+import Footer from '@/components/Footer';
+import Header from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import type { Metadata } from 'next';
-import { Space_Grotesk } from 'next/font/google';
+import localFont from 'next/font/local';
 
-const spaceGrotesk = Space_Grotesk({
-  subsets: ['latin'],
+const spaceGrotesk = localFont({
+  src: '../public/font/spacegrotesk/SpaceGrotesk-VariableFont_wght.ttf',
   variable: '--font-space-grotesk',
   display: 'swap',
 });
@@ -56,7 +56,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
+    <html lang="en" className={`${spaceGrotesk.className} scroll-smooth`}>
       <body className={`${spaceGrotesk.variable} font-space-grotesk`}>
         <AuthProvider>
           <Header />

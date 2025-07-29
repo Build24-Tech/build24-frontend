@@ -1,5 +1,7 @@
 # Todo List
 
+- [ ] Verify Space Grotesk font implementation and blog styling.
+
 - [ ] Create a big hero section for the blog page.
 
 This file tracks the development tasks for the Build24 project. Work on the first open item exclusively.
