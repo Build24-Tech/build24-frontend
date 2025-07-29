@@ -64,7 +64,7 @@ export default async function BlogPost({ params }: PageProps) {
       <article className="container mx-auto px-4 py-8">
         {/* Back to Blog */}
         <div className="mb-8">
-          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2">
+          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2 cursor-pointer select-none">
             <Link href="/blog" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
