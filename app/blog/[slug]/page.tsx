@@ -1,4 +1,5 @@
-import Header from '@/components/Header';
+
+import { MarkdownRenderer } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
@@ -18,7 +19,7 @@ export async function generateStaticParams() {
     const slugs = posts.map(post => ({
       slug: post.slug
     }));
-    
+
     console.log('Generated static params for blog posts:', slugs);
     return slugs;
   } catch (error) {
@@ -60,12 +61,10 @@ export default async function BlogPost({ params }: PageProps) {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <Header />
-
-      <article className="mx-auto px-4">
+      <article className="container mx-auto px-4 py-8">
         {/* Back to Blog */}
         <div className="mb-8">
-          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0">
+          <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2">
             <Link href="/blog" className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
@@ -86,12 +85,12 @@ export default async function BlogPost({ params }: PageProps) {
           <h1 className="text-4xl sm:text-5xl font-bold mb-6 leading-tight">
             {post.title}
           </h1>
-          
+
           {/* Feature Image */}
           {post.coverImage && (
             <div className="mb-8 rounded-lg overflow-hidden relative aspect-[16/9]">
-              <Image 
-                src={post.coverImage} 
+              <Image
+                src={post.coverImage}
                 alt={`Cover image for ${post.title}`}
                 className="object-cover"
                 fill
@@ -130,16 +129,11 @@ export default async function BlogPost({ params }: PageProps) {
 
         {/* Article Content */}
         {post.content ? (
-          <div
-            className="prose prose-invert prose-lg max-w-none"
-            dangerouslySetInnerHTML={{ __html: post.content }}
-          />
+          <MarkdownRenderer content={post.content} className="prose-lg" />
         ) : (
-          <div className="prose prose-invert prose-lg max-w-none">
-            <div className="bg-gray-800 rounded-lg p-8 text-center">
-              <h3 className="text-xl font-medium mb-4">Content Unavailable</h3>
-              <p>We apologize, but the content for this article is currently unavailable.</p>
-            </div>
+          <div className="bg-gray-800 rounded-lg p-8 text-center">
+            <h3 className="text-xl font-medium mb-4">Content Unavailable</h3>
+            <p>We apologize, but the content for this article is currently unavailable.</p>
           </div>
         )}
 
