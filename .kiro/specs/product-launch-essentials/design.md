@@ -269,6 +269,10 @@ class FrameworkError extends Error {
 - **Cypress**: End-to-end testing
 - **Firebase Emulator**: Local testing environment
 
+### Package Management
+- **Yarn**: Primary package manager for dependency management and script execution
+- All development commands should use `yarn` instead of `npm`
+
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
