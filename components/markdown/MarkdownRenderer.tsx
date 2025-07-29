@@ -131,13 +131,13 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           },
           // Customize other elements as needed
           h1: ({ node, ...props }) => (
-            <h1 className="text-3xl font-bold mt-10 mb-4" {...props} />
+            <h1 className="text-5xl font-bold text-yellow-400 mt-12 mb-6" {...props} />
           ),
           h2: ({ node, ...props }) => (
-            <h2 className="text-2xl font-bold mt-8 mb-3" {...props} />
+            <h2 className="text-4xl font-bold text-yellow-400 mt-10 mb-5" {...props} />
           ),
           h3: ({ node, ...props }) => (
-            <h3 className="text-xl font-semibold mt-6 mb-2" {...props} />
+            <h3 className="text-3xl font-bold text-yellow-400 mt-8 mb-4" {...props} />
           ),
           p: ({ node, ...props }) => <p className="mb-4 leading-relaxed" {...props} />,
           ul: ({ node, ...props }) => (
