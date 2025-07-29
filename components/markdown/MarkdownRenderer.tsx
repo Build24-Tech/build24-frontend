@@ -1,8 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Image as ImageIcon } from 'lucide-react';
-import { useState } from 'react';
+import { Image as ImageIcon, Play } from 'lucide-react';
+import { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/cjs/styles/prism';
@@ -38,10 +38,55 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
               </code>
             );
           },
+          // YouTube video embed
+          a: ({ node, href, children, ...props }) => {
+            const youtubeId = useMemo(() => {
+              if (!href) return null;
+              
+              // Handle YouTube URLs
+              const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+              const match = href.match(regExp);
+              
+              return (match && match[2].length === 11) ? match[2] : null;
+            }, [href]);
+
+            if (youtubeId) {
+              return (
+                <div className="relative aspect-video my-6 rounded-lg overflow-hidden">
+                  <iframe
+                    className="w-full h-full"
+                    src={`https://www.youtube.com/embed/${youtubeId}`}
+                    title="YouTube video player"
+                    frameBorder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    allowFullScreen
+                  />
+                </div>
+              );
+            }
+
+            // Default link behavior
+            return (
+              <a
+                href={href}
+                className="text-blue-400 hover:text-blue-300 underline underline-offset-4"
+                target="_blank"
+                rel="noopener noreferrer"
+                {...props}
+              >
+                {children}
+              </a>
+            );
+          },
           // Image with error handling
           img: ({ node, src, alt, ...props }) => {
             const [error, setError] = useState(false);
             const [loaded, setLoaded] = useState(false);
+
+            // Check if the image is a YouTube thumbnail
+            const isYoutubeThumbnail = useMemo(() => {
+              return typeof src === 'string' && src.includes('img.youtube.com');
+            }, [src]);
 
             if (error) {
               return (
@@ -55,17 +100,27 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
 
             return (
               <div className="relative flex items-center justify-center">
-                <img
-                  src={src}
-                  alt={alt || ''}
-                  onError={() => setError(true)}
-                  onLoad={() => setLoaded(true)}
-                  className={cn(
-                    'max-w-full h-auto rounded-lg transition-opacity duration-300',
-                    loaded ? 'opacity-100' : 'opacity-0'
+                <div className="relative w-full">
+                  <img
+                    src={src}
+                    alt={alt || ''}
+                    onError={() => setError(true)}
+                    onLoad={() => setLoaded(true)}
+                    className={cn(
+                      'w-full h-auto max-h-[430px] object-contain rounded-lg transition-all duration-300',
+                      loaded ? 'opacity-100' : 'opacity-0',
+                      isYoutubeThumbnail ? 'cursor-pointer hover:opacity-80' : ''
+                    )}
+                    {...props}
+                  />
+                  {isYoutubeThumbnail && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="bg-red-600 text-white rounded-full p-4 transform hover:scale-110 transition-transform">
+                        <Play className="w-6 h-6 fill-current" />
+                      </div>
+                    </div>
                   )}
-                  {...props}
-                />
+                </div>
                 {!loaded && !error && (
                   <div className="absolute inset-0 flex items-center justify-center bg-gray-800 rounded-lg">
                     <div className="animate-pulse w-full h-full bg-gray-700 rounded-lg"></div>
@@ -90,14 +145,6 @@ export function MarkdownRenderer({ content, className }: MarkdownRendererProps) 
           ),
           ol: ({ node, ...props }) => (
             <ol className="list-decimal pl-6 mb-4 space-y-2" {...props} />
-          ),
-          a: ({ node, ...props }) => (
-            <a
-              className="text-blue-400 hover:text-blue-300 underline underline-offset-4"
-              target="_blank"
-              rel="noopener noreferrer"
-              {...props}
-            />
           ),
           blockquote: ({ node, ...props }) => (
             <blockquote
