@@ -1,6 +1,6 @@
 # Product Overview
 
-Build24 is a developer-focused platform that documents the journey of building 24 unique projects in 24-hour sprints. It's a coding marathon that explores creativity, rapid prototyping, and the art of shipping fast.
+Build24 is a developer-focused platform that documents the journey of building any projects in 24-hour sprints. It's a coding marathon that explores creativity, rapid prototyping, and the art of shipping fast.
 
 ## Core Features
 
