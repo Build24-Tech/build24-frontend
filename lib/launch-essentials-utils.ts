@@ -166,9 +166,34 @@ export function getNextStep(progress: UserProgress): StepProgress | null {
   const currentPhase = progress.phases[progress.currentPhase];
   if (!currentPhase) return null;
 
-  return currentPhase.steps.find(step =>
+  // First check current phase for incomplete steps
+  const currentPhaseIncomplete = currentPhase.steps.find(step =>
     step.status === 'not_started' || step.status === 'in_progress'
-  ) || null;
+  );
+
+  if (currentPhaseIncomplete) {
+    return currentPhaseIncomplete;
+  }
+
+  // If current phase is complete, check other phases
+  const phaseOrder: LaunchPhase[] = [
+    'validation', 'definition', 'technical', 'marketing',
+    'operations', 'financial', 'risk', 'optimization'
+  ];
+
+  for (const phase of phaseOrder) {
+    const phaseProgress = progress.phases[phase];
+    if (phaseProgress) {
+      const incompleteStep = phaseProgress.steps.find(step =>
+        step.status === 'not_started' || step.status === 'in_progress'
+      );
+      if (incompleteStep) {
+        return incompleteStep;
+      }
+    }
+  }
+
+  return null;
 }
 
 /**
