@@ -45,7 +45,7 @@ export default function BlogGrid({ posts }: BlogGridProps) {
                   <CardTitle className="text-white group-hover:text-yellow-400 transition-colors line-clamp-2">
                     {post.title || 'Untitled Post'}
                   </CardTitle>
-                  <CardDescription className="text-gray-400">
+                  <CardDescription className="text-gray-400 line-clamp-3">
                     {post.description || 'No description available'}
                   </CardDescription>
                 </CardHeader>
