@@ -7,9 +7,15 @@ jest.mock('firebase/app', () => ({
 
 jest.mock('firebase/auth', () => ({
   getAuth: jest.fn(),
-  GithubAuthProvider: jest.fn(),
-  GoogleAuthProvider: jest.fn(),
-  OAuthProvider: jest.fn(),
+  GithubAuthProvider: jest.fn().mockImplementation(() => ({
+    addScope: jest.fn(),
+  })),
+  GoogleAuthProvider: jest.fn().mockImplementation(() => ({
+    addScope: jest.fn(),
+  })),
+  OAuthProvider: jest.fn().mockImplementation(() => ({
+    addScope: jest.fn(),
+  })),
 }));
 
 jest.mock('firebase/firestore', () => ({
