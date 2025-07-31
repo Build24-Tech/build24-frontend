@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { filterPostsByLanguage, getUserLanguage } from '@/lib/language-utils';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 
-interface BlogPageProps {
-  searchParams: { lang?: string };
-}
-
-export default async function BlogPage({ searchParams }: BlogPageProps) {
-  // Get language from URL parameter
-  const currentLanguage = getUserLanguage(searchParams.lang);
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const query = await searchParams;
+  const currentLanguage = getUserLanguage(query?.lang);
 
   // Fetch real data from Notion
   let blogPosts: Post[] = [];
