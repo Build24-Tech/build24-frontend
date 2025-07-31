@@ -4,12 +4,14 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import Image from 'next/image';
 import Link from 'next/link';
+import Script from 'next/script';
 
 export default function Footer() {
   const { user } = useAuth();
 
   return (
     <footer className="bg-black border-t border-gray-800">
+      <Script src="https://images.dmca.com/Badges/DMCABadgeHelper.min.js" strategy="lazyOnload" />
       <div className="container mx-auto px-4">
         {/* Main Footer Content */}
         <div className="py-12">
@@ -112,6 +114,9 @@ export default function Footer() {
               <p className="text-gray-400 text-sm">
                 &copy; {new Date().getFullYear()} Build24. All rights reserved.
               </p>
+              <a href="//www.dmca.com/Protection/Status.aspx?ID=ba1c1357-18a3-4406-bf82-53db832167c0" title="DMCA.com Protection Status" className="dmca-badge">
+                <img src="https://images.dmca.com/Badges/dmca_protected_sml_120m.png?ID=ba1c1357-18a3-4406-bf82-53db832167c0" alt="DMCA.com Protection Status" />
+              </a>
             </div>
             <div className="flex items-center gap-6 text-sm">
               <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
