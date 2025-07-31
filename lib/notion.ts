@@ -5,6 +5,8 @@ import { NotionToMarkdown } from "notion-to-md";
 export const notion = new Client({ auth: process.env.NOTION_TOKEN });
 export const n2m = new NotionToMarkdown({ notionClient: notion });
 
+export type PostLanguage = 'en' | 'cn' | 'jp' | 'vn';
+
 export interface Post {
   id: string;
   title: string;
@@ -16,6 +18,7 @@ export interface Post {
   author?: string;
   tags?: string[];
   category?: string;
+  language: PostLanguage;
 }
 
 export async function getDatabaseStructure() {
@@ -53,7 +56,7 @@ export async function fetchPublishedPosts() {
       },
     ],
   });
-  //console.log('~~~~~ fetch', posts)
+
   return posts;
 }
 
@@ -73,9 +76,9 @@ export async function getPost(pageId: string): Promise<Post | null> {
     const description =
       firstParagraph.slice(0, 160) + (firstParagraph.length > 160 ? "..." : "");
 
-        const properties = page.properties as any;
+    const properties = page.properties as any;
     // Join all rich text segments for the complete title
-        const rawTitle = (properties.Title?.title ?? [])
+    const rawTitle = (properties.Title?.title ?? [])
       .map((t: any) => t.plain_text)
       .join(" ") // preserve spaces between rich text segments
       .replace(/\s+/g, " ") // collapse consecutive whitespace
@@ -88,7 +91,7 @@ export async function getPost(pageId: string): Promise<Post | null> {
     const post: Post = {
       id: page.id,
 
-      
+
 
       title: fullTitle,
       slug:
@@ -105,6 +108,7 @@ export async function getPost(pageId: string): Promise<Post | null> {
       author: properties.Author?.people[0]?.name,
       tags: properties.Tags?.multi_select?.map((tag: any) => tag.name) || [],
       category: properties.Category?.select?.name,
+      language: (properties.Language?.select?.name as PostLanguage) || 'en',
     };
 
     return post;
