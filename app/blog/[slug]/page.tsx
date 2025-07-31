@@ -56,14 +56,16 @@ async function getBlogPost(slug: string, language?: string): Promise<Post | null
 // Allow dynamic params for development (will show 404 for non-existent posts)
 export const dynamicParams = true;
 
-interface PageProps {
+export default async function BlogPost({
+  params,
+  searchParams,
+}: {
   params: Promise<{ slug: string }>;
-  searchParams: { lang?: string };
-}
-
-export default async function BlogPost({ params, searchParams }: PageProps) {
+  searchParams: Promise<{ lang?: string }>;
+}) {
   const { slug } = await params;
-  const currentLanguage = getUserLanguage(searchParams.lang);
+  const query = await searchParams;
+  const currentLanguage = getUserLanguage(query?.lang);
   const post = await getBlogPost(slug, currentLanguage);
 
   if (!post) {
