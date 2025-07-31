@@ -2,11 +2,12 @@
 import { MarkdownRenderer } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { getUserLanguage } from '@/lib/language-utils';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useSearchParams } from 'next/navigation';
 
 export async function generateStaticParams() {
   // For static export, we need to generate all possible blog post slugs
@@ -30,14 +31,22 @@ export async function generateStaticParams() {
 }
 
 // Fetch blog post from Notion API
-async function getBlogPost(slug: string): Promise<Post | null> {
+async function getBlogPost(slug: string, language?: string): Promise<Post | null> {
   try {
     const response = await fetchPublishedPosts();
     const posts: Post[] = await Promise.all(
       response.results.map((page: any) => getPost(page.id))
     ).then(posts => posts.filter((post): post is Post => post !== null));
 
-    return posts.find(post => post.slug === slug) || null;
+    // First try to find post with matching slug and language
+    let post = posts.find(post => post.slug === slug && post.language === language);
+
+    // If not found, fallback to any post with matching slug (default to English)
+    if (!post) {
+      post = posts.find(post => post.slug === slug);
+    }
+
+    return post || null;
   } catch (error) {
     console.error('Error fetching blog post:', error);
     return null;
@@ -47,13 +56,15 @@ async function getBlogPost(slug: string): Promise<Post | null> {
 // Allow dynamic params for development (will show 404 for non-existent posts)
 export const dynamicParams = true;
 
-interface PageProps {
+export default async function BlogPost({
+  params,
+}: {
   params: Promise<{ slug: string }>;
-}
-
-export default async function BlogPost({ params }: PageProps) {
+}) {
   const { slug } = await params;
-  const post = await getBlogPost(slug);
+  const searchParams = useSearchParams();
+  const currentLanguage = getUserLanguage(searchParams.get('lang') || 'en');
+  const post = await getBlogPost(slug, currentLanguage);
 
   if (!post) {
     notFound();
@@ -65,7 +76,7 @@ export default async function BlogPost({ params }: PageProps) {
       <div className="bg-black">
         <div className="container mx-auto px-4 py-8">
           <Button asChild variant="ghost" className="text-gray-400 hover:text-white p-0 px-2 cursor-pointer select-none">
-            <Link href="/blog" className="flex items-center gap-2">
+            <Link href={`/blog?lang=${currentLanguage}`} className="flex items-center gap-2">
               <ArrowLeft className="w-4 h-4" />
               Back to Blog
             </Link>
@@ -154,10 +165,10 @@ export default async function BlogPost({ params }: PageProps) {
         {/* Navigation */}
         <div className="flex justify-between items-center pt-12 mt-12 border-t border-gray-800">
           <Button asChild variant="outline" className="border-gray-600 text-white hover:bg-gray-800">
-            <Link href="/blog">← Previous Post</Link>
+            <Link href={`/blog?lang=${currentLanguage}`}>← Previous Post</Link>
           </Button>
           <Button asChild variant="outline" className="border-gray-600 text-white hover:bg-gray-800">
-            <Link href="/blog">Next Post →</Link>
+            <Link href={`/blog?lang=${currentLanguage}`}>Next Post →</Link>
           </Button>
         </div>
       </article>

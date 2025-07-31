@@ -1,18 +1,18 @@
-import { doc, setDoc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from './firebase';
+import { UserLanguage, UserProfile, UserStatus } from '@/types/user';
 import { User } from 'firebase/auth';
-import { UserProfile, UserStatus } from '@/types/user';
+import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { db } from './firebase';
 
 /**
  * Creates or updates a user profile in Firestore
  */
-export const createUserProfile = async (user: User, status: UserStatus = 'onboarding', emailUpdates: boolean = false): Promise<void> => {
+export const createUserProfile = async (user: User, status: UserStatus = 'onboarding', emailUpdates: boolean = false, language: UserLanguage = 'en'): Promise<void> => {
   try {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
-    
+
     const timestamp = Date.now();
-    
+
     if (!userSnap.exists()) {
       // Create new user profile
       const userData: UserProfile = {
@@ -22,10 +22,11 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
         photoURL: user.photoURL || undefined,
         status,
         emailUpdates,
+        language,
         createdAt: timestamp,
         updatedAt: timestamp,
       };
-      
+
       await setDoc(userRef, userData);
       console.log('User profile created');
     } else {
@@ -62,17 +63,34 @@ export const updateUserStatus = async (userId: string, status: UserStatus): Prom
 };
 
 /**
+ * Updates a user's language preference in Firestore
+ */
+export const updateUserLanguage = async (userId: string, language: UserLanguage): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      language,
+      updatedAt: Date.now()
+    });
+    console.log(`User language updated to: ${language}`);
+  } catch (error) {
+    console.error('Error updating user language:', error);
+    throw error;
+  }
+};
+
+/**
  * Gets a user profile from Firestore
  */
 export const getUserProfile = async (userId: string): Promise<UserProfile | null> => {
   try {
     const userRef = doc(db, 'users', userId);
     const userSnap = await getDoc(userRef);
-    
+
     if (userSnap.exists()) {
       return userSnap.data() as UserProfile;
     }
-    
+
     return null;
   } catch (error) {
     console.error('Error getting user profile:', error);

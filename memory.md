@@ -51,3 +51,16 @@ This document records important decisions, recurring problems, and key configura
   - Added GitHub link (https://github.com/Build24-Tech) and Discord icon to social links
   - Updated "Join Discord" link with placeholder invite URL
   - Removed duplicate header/footer from homepage to use global layout
+
+- **Multi-Language Support (2025-07-27)**: Implemented comprehensive multi-language support:
+  - Added language field to user Firestore document with default 'en'
+  - Updated Post interface to support multiple languages (en, cn, jp, vn)
+  - Added language parameter to blog post URLs (?lang=)
+  - Auto-detect user language preference from settings
+  - Implemented language fallback to English
+  - Created language utility functions (`lib/language-utils.ts`)
+  - Added LanguageSelector component for user language preference
+  - Updated blog pages to filter content by language
+  - Added language filter to blog filters
+  - Integrated language selector in header navigation
+  - Database field mapping: Language: en | jp | cn | vn

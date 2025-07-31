@@ -1,22 +1,25 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { createLanguageUrl } from '@/lib/language-utils';
 import { Post } from '@/lib/notion';
+import { UserLanguage } from '@/types/user';
 import { ArrowRight, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
 interface BlogGridProps {
   posts: Post[];
+  currentLanguage: UserLanguage;
 }
 
-export default function BlogGrid({ posts }: BlogGridProps) {
+export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
   return (
     <>
       {posts.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post: Post) => (
-            <Link href={`/blog/${post.slug || 'not-found'}`} key={post.id} className="block h-full">
+            <Link href={createLanguageUrl(post.slug || 'not-found', currentLanguage)} key={post.id} className="block h-full">
               <Card className="bg-gray-900 border-gray-700 hover:border-gray-600 transition-all duration-300 group h-full flex flex-col">
                 {/* Feature Image */}
                 <div className="w-full aspect-video overflow-hidden relative">

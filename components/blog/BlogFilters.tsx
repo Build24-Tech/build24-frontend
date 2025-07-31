@@ -1,9 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Post } from '@/lib/notion';
 import { Button } from '@/components/ui/button';
-import { Check, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,32 +8,39 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { LANGUAGE_NAMES } from '@/lib/language-utils';
+import { Post } from '@/lib/notion';
+import { UserLanguage } from '@/types/user';
+import { Check, ChevronDown } from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 export type SortOption = 'newest' | 'oldest' | 'author' | 'category';
 
 type FilterOption = {
-  type: 'tag' | 'author' | 'category';
+  type: 'tag' | 'author' | 'category' | 'language';
   value: string;
 };
 
 interface BlogFiltersProps {
   posts: Post[];
   onFilterChange: (posts: Post[]) => void;
+  currentLanguage: UserLanguage;
 }
 
-export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps) {
+export default function BlogFilters({ posts, onFilterChange, currentLanguage }: BlogFiltersProps) {
   const [sortOption, setSortOption] = useState<SortOption>('newest');
   const [activeFilters, setActiveFilters] = useState<FilterOption[]>([]);
-  
+
   // Extract unique tags, authors, and categories from posts
   const allTags = Array.from(new Set(posts.flatMap(post => post.tags || [])));
   const allAuthors = Array.from(new Set(posts.map(post => post.author).filter(Boolean) as string[]));
   const allCategories = Array.from(new Set(posts.map(post => post.category).filter(Boolean) as string[]));
+  const allLanguages = Array.from(new Set(posts.map(post => post.language).filter(Boolean) as string[]));
 
   // Apply sorting and filtering whenever options change
   useEffect(() => {
     let filteredPosts = [...posts];
-    
+
     // Apply filters
     if (activeFilters.length > 0) {
       filteredPosts = filteredPosts.filter(post => {
@@ -48,13 +52,15 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
               return post.author === filter.value;
             case 'category':
               return post.category === filter.value;
+            case 'language':
+              return post.language === filter.value;
             default:
               return true;
           }
         });
       });
     }
-    
+
     // Apply sorting
     filteredPosts.sort((a, b) => {
       switch (sortOption) {
@@ -70,7 +76,7 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
           return 0;
       }
     });
-    
+
     onFilterChange(filteredPosts);
   }, [sortOption, activeFilters, posts, onFilterChange]);
 
@@ -80,7 +86,7 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
       const filterExists = prev.some(
         f => f.type === filter.type && f.value === filter.value
       );
-      
+
       if (filterExists) {
         return prev.filter(
           f => !(f.type === filter.type && f.value === filter.value)
@@ -123,11 +129,11 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        
+
         <div className="flex items-center gap-2">
           {activeFilters.length > 0 && (
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               className="text-gray-400 hover:text-white"
               onClick={() => setActiveFilters([])}
             >
@@ -136,9 +142,36 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
           )}
         </div>
       </div>
-      
+
       {/* Filter sections */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Languages filter */}
+        {allLanguages.length > 0 && (
+          <div>
+            <h3 className="text-gray-400 mb-2">Languages</h3>
+            <div className="flex flex-wrap gap-2">
+              {allLanguages.map((language) => (
+                <Button
+                  key={`language-${language}`}
+                  variant={isFilterActive({ type: 'language', value: language }) ? "default" : "outline"}
+                  size="sm"
+                  className={
+                    isFilterActive({ type: 'language', value: language })
+                      ? "bg-yellow-400 text-black hover:bg-yellow-500"
+                      : "border-gray-700 bg-gray-900 hover:bg-gray-800"
+                  }
+                  onClick={() => toggleFilter({ type: 'language', value: language })}
+                >
+                  {isFilterActive({ type: 'language', value: language }) && (
+                    <Check className="mr-1 h-3 w-3" />
+                  )}
+                  {LANGUAGE_NAMES[language as UserLanguage] || language}
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Categories filter */}
         {allCategories.length > 0 && (
           <div>
@@ -147,16 +180,16 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
               {allCategories.map((category) => (
                 <Button
                   key={`category-${category}`}
-                  variant={isFilterActive({type: 'category', value: category}) ? "default" : "outline"}
+                  variant={isFilterActive({ type: 'category', value: category }) ? "default" : "outline"}
                   size="sm"
                   className={
-                    isFilterActive({type: 'category', value: category})
+                    isFilterActive({ type: 'category', value: category })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
                       : "border-gray-700 bg-gray-900 hover:bg-gray-800"
                   }
-                  onClick={() => toggleFilter({type: 'category', value: category})}
+                  onClick={() => toggleFilter({ type: 'category', value: category })}
                 >
-                  {isFilterActive({type: 'category', value: category}) && (
+                  {isFilterActive({ type: 'category', value: category }) && (
                     <Check className="mr-1 h-3 w-3" />
                   )}
                   {category}
@@ -165,7 +198,7 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
             </div>
           </div>
         )}
-        
+
         {/* Authors filter */}
         {allAuthors.length > 0 && (
           <div>
@@ -174,16 +207,16 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
               {allAuthors.map((author) => (
                 <Button
                   key={`author-${author}`}
-                  variant={isFilterActive({type: 'author', value: author}) ? "default" : "outline"}
+                  variant={isFilterActive({ type: 'author', value: author }) ? "default" : "outline"}
                   size="sm"
                   className={
-                    isFilterActive({type: 'author', value: author})
+                    isFilterActive({ type: 'author', value: author })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
                       : "border-gray-700 bg-gray-900 hover:bg-gray-800"
                   }
-                  onClick={() => toggleFilter({type: 'author', value: author})}
+                  onClick={() => toggleFilter({ type: 'author', value: author })}
                 >
-                  {isFilterActive({type: 'author', value: author}) && (
+                  {isFilterActive({ type: 'author', value: author }) && (
                     <Check className="mr-1 h-3 w-3" />
                   )}
                   {author}
@@ -192,7 +225,7 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
             </div>
           </div>
         )}
-        
+
         {/* Tags filter */}
         {allTags.length > 0 && (
           <div>
@@ -201,16 +234,16 @@ export default function BlogFilters({ posts, onFilterChange }: BlogFiltersProps)
               {allTags.map((tag) => (
                 <Button
                   key={`tag-${tag}`}
-                  variant={isFilterActive({type: 'tag', value: tag}) ? "default" : "outline"}
+                  variant={isFilterActive({ type: 'tag', value: tag }) ? "default" : "outline"}
                   size="sm"
                   className={
-                    isFilterActive({type: 'tag', value: tag})
+                    isFilterActive({ type: 'tag', value: tag })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
                       : "border-gray-700 bg-gray-900 hover:bg-gray-800"
                   }
-                  onClick={() => toggleFilter({type: 'tag', value: tag})}
+                  onClick={() => toggleFilter({ type: 'tag', value: tag })}
                 >
-                  {isFilterActive({type: 'tag', value: tag}) && (
+                  {isFilterActive({ type: 'tag', value: tag }) && (
                     <Check className="mr-1 h-3 w-3" />
                   )}
                   {tag}
