@@ -74,11 +74,15 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
 
     try {
       // Create a new project
-      const newProject = await ProjectDataService.createProject(
-        user.uid,
-        'My Product Launch',
-        'A new product launch project'
-      );
+      const newProject = await ProjectDataService.createProject({
+        userId: user.uid,
+        name: 'My Product Launch',
+        description: 'A new product launch project',
+        industry: 'Technology',
+        targetMarket: 'Global',
+        stage: 'concept',
+        data: {},
+      });
 
       // Initialize progress for the new project
       const progress = await progressTracker.initializeProgress(
