@@ -1,11 +1,12 @@
 'use client';
 
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { Menu, X } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import LanguageSelector from './LanguageSelector';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -36,6 +37,7 @@ export default function Header() {
             <Link href="/about" className="text-gray-300 hover:text-white transition-colors">
               About
             </Link>
+            <LanguageSelector variant="compact" />
             <Button asChild variant="outline" className="border-yellow-400 text-black hover:bg-yellow-400 hover:text-black bg-yellow-400">
               <Link
                 href={user ? "/dashboard" : "/login"}
@@ -80,6 +82,10 @@ export default function Header() {
               >
                 About
               </Link>
+              <div className="flex items-center gap-2 py-2">
+                <span className="text-gray-300">Language:</span>
+                <LanguageSelector />
+              </div>
               <Button asChild variant="default" className="w-fit bg-yellow-400 text-black hover:bg-yellow-500 hover:text-black">
                 <Link
                   href={user ? "/dashboard" : "/login"}
