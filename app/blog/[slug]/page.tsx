@@ -57,12 +57,12 @@ async function getBlogPost(slug: string, language?: string): Promise<Post | null
 export const dynamicParams = true;
 
 interface PageProps {
-  params: { slug: string };
+  params: Promise<{ slug: string }>;
   searchParams: { lang?: string };
 }
 
 export default async function BlogPost({ params, searchParams }: PageProps) {
-  const { slug } = params;
+  const { slug } = await params;
   const currentLanguage = getUserLanguage(searchParams.lang);
   const post = await getBlogPost(slug, currentLanguage);
 
