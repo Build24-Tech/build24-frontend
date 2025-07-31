@@ -7,7 +7,7 @@ import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useSearchParams } from 'next/navigation';
 
 export async function generateStaticParams() {
   // For static export, we need to generate all possible blog post slugs
@@ -58,14 +58,12 @@ export const dynamicParams = true;
 
 export default async function BlogPost({
   params,
-  searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ lang?: string }>;
 }) {
   const { slug } = await params;
-  const query = await searchParams;
-  const currentLanguage = getUserLanguage(query?.lang);
+  const searchParams = useSearchParams();
+  const currentLanguage = getUserLanguage(searchParams.get('lang') || 'en');
   const post = await getBlogPost(slug, currentLanguage);
 
   if (!post) {
