@@ -3,11 +3,14 @@ import Hero from '@/components/blog/Hero';
 import { Button } from '@/components/ui/button';
 import { filterPostsByLanguage, getUserLanguage } from '@/lib/language-utils';
 import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
-import { useSearchParams } from 'next/navigation';
 
-export default async function BlogPage() {
-  const searchParams = useSearchParams();
-  const currentLanguage = getUserLanguage(searchParams.get('lang') || 'en');
+export default async function BlogPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ lang?: string }>;
+}) {
+  const query = await searchParams;
+  const currentLanguage = getUserLanguage(query?.lang || 'en');
 
   // Fetch real data from Notion
   let blogPosts: Post[] = [];

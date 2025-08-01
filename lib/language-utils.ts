@@ -65,5 +65,5 @@ export function filterPostsByLanguage(
  * Creates a language-specific URL for blog posts
  */
 export function createLanguageUrl(slug: string, language: UserLanguage): string {
-  return `/blog/${slug}?lang=${language}`;
+  return `/${language}/blog/${slug}`;
 } 
