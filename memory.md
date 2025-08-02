@@ -55,7 +55,7 @@ This document records important decisions, recurring problems, and key configura
 - **Multi-Language Support (2025-07-27)**: Implemented comprehensive multi-language support:
   - Added language field to user Firestore document with default 'en'
   - Updated Post interface to support multiple languages (en, cn, jp, vn)
-  - Added language parameter to blog post URLs (?lang=)
+  - **MIGRATED TO PATH-BASED ROUTING (2025-01-XX)**: URLs now use /en/blog, /jp/blog, etc. instead of ?lang= parameter
   - Auto-detect user language preference from settings
   - Implemented language fallback to English
   - Created language utility functions (`lib/language-utils.ts`)
@@ -64,3 +64,10 @@ This document records important decisions, recurring problems, and key configura
   - Added language filter to blog filters
   - Integrated language selector in header navigation
   - Database field mapping: Language: en | jp | cn | vn
+  - **Path-based routing features**:
+    - Middleware redirects non-language URLs to default language
+    - All internal links updated to use language-prefixed URLs
+    - generateStaticParams for all language/slug combinations
+    - Updated sitemap for all language variants
+    - Static assets properly excluded from middleware
+    - Language selector navigates to same page in new language

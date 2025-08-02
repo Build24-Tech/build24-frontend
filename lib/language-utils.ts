@@ -66,4 +66,20 @@ export function filterPostsByLanguage(
  */
 export function createLanguageUrl(slug: string, language: UserLanguage): string {
   return `/${language}/blog/${slug}`;
+}
+
+/**
+ * Creates a language-specific URL for any path
+ */
+export function createLangPath(path: string, language: UserLanguage): string {
+  // Remove leading slash if present
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `/${language}/${cleanPath}`;
+}
+
+/**
+ * Creates a language-specific URL for navigation links
+ */
+export function href(language: UserLanguage, path: string): string {
+  return createLangPath(path, language);
 } 

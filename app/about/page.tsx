@@ -1,10 +1,18 @@
+'use client';
+
+import Newsletter from '@/components/Newsletter';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import Newsletter from '@/components/Newsletter';
+import { href } from '@/lib/language-utils';
+import { UserLanguage } from '@/types/user';
+import { Clock, Code, Lightbulb, Target } from 'lucide-react';
 import Link from 'next/link';
-import { Code, Clock, Target, Zap, Coffee, Lightbulb } from 'lucide-react';
+import { useParams } from 'next/navigation';
 
 export default function AboutPage() {
+  const params = useParams();
+  const currentLang = (params?.lang as UserLanguage) || 'en';
+
   const principles = [
     {
       icon: <Clock className="w-8 h-8 text-yellow-400" />,
@@ -44,7 +52,7 @@ export default function AboutPage() {
             About <span className="text-yellow-400">Build24</span>
           </h1>
           <p className="text-xl text-gray-400 max-w-3xl mx-auto leading-relaxed">
-            Build24 is an ambitious coding challenge: create 24 unique, functional projects in 24 hours. 
+            Build24 is an ambitious coding challenge: create 24 unique, functional projects in 24 hours.
             It's about pushing creative boundaries, learning rapidly, and proving that great ideas can come to life quickly.
           </p>
         </div>
@@ -67,16 +75,16 @@ export default function AboutPage() {
           <div className="grid md:grid-cols-2 gap-12 items-center">
             <div className="space-y-6">
               <p className="text-gray-300 text-lg leading-relaxed">
-                As developers, we often get caught up in perfectionism. We spend weeks planning, 
+                As developers, we often get caught up in perfectionism. We spend weeks planning,
                 over-engineering solutions, and second-guessing our decisions. Build24 is the antidote to that.
               </p>
               <p className="text-gray-300 text-lg leading-relaxed">
-                The idea is simple: what if we removed all the barriers and just built? What if we 
-                embraced constraints instead of fighting them? What amazing things could we create 
+                The idea is simple: what if we removed all the barriers and just built? What if we
+                embraced constraints instead of fighting them? What amazing things could we create
                 when time is limited and creativity is unleashed?
               </p>
               <p className="text-gray-300 text-lg leading-relaxed">
-                Each hour brings a new challenge, a fresh start, and an opportunity to explore 
+                Each hour brings a new challenge, a fresh start, and an opportunity to explore
                 technologies, patterns, and ideas that might otherwise remain in the "someday" pile.
               </p>
             </div>
@@ -171,15 +179,15 @@ export default function AboutPage() {
         <div className="text-center">
           <h2 className="text-3xl font-bold mb-6">Join the Journey</h2>
           <p className="text-xl text-gray-400 mb-8 max-w-2xl mx-auto">
-            Follow along as the challenge unfolds. Every success, every failure, every lesson learned 
+            Follow along as the challenge unfolds. Every success, every failure, every lesson learned
             will be documented and shared.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button asChild className="bg-yellow-400 text-black hover:bg-yellow-500 text-lg px-8 py-6 h-auto">
-              <Link href="/blog">Read the Blog</Link>
+              <Link href={href(currentLang, '/blog')}>Read the Blog</Link>
             </Button>
             <Button asChild variant="outline" className="border-gray-600 text-white hover:bg-gray-800 text-lg px-8 py-6 h-auto">
-              <Link href="/projects">View Projects</Link>
+              <Link href={href(currentLang, '/projects')}>View Projects</Link>
             </Button>
           </div>
         </div>

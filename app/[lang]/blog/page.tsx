@@ -1,13 +1,62 @@
+import ClientBlogWrapper from '@/components/blog/ClientBlogWrapper';
+import Hero from '@/components/blog/Hero';
+import { Button } from '@/components/ui/button';
+import { filterPostsByLanguage, getUserLanguage, SUPPORTED_LANGUAGES } from '@/lib/language-utils';
+import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
 import { UserLanguage } from '@/types/user';
-import BlogPage from '../../blog/page';
+
+export async function generateStaticParams() {
+  return SUPPORTED_LANGUAGES.map((lang) => ({
+    lang,
+  }));
+}
 
 export default async function LangBlogPage({
   params,
   searchParams,
 }: {
-  params: { lang: UserLanguage };
-  searchParams: { [key: string]: string | string[] | undefined };
+  params: Promise<{ lang: UserLanguage }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  // Pass through searchParams (without ?lang)
-  return await BlogPage({ searchParams });
+  const { lang } = await params;
+  const query = await searchParams;
+  const currentLanguage = getUserLanguage(lang);
+
+  // Fetch real data from Notion
+  let blogPosts: Post[] = [];
+
+  try {
+    const response = await fetchPublishedPosts();
+    blogPosts = await Promise.all(
+      response.results.map((page: any) => getPost(page.id))
+    ).then(posts => posts.filter((post): post is Post => post !== null));
+
+    // Filter posts by language
+    blogPosts = filterPostsByLanguage(blogPosts, currentLanguage);
+  } catch (error) {
+    console.error('Error fetching blog posts:', error);
+    // Will render the page with an empty array of posts
+  }
+
+  return (
+    <div className="min-h-screen bg-black text-white">
+      <div className="w-full h-[400px]">
+        <Hero />
+      </div>
+
+      <div className="container mx-auto px-4 py-12">
+        {/* Blog Filter and Grid Components */}
+        <ClientBlogWrapper initialPosts={blogPosts} currentLanguage={currentLanguage} />
+
+        {/* Load More Button */}
+        {blogPosts.length > 0 && (
+          <div className="text-center mt-12">
+            <Button className="bg-yellow-400 text-black hover:bg-yellow-500 cursor-pointer select-none">
+              Load More Posts
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
 }

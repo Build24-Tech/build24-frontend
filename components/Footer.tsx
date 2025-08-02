@@ -2,12 +2,17 @@
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { href } from '@/lib/language-utils';
+import { UserLanguage } from '@/types/user';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useParams } from 'next/navigation';
 import Script from 'next/script';
 
 export default function Footer() {
   const { user } = useAuth();
+  const params = useParams();
+  const currentLang = (params?.lang as UserLanguage) || 'en';
 
   return (
     <footer className="bg-black border-t border-gray-800">
@@ -18,7 +23,7 @@ export default function Footer() {
           <div className="grid md:grid-cols-3 gap-8">
             {/* Brand Section */}
             <div className="md:col-span-1">
-              <Link href="/" className="flex items-center mb-4">
+              <Link href={href(currentLang, '/')} className="flex items-center mb-4">
                 <Image
                   src="/build24_logo_light.svg"
                   alt="Build24"
@@ -55,17 +60,17 @@ export default function Footer() {
                 <h3 className="text-white font-semibold mb-4">Navigate</h3>
                 <ul className="space-y-2">
                   <li>
-                    <Link href="/blog" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href={href(currentLang, '/blog')} className="text-gray-400 hover:text-white transition-colors">
                       Blog
                     </Link>
                   </li>
                   <li>
-                    <Link href="/projects" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href={href(currentLang, '/projects')} className="text-gray-400 hover:text-white transition-colors">
                       Projects
                     </Link>
                   </li>
                   <li>
-                    <Link href="/about" className="text-gray-400 hover:text-white transition-colors">
+                    <Link href={href(currentLang, '/about')} className="text-gray-400 hover:text-white transition-colors">
                       About
                     </Link>
                   </li>
@@ -99,7 +104,7 @@ export default function Footer() {
               <h3 className="text-white font-semibold mb-4">Get Started</h3>
               <p className="text-gray-400 mb-4">Join our community of builders today.</p>
               <Button asChild variant="outline" className="border-yellow-400 text-black hover:bg-yellow-400 hover:text-black bg-yellow-400">
-                <Link href={user ? "/dashboard" : "/login"}>
+                <Link href={user ? href(currentLang, '/dashboard') : href(currentLang, '/login')}>
                   {user ? "Dashboard" : "Join Build24"}
                 </Link>
               </Button>
@@ -119,10 +124,10 @@ export default function Footer() {
               </a>
             </div>
             <div className="flex items-center gap-6 text-sm">
-              <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
+              <Link href={href(currentLang, '/privacy')} className="text-gray-400 hover:text-white transition-colors">
                 Privacy Policy
               </Link>
-              <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
+              <Link href={href(currentLang, '/terms')} className="text-gray-400 hover:text-white transition-colors">
                 Terms of Service
               </Link>
             </div>

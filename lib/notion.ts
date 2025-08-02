@@ -117,3 +117,16 @@ export async function getPost(pageId: string): Promise<Post | null> {
     return null;
   }
 }
+
+export async function getPosts(): Promise<Post[]> {
+  try {
+    const response = await fetchPublishedPosts();
+    const posts = await Promise.all(
+      response.results.map((page) => getPost(page.id))
+    );
+    return posts.filter((post): post is Post => post !== null);
+  } catch (error) {
+    console.error("Error getting posts:", error);
+    return [];
+  }
+}

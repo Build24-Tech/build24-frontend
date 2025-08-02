@@ -2,25 +2,29 @@
 
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
+import { href } from '@/lib/language-utils';
+import { UserLanguage } from '@/types/user';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function DashboardPage() {
   const { user, loading, logout } = useAuth();
   const router = useRouter();
+  const params = useParams();
+  const currentLang = (params?.lang as UserLanguage) || 'en';
 
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/login');
+      router.push(href(currentLang, '/login'));
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, currentLang]);
 
   const handleLogout = async () => {
     try {
       await logout();
-      router.push('/');
+      router.push(href(currentLang, '/'));
     } catch (error) {
       console.error('Error logging out:', error);
     }
@@ -88,12 +92,12 @@ export default function DashboardPage() {
                 <h2 className="text-xl font-bold mb-4">Quick Actions</h2>
                 <div className="space-y-3">
                   <Button asChild className="w-full bg-yellow-400 text-black hover:bg-yellow-300">
-                    <Link href="/projects">
+                    <Link href={href(currentLang, '/projects')}>
                       View Projects
                     </Link>
                   </Button>
                   <Button asChild className="w-full bg-gray-700 text-white hover:bg-gray-600">
-                    <Link href="/blog">
+                    <Link href={href(currentLang, '/blog')}>
                       Read Latest Blog
                     </Link>
                   </Button>

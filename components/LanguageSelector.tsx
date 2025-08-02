@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/AuthContext';
-import { LANGUAGE_NAMES, SUPPORTED_LANGUAGES } from '@/lib/language-utils';
+import { href, LANGUAGE_NAMES, SUPPORTED_LANGUAGES } from '@/lib/language-utils';
 import { UserLanguage } from '@/types/user';
 import { ChevronDown, Globe } from 'lucide-react';
+import { useParams, usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 interface LanguageSelectorProps {
@@ -22,15 +23,26 @@ interface LanguageSelectorProps {
 export default function LanguageSelector({ className = '', variant = 'default' }: LanguageSelectorProps) {
   const { user, userProfile, updateLanguage } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
+  const params = useParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
-  const currentLanguage = userProfile?.language || 'en';
+  const currentLanguage = (params?.lang as UserLanguage) || userProfile?.language || 'en';
 
   const handleLanguageChange = async (language: string) => {
-    if (!user || language === currentLanguage) return;
+    if (language === currentLanguage) return;
 
     setIsUpdating(true);
     try {
-      await updateLanguage(language as UserLanguage);
+      // Update user profile if logged in
+      if (user) {
+        await updateLanguage(language as UserLanguage);
+      }
+
+      // Navigate to the same page in the new language
+      const currentPath = pathname.replace(/^\/[a-z]{2}/, ''); // Remove current language prefix
+      const newPath = href(language as UserLanguage, currentPath);
+      router.push(newPath);
     } catch (error) {
       console.error('Error updating language:', error);
     } finally {
