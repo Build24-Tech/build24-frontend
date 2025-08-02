@@ -54,7 +54,7 @@ export default function LanguageSelector({ className = '', variant = 'default' }
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="sm" className={`p-2 ${className}`}>
+          <Button variant="ghost" size="sm" className={`p-2 ${className} cursor-pointer`}>
             <Globe className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
@@ -64,7 +64,7 @@ export default function LanguageSelector({ className = '', variant = 'default' }
               <DropdownMenuRadioItem
                 key={language}
                 value={language}
-                className="text-white hover:bg-gray-800"
+                className="text-white hover:bg-gray-800 cursor-pointer"
                 disabled={isUpdating}
               >
                 {LANGUAGE_NAMES[language]}
@@ -79,7 +79,7 @@ export default function LanguageSelector({ className = '', variant = 'default' }
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" className={`border-gray-700 bg-gray-900 ${className}`}>
+        <Button variant="outline" className={`border-gray-700 bg-gray-900 ${className} cursor-pointer`}>
           <Globe className="mr-2 h-4 w-4" />
           {LANGUAGE_NAMES[currentLanguage]}
           <ChevronDown className="ml-2 h-4 w-4" />
@@ -91,7 +91,7 @@ export default function LanguageSelector({ className = '', variant = 'default' }
             <DropdownMenuRadioItem
               key={language}
               value={language}
-              className="text-white hover:bg-gray-800"
+              className="text-white hover:bg-gray-800 cursor-pointer"
               disabled={isUpdating}
             >
               {LANGUAGE_NAMES[language]}
