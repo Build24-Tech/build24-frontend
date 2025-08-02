@@ -11,6 +11,7 @@ export interface Post {
   id: string;
   title: string;
   slug: string;
+  customUrl?: string;
   coverImage?: string;
   description: string;
   date: string;
@@ -19,6 +20,7 @@ export interface Post {
   tags?: string[];
   category?: string;
   language: PostLanguage;
+  relatedOrigin?: string; // ID of the original post (usually English version)
 }
 
 export async function getDatabaseStructure() {
@@ -88,18 +90,46 @@ export async function getPost(pageId: string): Promise<Post | null> {
       // .replace(/\b[a-zA-Z]\b/g, "") // Commented out: previously removed single-letter words including numbers
       .replace(/\s+/g, " ")
       .trim() || "Untitled";
+    // Get custom URL if available, otherwise generate slug from title
+    const rawCustomUrl = properties["Custom URL"]?.rich_text?.[0]?.plain_text ||
+      properties["Custom URL"]?.url ||
+      undefined;
+
+    // Format custom URL to be URL-friendly (like slug generation)
+    const customUrl = rawCustomUrl ?
+      rawCustomUrl
+        .toLowerCase()
+        // Vietnamese character normalization
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/[đĐ]/g, 'd') // Replace đ/Đ with d
+        .replace(/\//g, '-') // Replace forward slashes with hyphens
+        .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove other special characters except spaces and hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Collapse multiple hyphens
+        .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+        .trim() :
+      undefined;
+
+
+    const generatedSlug = fullTitle
+      .toLowerCase()
+      // Vietnamese character normalization
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[đĐ]/g, 'd') // Replace đ/Đ with d
+      .replace(/\//g, '-') // Replace forward slashes with hyphens
+      .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove other special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Collapse multiple hyphens
+      .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+      .trim() || "untitled";
+
     const post: Post = {
       id: page.id,
-
-
-
       title: fullTitle,
-      slug:
-        fullTitle
-          .replace(/[^a-zA-Z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash, preserve case
-          .replace(/-+/g, "-") // collapse multiple dashes
-          .replace(/^-+|-+$/g, "") || // Remove leading/trailing dashes
-        "untitled",
+      slug: generatedSlug,
+      customUrl,
       coverImage: properties["Featured Image"]?.url || undefined,
       description,
       date:
@@ -109,7 +139,12 @@ export async function getPost(pageId: string): Promise<Post | null> {
       tags: properties.Tags?.multi_select?.map((tag: any) => tag.name) || [],
       category: properties.Category?.select?.name,
       language: (properties.Language?.select?.name as PostLanguage) || 'en',
+      relatedOrigin: properties["Related Origin"]?.relation?.[0]?.id || undefined,
     };
+
+
+
+    return post;
 
     return post;
   } catch (error) {
@@ -129,4 +164,78 @@ export async function getPosts(): Promise<Post[]> {
     console.error("Error getting posts:", error);
     return [];
   }
+}
+
+/**
+ * Find related posts across different languages
+ * @param currentPost The current post
+ * @param allPosts All available posts
+ * @returns Object with language keys and related post IDs
+ */
+export function findRelatedPosts(currentPost: Post, allPosts: Post[]): Record<PostLanguage, string | null> {
+  const related: Record<PostLanguage, string | null> = {
+    en: null,
+    cn: null,
+    jp: null,
+    vn: null,
+  };
+
+  // Strategy: Find all posts that are related through any connection
+  const relatedPostIds = new Set<string>();
+
+  // Add current post
+  relatedPostIds.add(currentPost.id);
+
+  // Add posts that current post points to
+  if (currentPost.relatedOrigin) {
+    relatedPostIds.add(currentPost.relatedOrigin);
+  }
+
+  // Add posts that point to current post
+  const postsPointingToCurrent = allPosts.filter(post => post.relatedOrigin === currentPost.id);
+  postsPointingToCurrent.forEach(post => relatedPostIds.add(post.id));
+
+  // If current post has a relatedOrigin, also add posts that point to that origin
+  if (currentPost.relatedOrigin) {
+    const postsPointingToOrigin = allPosts.filter(post => post.relatedOrigin === currentPost.relatedOrigin);
+    postsPointingToOrigin.forEach(post => relatedPostIds.add(post.id));
+  }
+
+  // Map all related posts to their languages
+  allPosts.forEach(post => {
+    if (relatedPostIds.has(post.id)) {
+      related[post.language] = post.id;
+    }
+  });
+
+  return related;
+}
+
+/**
+ * Get the best available post for a specific language
+ * @param targetLanguage The desired language
+ * @param relatedPosts Object with language keys and post IDs
+ * @param allPosts All available posts
+ * @returns The post in the target language, or the English version as fallback
+ */
+export function getBestPostForLanguage(
+  targetLanguage: PostLanguage,
+  relatedPosts: Record<PostLanguage, string | null>,
+  allPosts: Post[]
+): Post | null {
+  // Try to get the post in the target language
+  const targetPostId = relatedPosts[targetLanguage];
+  if (targetPostId) {
+    const targetPost = allPosts.find(post => post.id === targetPostId);
+    if (targetPost) return targetPost;
+  }
+
+  // Fallback to English version
+  const englishPostId = relatedPosts.en;
+  if (englishPostId) {
+    const englishPost = allPosts.find(post => post.id === englishPostId);
+    if (englishPost) return englishPost;
+  }
+
+  return null;
 }

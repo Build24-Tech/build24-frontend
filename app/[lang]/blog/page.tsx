@@ -37,11 +37,9 @@ export default async function LangBlogPage({
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="w-full h-[400px]">
-        <Hero />
-      </div>
+      <Hero currentLanguage={currentLanguage} />
 
-      <div className="container mx-auto px-4 py-12">
+      <div id="blog-posts" className="container mx-auto px-4 py-16">
         {/* Blog Filter and Grid Components */}
         <ClientBlogWrapper initialPosts={blogPosts} currentLanguage={currentLanguage} />
 
