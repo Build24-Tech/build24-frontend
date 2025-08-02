@@ -13,13 +13,10 @@ export async function generateStaticParams() {
 
 export default async function LangBlogPage({
   params,
-  searchParams,
 }: {
   params: Promise<{ lang: UserLanguage }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { lang } = await params;
-  const query = await searchParams;
   const currentLanguage = getUserLanguage(lang);
 
   // Fetch real data from Notion
