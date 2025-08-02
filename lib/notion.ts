@@ -11,6 +11,7 @@ export interface Post {
   id: string;
   title: string;
   slug: string;
+  customUrl?: string;
   coverImage?: string;
   description: string;
   date: string;
@@ -88,18 +89,23 @@ export async function getPost(pageId: string): Promise<Post | null> {
       // .replace(/\b[a-zA-Z]\b/g, "") // Commented out: previously removed single-letter words including numbers
       .replace(/\s+/g, " ")
       .trim() || "Untitled";
+    // Get custom URL if available, otherwise generate slug from title
+    const customUrl = properties["Custom URL"]?.rich_text?.[0]?.plain_text ||
+      properties["Custom URL"]?.url ||
+      undefined;
+
+
+    const generatedSlug = fullTitle
+      .replace(/[^a-zA-Z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash, preserve case
+      .replace(/-+/g, "-") // collapse multiple dashes
+      .replace(/^-+|-+$/g, "") || // Remove leading/trailing dashes
+      "untitled";
+
     const post: Post = {
       id: page.id,
-
-
-
       title: fullTitle,
-      slug:
-        fullTitle
-          .replace(/[^a-zA-Z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash, preserve case
-          .replace(/-+/g, "-") // collapse multiple dashes
-          .replace(/^-+|-+$/g, "") || // Remove leading/trailing dashes
-        "untitled",
+      slug: generatedSlug,
+      customUrl,
       coverImage: properties["Featured Image"]?.url || undefined,
       description,
       date:

@@ -71,3 +71,9 @@ This document records important decisions, recurring problems, and key configura
     - Updated sitemap for all language variants
     - Static assets properly excluded from middleware
     - Language selector navigates to same page in new language
+  - **Custom URL Support (2025-01-XX)**: Added support for custom URLs from Notion:
+    - Added `customUrl` field to Post interface
+    - Posts with Custom URL field use custom URL instead of generated slug
+    - Fallback to generated slug when Custom URL is not available
+    - Updated URL generation, routing, and sitemap to handle custom URLs
+    - Maintains backward compatibility with existing slug-based URLs

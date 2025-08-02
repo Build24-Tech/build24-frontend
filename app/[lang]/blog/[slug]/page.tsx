@@ -1,7 +1,7 @@
 import { MarkdownRenderer } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { getUserLanguage, SUPPORTED_LANGUAGES } from '@/lib/language-utils';
+import { getUserLanguage } from '@/lib/language-utils';
 import { fetchPublishedPosts, getPost, getPosts, Post } from '@/lib/notion';
 import { UserLanguage } from '@/types/user';
 import { ArrowLeft, Calendar } from 'lucide-react';
@@ -9,19 +9,32 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 export async function generateStaticParams() {
-  const posts = await getPosts();
-  const params: { lang: UserLanguage; slug: string }[] = [];
+  try {
+    const posts = await getPosts();
+    const params: { lang: UserLanguage; slug: string }[] = [];
 
-  for (const post of posts) {
-    for (const lang of SUPPORTED_LANGUAGES) {
-      params.push({
-        lang,
-        slug: post.slug,
-      });
+    for (const post of posts) {
+      // Generate static params for all supported languages
+      // The getBlogPost function will handle finding the correct post for each language
+      const urlPath = post.customUrl || post.slug;
+
+      // Ensure urlPath is a valid string
+      if (typeof urlPath === 'string' && urlPath.trim() !== '') {
+        params.push({
+          lang: post.language,
+          slug: urlPath,
+        });
+      } else {
+        console.warn(`Skipping post "${post.title}" - invalid URL path:`, urlPath);
+      }
     }
-  }
 
-  return params;
+    console.log(`Generated ${params.length} static params for blog posts (${posts.length} posts with their actual languages)`);
+    return params;
+  } catch (error) {
+    console.error('Error generating static params for blog posts:', error);
+    return [];
+  }
 }
 
 // Fetch blog post from Notion API
@@ -32,12 +45,12 @@ async function getBlogPost(slug: string, language?: string): Promise<Post | null
       response.results.map((page: any) => getPost(page.id))
     ).then(posts => posts.filter((post): post is Post => post !== null));
 
-    // First try to find post with matching slug and language
-    let post = posts.find(post => post.slug === slug && post.language === language);
+    // First try to find post with matching custom URL and language
+    let post = posts.find(post => post.customUrl === slug && post.language === language);
 
-    // If not found, fallback to any post with matching slug (default to English)
+    // If not found, try to find post with matching slug and language
     if (!post) {
-      post = posts.find(post => post.slug === slug);
+      post = posts.find(post => post.slug === slug && post.language === language);
     }
 
     return post || null;

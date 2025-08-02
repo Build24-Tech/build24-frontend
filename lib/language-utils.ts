@@ -64,8 +64,9 @@ export function filterPostsByLanguage(
 /**
  * Creates a language-specific URL for blog posts
  */
-export function createLanguageUrl(slug: string, language: UserLanguage): string {
-  return `/${language}/blog/${slug}`;
+export function createLanguageUrl(slug: string, language: UserLanguage, customUrl?: string): string {
+  const urlPath = customUrl || slug;
+  return `/${language}/blog/${urlPath}`;
 }
 
 /**
