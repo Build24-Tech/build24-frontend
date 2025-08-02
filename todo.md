@@ -22,3 +22,9 @@ This file tracks the development tasks for the Build24 project. Work on the firs
 - [x] Update Subscribe buttons to "Join" and redirect to login page
 - [x] Implement login state handling for authenticated users
 - [x] Store user profiles in Firestore with status tracking
+- [x] Implement multi-language support for website:
+  - Add language field to user Firestore document (default: 'en')
+  - Update Post interface to support multiple languages (en, cn, jp, vn)
+  - Add language parameter to blog post URLs (?lang=)
+  - Auto-detect user language preference from settings
+  - Implement language fallback to English

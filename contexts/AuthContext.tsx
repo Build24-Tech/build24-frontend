@@ -1,21 +1,23 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { 
-  User, 
-  signInWithEmailAndPassword, 
+import { appleProvider, auth, githubProvider, googleProvider } from '@/lib/firebase';
+import { createUserProfile, getUserProfile, updateUserLanguage } from '@/lib/firestore';
+import { UserLanguage, UserProfile } from '@/types/user';
+import {
+  User,
   createUserWithEmailAndPassword,
-  signInWithPopup,
-  signOut,
   onAuthStateChanged,
   sendPasswordResetEmail,
+  signInWithEmailAndPassword,
+  signInWithPopup,
+  signOut,
   updateProfile
 } from 'firebase/auth';
-import { auth, googleProvider, githubProvider, appleProvider } from '@/lib/firebase';
-import { createUserProfile } from '@/lib/firestore';
+import { ReactNode, createContext, useContext, useEffect, useState } from 'react';
 
 interface AuthContextType {
   user: User | null;
+  userProfile: UserProfile | null;
   loading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<User>;
   signIn: (email: string, password: string) => Promise<User>;
@@ -24,6 +26,7 @@ interface AuthContextType {
   signInWithApple: () => Promise<User>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
+  updateLanguage: (language: UserLanguage) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,11 +45,23 @@ interface AuthProviderProps {
 
 export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setUser(user);
+      if (user) {
+        try {
+          const profile = await getUserProfile(user.uid);
+          setUserProfile(profile);
+        } catch (error) {
+          console.error('Error fetching user profile:', error);
+          setUserProfile(null);
+        }
+      } else {
+        setUserProfile(null);
+      }
       setLoading(false);
     });
 
@@ -56,14 +71,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signUp = async (email: string, password: string, displayName?: string): Promise<User> => {
     try {
       const result = await createUserWithEmailAndPassword(auth, email, password);
-      
+
       if (displayName && result.user) {
         await updateProfile(result.user, { displayName });
       }
-      
+
       // Store user information in Firestore with status 'onboarding'
       await createUserProfile(result.user, 'onboarding');
-      
+
       return result.user;
     } catch (error) {
       console.error('Error signing up:', error);
@@ -84,10 +99,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGoogle = async (): Promise<User> => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
-      
+
       // Store or update user information in Firestore
       await createUserProfile(result.user);
-      
+
       return result.user;
     } catch (error) {
       console.error('Error signing in with Google:', error);
@@ -98,10 +113,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithGithub = async (): Promise<User> => {
     try {
       const result = await signInWithPopup(auth, githubProvider);
-      
+
       // Store or update user information in Firestore
       await createUserProfile(result.user);
-      
+
       return result.user;
     } catch (error) {
       console.error('Error signing in with GitHub:', error);
@@ -112,10 +127,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const signInWithApple = async (): Promise<User> => {
     try {
       const result = await signInWithPopup(auth, appleProvider);
-      
+
       // Store or update user information in Firestore
       await createUserProfile(result.user);
-      
+
       return result.user;
     } catch (error) {
       console.error('Error signing in with Apple:', error);
@@ -141,8 +156,19 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateLanguage = async (language: UserLanguage): Promise<void> => {
+    if (user) {
+      await updateUserLanguage(user.uid, language);
+      // Update local state
+      if (userProfile) {
+        setUserProfile({ ...userProfile, language });
+      }
+    }
+  };
+
   const value: AuthContextType = {
     user,
+    userProfile,
     loading,
     signUp,
     signIn,
@@ -151,6 +177,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     signInWithApple,
     logout,
     resetPassword,
+    updateLanguage,
   };
 
   return (
