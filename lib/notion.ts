@@ -90,16 +90,37 @@ export async function getPost(pageId: string): Promise<Post | null> {
       .replace(/\s+/g, " ")
       .trim() || "Untitled";
     // Get custom URL if available, otherwise generate slug from title
-    const customUrl = properties["Custom URL"]?.rich_text?.[0]?.plain_text ||
+    const rawCustomUrl = properties["Custom URL"]?.rich_text?.[0]?.plain_text ||
       properties["Custom URL"]?.url ||
+      undefined;
+
+    // Format custom URL to be URL-friendly (like slug generation)
+    const customUrl = rawCustomUrl ?
+      rawCustomUrl
+        .toLowerCase()
+        // Vietnamese character normalization
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+        .replace(/[đĐ]/g, 'd') // Replace đ/Đ with d
+        .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+        .replace(/\s+/g, '-') // Replace spaces with hyphens
+        .replace(/-+/g, '-') // Collapse multiple hyphens
+        .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+        .trim() :
       undefined;
 
 
     const generatedSlug = fullTitle
-      .replace(/[^a-zA-Z0-9]+/g, "-") // Replace any non-alphanumeric chars with dash, preserve case
-      .replace(/-+/g, "-") // collapse multiple dashes
-      .replace(/^-+|-+$/g, "") || // Remove leading/trailing dashes
-      "untitled";
+      .toLowerCase()
+      // Vietnamese character normalization
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[đĐ]/g, 'd') // Replace đ/Đ with d
+      .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Collapse multiple hyphens
+      .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
+      .trim() || "untitled";
 
     const post: Post = {
       id: page.id,
