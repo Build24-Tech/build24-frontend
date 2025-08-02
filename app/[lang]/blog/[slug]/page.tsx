@@ -1,3 +1,4 @@
+import LanguageSwitcher from '@/components/blog/LanguageSwitcher';
 import { MarkdownRenderer } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -76,6 +77,11 @@ export default async function LangBlogPost({
     notFound();
   }
 
+  // Fetch all posts for language switching functionality
+  const allPosts = await getPosts();
+
+
+
   return (
     <div className="min-h-screen bg-black text-white align-center">
       {/* Back to Blog - Outside header */}
@@ -118,6 +124,15 @@ export default async function LangBlogPost({
             {post.author && (
               <div>By {post.author}</div>
             )}
+          </div>
+
+          {/* Language Switcher */}
+          <div className="mt-8">
+            <LanguageSwitcher
+              currentPost={post}
+              allPosts={allPosts}
+              currentLanguage={currentLanguage}
+            />
           </div>
         </div>
       </header>

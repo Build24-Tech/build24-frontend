@@ -77,3 +77,26 @@ This document records important decisions, recurring problems, and key configura
     - Fallback to generated slug when Custom URL is not available
     - Updated URL generation, routing, and sitemap to handle custom URLs
     - Maintains backward compatibility with existing slug-based URLs
+    - **Vietnamese Character Support**: Added proper Vietnamese character normalization:
+      - Converts Vietnamese characters to ASCII equivalents (Việt Nam → viet-nam)
+      - Handles đ/Đ → d conversion
+      - Forward slash conversion (5/100 → 5-100)
+      - Maintains URL-friendly formatting
+
+  - **Related Origin Support (2025-01-XX)**: Implemented cross-language post relationships:
+    - Added `relatedOrigin` field to Post interface for Notion relation field
+    - English posts can link to translations (vn, cn, jp versions)
+    - Translation posts link back to English origin
+    - **Language Switcher Component**: Added interactive language switching:
+      - Shows available language versions for current post
+      - Seamlessly navigates between language versions
+      - Falls back to English if target language not available
+      - Only displays when multiple language versions exist
+    - **Utility Functions**:
+      - `findRelatedPosts()`: Maps all related posts across languages using bidirectional relationship detection
+      - `getBestPostForLanguage()`: Gets best available post for target language
+    - **User Experience**: Users can switch languages while reading posts
+    - **Relationship Logic**: Handles circular references and bidirectional relationships:
+      - Finds all posts connected through any relationship (current → target, target → current, shared origins)
+      - Maps related posts to their respective languages
+      - Ensures language switcher appears when multiple versions exist
