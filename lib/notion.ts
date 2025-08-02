@@ -102,7 +102,8 @@ export async function getPost(pageId: string): Promise<Post | null> {
         .normalize('NFD')
         .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
         .replace(/[đĐ]/g, 'd') // Replace đ/Đ with d
-        .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+        .replace(/\//g, '-') // Replace forward slashes with hyphens
+        .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove other special characters except spaces and hyphens
         .replace(/\s+/g, '-') // Replace spaces with hyphens
         .replace(/-+/g, '-') // Collapse multiple hyphens
         .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
@@ -116,7 +117,8 @@ export async function getPost(pageId: string): Promise<Post | null> {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
       .replace(/[đĐ]/g, 'd') // Replace đ/Đ with d
-      .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+      .replace(/\//g, '-') // Replace forward slashes with hyphens
+      .replace(/[^a-zA-Z0-9\s-]/g, '') // Remove other special characters except spaces and hyphens
       .replace(/\s+/g, '-') // Replace spaces with hyphens
       .replace(/-+/g, '-') // Collapse multiple hyphens
       .replace(/^-+|-+$/g, '') // Remove leading/trailing hyphens
