@@ -181,7 +181,7 @@ describe('ProductDefinition', () => {
       />
     );
 
-    expect(screen.getByText('Vision & Mission')).toBeInTheDocument();
+    expect(screen.getAllByText('Vision & Mission')).toHaveLength(2); // Navigation and content
     expect(screen.getByText('Value Proposition')).toBeInTheDocument();
     expect(screen.getByText('Feature Prioritization')).toBeInTheDocument();
     expect(screen.getByText('Success Metrics')).toBeInTheDocument();
@@ -195,9 +195,18 @@ describe('ProductDefinition', () => {
       />
     );
 
-    // Vision & Mission step should show as completed
-    const visionMissionStep = screen.getByText('Vision & Mission').closest('button');
-    expect(visionMissionStep).toHaveClass('border-green-200', 'bg-green-50');
+    // Vision & Mission step should show as current (yellow) since it's the default current step
+    const visionMissionSteps = screen.getAllByText('Vision & Mission');
+    const visionMissionStep = visionMissionSteps[0].closest('button');
+    expect(visionMissionStep).toHaveClass('border-yellow-500', 'bg-yellow-50');
+
+    // Navigate to Value Proposition to see Vision & Mission as completed
+    fireEvent.click(screen.getByText('Value Proposition'));
+
+    // Now Vision & Mission should show as completed (green)
+    const updatedVisionMissionSteps = screen.getAllByText('Vision & Mission');
+    const updatedVisionMissionStep = updatedVisionMissionSteps[0].closest('button');
+    expect(updatedVisionMissionStep).toHaveClass('border-green-200', 'bg-green-50');
   });
 
   it('allows navigation between steps', () => {
@@ -309,9 +318,10 @@ describe('ProductDefinition', () => {
       />
     );
 
-    // Vision & Mission should show as complete (has data)
-    const visionMissionStep = screen.getByText('Vision & Mission').closest('button');
-    expect(visionMissionStep).toHaveClass('border-green-200');
+    // Vision & Mission should show as current (yellow) since it's the default current step
+    const visionMissionSteps = screen.getAllByText('Vision & Mission');
+    const visionMissionStep = visionMissionSteps[0].closest('button');
+    expect(visionMissionStep).toHaveClass('border-yellow-500');
 
     // Navigate to Value Proposition
     fireEvent.click(screen.getByText('Value Proposition'));
@@ -358,5 +368,65 @@ describe('ProductDefinition', () => {
 
     const visionTextarea = screen.getByPlaceholderText('Enter your product vision statement...');
     expect(visionTextarea).toHaveValue('');
+  });
+
+  it('shows validation guidance for incomplete definition', () => {
+    const incompleteProjectData = {
+      ...mockProjectData,
+      data: {
+        definition: {
+          vision: {
+            statement: '',
+            missionAlignment: ''
+          },
+          valueProposition: {
+            canvas: {
+              customerJobs: [],
+              painPoints: [],
+              gainCreators: [],
+              painRelievers: [],
+              productsServices: []
+            },
+            uniqueValue: ''
+          },
+          features: {
+            coreFeatures: [],
+            prioritization: {
+              method: 'moscow',
+              results: []
+            }
+          },
+          metrics: {
+            kpis: [],
+            successCriteria: []
+          }
+        }
+      }
+    };
+
+    render(
+      <ProductDefinition
+        projectData={incompleteProjectData}
+        userProgress={mockUserProgress}
+      />
+    );
+
+    // Should show validation guidance
+    expect(screen.getByText('Product Definition Incomplete')).toBeInTheDocument();
+    expect(screen.getByText('Missing Elements:')).toBeInTheDocument();
+    expect(screen.getByText('Guidance:')).toBeInTheDocument();
+    expect(screen.getByText('Vision Statement')).toBeInTheDocument();
+  });
+
+  it('hides validation guidance when definition is complete', () => {
+    render(
+      <ProductDefinition
+        projectData={mockProjectData}
+        userProgress={mockUserProgress}
+      />
+    );
+
+    // Should not show validation guidance since data is complete
+    expect(screen.queryByText('Product Definition Incomplete')).not.toBeInTheDocument();
   });
 });

@@ -5,13 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
 import { ProjectDataService, UserProgressService } from '@/lib/launch-essentials-firestore';
-import { ProjectData, UserProgress, ProductDefinitionData } from '@/types/launch-essentials';
-import { AlertCircle, CheckCircle, Save, Target, Lightbulb, Star, BarChart3 } from 'lucide-react';
-import t, useState } from 'react';
-import { VisionMission } from './definition/VisionMission';
-import { ValueProposition } from './definition/ValueProposition';
+import { ProductDefinitionData, ProjectData, UserProgress } from '@/types/launch-essentials';
+import { AlertCircle, BarChart3, CheckCircle, Lightbulb, Save, Star, Target } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { FeaturePrioritization } from './definition/FeaturePrioritization';
 import { MetricsDefinition } from './definition/MetricsDefinition';
+import { ValueProposition } from './definition/ValueProposition';
+import { VisionMission } from './definition/VisionMission';
 
 interface ProductDefinitionProps {
   projectData: ProjectData;
@@ -194,6 +194,61 @@ export function ProductDefinition({
     }
   };
 
+  const getValidationGuidance = (): { isComplete: boolean; missingElements: string[]; guidance: string[] } => {
+    const missingElements: string[] = [];
+    const guidance: string[] = [];
+
+    // Vision & Mission validation
+    if (!definitionData.vision.statement) {
+      missingElements.push('Vision Statement');
+      guidance.push('Define a clear, inspiring vision statement that describes what you want your product to achieve');
+    }
+    if (!definitionData.vision.missionAlignment) {
+      missingElements.push('Mission Alignment');
+      guidance.push('Explain how this product aligns with your broader mission and values');
+    }
+
+    // Value Proposition validation
+    if (definitionData.valueProposition.canvas.customerJobs.length === 0) {
+      missingElements.push('Customer Jobs');
+      guidance.push('Identify the jobs your customers are trying to accomplish');
+    }
+    if (definitionData.valueProposition.canvas.painPoints.length === 0) {
+      missingElements.push('Customer Pain Points');
+      guidance.push('Document the pains and frustrations your customers experience');
+    }
+    if (!definitionData.valueProposition.uniqueValue) {
+      missingElements.push('Unique Value Proposition');
+      guidance.push('Craft a clear, compelling statement of your unique value');
+    }
+
+    // Feature Prioritization validation
+    if (definitionData.features.coreFeatures.length === 0) {
+      missingElements.push('Core Features');
+      guidance.push('Define the core features your product will include');
+    }
+    if (definitionData.features.prioritization.results.length === 0 && definitionData.features.coreFeatures.length > 0) {
+      missingElements.push('Feature Prioritization');
+      guidance.push('Prioritize your features using a structured methodology');
+    }
+
+    // Metrics validation
+    if (definitionData.metrics.kpis.length === 0) {
+      missingElements.push('Key Performance Indicators');
+      guidance.push('Define measurable KPIs to track your product\'s success');
+    }
+    if (definitionData.metrics.successCriteria.length === 0) {
+      missingElements.push('Success Criteria');
+      guidance.push('Establish clear success criteria and milestones');
+    }
+
+    return {
+      isComplete: missingElements.length === 0,
+      missingElements,
+      guidance
+    };
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 'vision-mission':
@@ -258,6 +313,47 @@ export function ProductDefinition({
           </Button>
         </div>
       </div>
+
+      {/* Validation Summary */}
+      {(() => {
+        const validation = getValidationGuidance();
+        if (!validation.isComplete) {
+          return (
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <h3 className="font-medium text-amber-800 mb-2">
+                    Product Definition Incomplete
+                  </h3>
+                  <p className="text-sm text-amber-700 mb-3">
+                    Complete the following elements to finalize your product definition:
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <h4 className="font-medium text-amber-800 text-sm mb-1">Missing Elements:</h4>
+                      <ul className="text-sm text-amber-700 space-y-1">
+                        {validation.missingElements.map((element, index) => (
+                          <li key={index}>• {element}</li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-amber-800 text-sm mb-1">Guidance:</h4>
+                      <ul className="text-sm text-amber-700 space-y-1">
+                        {validation.guidance.map((guide, index) => (
+                          <li key={index}>• {guide}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+        return null;
+      })()}
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Step Navigation */}

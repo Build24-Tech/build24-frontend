@@ -22,7 +22,7 @@ describe('Definition Components', () => {
       render(<VisionMission data={mockVisionData} onChange={mockOnChange} />);
 
       expect(screen.getByText('Vision Statement')).toBeInTheDocument();
-      expect(screen.getByText('Mission Alignment')).toBeInTheDocument();
+      expect(screen.getAllByText('Mission Alignment')).toHaveLength(3); // Header, label, and summary
     });
 
     it('displays existing vision data', () => {
@@ -76,7 +76,7 @@ describe('Definition Components', () => {
       fireEvent.click(screen.getByText('Guidance'));
 
       expect(screen.getByText('Vision Statement Guidelines')).toBeInTheDocument();
-      expect(screen.getByText('Keep it concise but inspiring (1-2 sentences)')).toBeInTheDocument();
+      expect(screen.getByText(/Keep it concise but inspiring/)).toBeInTheDocument();
     });
 
     it('shows summary when both fields are filled', () => {
@@ -108,9 +108,9 @@ describe('Definition Components', () => {
       render(<ValueProposition data={mockValuePropData} onChange={mockOnChange} />);
 
       expect(screen.getByText('Value Proposition Canvas')).toBeInTheDocument();
-      expect(screen.getByText('Customer Jobs')).toBeInTheDocument();
-      expect(screen.getByText('Pain Points')).toBeInTheDocument();
-      expect(screen.getByText('Gain Creators')).toBeInTheDocument();
+      expect(screen.getAllByText('Customer Jobs')).toHaveLength(2); // Section header and summary
+      expect(screen.getAllByText('Pain Points')).toHaveLength(2); // Section header and summary
+      expect(screen.getAllByText('Gain Creators')).toHaveLength(2); // Section header and summary
     });
 
     it('displays existing canvas data', () => {
@@ -126,7 +126,7 @@ describe('Definition Components', () => {
 
       // Find customer jobs input and add button
       const customerJobsInput = screen.getByPlaceholderText(/Manage team communications/);
-      const addButton = customerJobsInput.nextElementSibling?.querySelector('button');
+      const addButton = customerJobsInput.parentElement?.querySelector('button');
 
       fireEvent.change(customerJobsInput, { target: { value: 'New job' } });
       fireEvent.click(addButton!);
@@ -143,11 +143,9 @@ describe('Definition Components', () => {
     it('allows removing canvas items', () => {
       render(<ValueProposition data={mockValuePropData} onChange={mockOnChange} />);
 
-      // Find and click remove button for first job
-      const removeButtons = screen.getAllByRole('button');
-      const removeButton = removeButtons.find(btn =>
-        btn.querySelector('svg') && btn.textContent === ''
-      );
+      // Find the first job item and its remove button
+      const jobItem = screen.getByText('Job 1');
+      const removeButton = jobItem.parentElement?.querySelector('button');
 
       if (removeButton) {
         fireEvent.click(removeButton);
