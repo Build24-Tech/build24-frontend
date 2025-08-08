@@ -3,12 +3,15 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
+import { useErrorHandling } from '@/hooks/use-error-handling';
 import { toast } from '@/hooks/use-toast';
 import { ProjectDataService } from '@/lib/launch-essentials-firestore';
 import { progressTracker } from '@/lib/progress-tracker';
 import { LaunchPhase, ProjectData, UserProgress } from '@/types/launch-essentials';
-import { Plus } from 'lucide-react';
+import { Plus, RefreshCw } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
+import { ErrorDisplay } from './ErrorDisplay';
 import { NextStepsPanel } from './NextStepsPanel';
 import { OverviewCard } from './OverviewCard';
 import { PhaseProgress } from './PhaseProgress';
@@ -21,6 +24,11 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
   const { user } = useAuth();
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
+
+  // Mobile optimization hooks
+  const deviceInfo = useDeviceInfo();
+  const performance = usePerformanceOptimization();
+  const complexity = getAdaptiveComplexity(deviceInfo);
 
   const {
     executeWithErrorHandling,
@@ -202,65 +210,104 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
     );
   }
 
+  // Touch gestures for mobile navigation
+  const touchGestures = useTouchGestures({
+    onSwipeLeft: () => {
+      if (deviceInfo.isMobile) {
+        // Navigate to next phase or section
+        console.log('Swipe left - next section');
+      }
+    },
+    onSwipeRight: () => {
+      if (deviceInfo.isMobile) {
+        // Navigate to previous phase or section
+        console.log('Swipe right - previous section');
+      }
+    },
+  });
+
   return (
     <ErrorBoundary>
-      <div className={`space-y-6 ${className}`}>
-        <NetworkStatus isOnline={isOnline} />
+      <div
+        className={`${getResponsiveSpacing(deviceInfo, 'md')} space-y-4 md:space-y-6 ${className}`}
+        {...(deviceInfo.touchSupported ? touchGestures : {})}
+      >
+        {/* Offline indicator for mobile */}
+        {deviceInfo.isMobile && isOffline && (
+          <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 text-sm text-amber-800">
+            You're currently offline. Some features may be limited.
+          </div>
+        )}
 
-        <LoadingOverlay isLoading={isLoading} text="Updating dashboard...">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
+        <LoadingStates.LoadingOverlay isLoading={isLoading} text="Updating dashboard...">
+          {/* Header - Mobile optimized */}
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+            <div className="min-w-0 flex-1">
+              <h1 className={`${getResponsiveTextSize(deviceInfo, '2xl')} font-bold text-gray-900 truncate`}>
                 {projectData.name}
               </h1>
-              <p className="text-gray-600 mt-1">
+              <p className={`${getResponsiveTextSize(deviceInfo, 'sm')} text-gray-600 mt-1 ${deviceInfo.isMobile ? 'line-clamp-2' : ''}`}>
                 {projectData.description}
               </p>
             </div>
-            <div className="flex items-center space-x-2">
+
+            {/* Action buttons - Responsive layout */}
+            <div className={`flex ${deviceInfo.isMobile ? 'flex-col gap-2' : 'items-center space-x-2'}`}>
+              {!deviceInfo.isMobile && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => retry(loadUserData)}
+                  disabled={isLoading}
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Refresh
+                </Button>
+              )}
+
+              {complexity !== 'simple' && (
+                <Button variant="outline" size={deviceInfo.isMobile ? 'default' : 'sm'}>
+                  Project Settings
+                </Button>
+              )}
+
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => retry(loadUserData)}
-                disabled={isLoading}
-              >
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-              <Button variant="outline" size="sm">
-                Project Settings
-              </Button>
-              <Button
-                size="sm"
+                size={deviceInfo.isMobile ? 'default' : 'sm'}
                 onClick={handleCreateProject}
                 disabled={isLoading || !isOnline}
+                className="w-full sm:w-auto"
               >
                 <Plus className="h-4 w-4 mr-2" />
-                New Project
+                {deviceInfo.isMobile ? 'New Project' : 'New'}
               </Button>
             </div>
           </div>
 
-          {/* Overview Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Overview Cards - Responsive grid */}
+          <div className={`grid ${getResponsiveGridCols(deviceInfo, { mobile: 1, tablet: 2, desktop: 3 })} gap-4 md:gap-6`}>
             <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load overview</p></Card>}>
               <OverviewCard
                 title="Overall Progress"
                 progress={progressTracker.calculateProgress(userProgress)}
                 userProgress={userProgress}
                 projectData={projectData}
+                deviceInfo={deviceInfo}
               />
             </ErrorBoundary>
-            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load current phase</p></Card>}>
-              <OverviewCard
-                title="Current Phase"
-                progress={progressTracker.calculateProgress(userProgress)}
-                userProgress={userProgress}
-                projectData={projectData}
-                variant="current-phase"
-              />
-            </ErrorBoundary>
+
+            {complexity !== 'simple' && (
+              <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load current phase</p></Card>}>
+                <OverviewCard
+                  title="Current Phase"
+                  progress={progressTracker.calculateProgress(userProgress)}
+                  userProgress={userProgress}
+                  projectData={projectData}
+                  variant="current-phase"
+                  deviceInfo={deviceInfo}
+                />
+              </ErrorBoundary>
+            )}
+
             <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load next steps</p></Card>}>
               <OverviewCard
                 title="Next Steps"
@@ -268,30 +315,52 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
                 userProgress={userProgress}
                 projectData={projectData}
                 variant="next-steps"
+                deviceInfo={deviceInfo}
               />
             </ErrorBoundary>
           </div>
 
-          {/* Phase Progress Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Phase Progress Grid - Responsive layout */}
+          <div className={`grid ${deviceInfo.isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}>
             <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load phase progress</p></Card>}>
               <PhaseProgress
                 userProgress={userProgress}
                 onPhaseClick={handlePhaseClick}
+                deviceInfo={deviceInfo}
+                complexity={complexity}
               />
             </ErrorBoundary>
-            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load next steps panel</p></Card>}>
-              <NextStepsPanel
-                userProgress={userProgress}
-                projectData={projectData}
-                onStepClick={(stepId) => {
-                  console.log('Navigate to step:', stepId);
-                  // TODO: Implement navigation to specific step
-                }}
-              />
-            </ErrorBoundary>
+
+            {complexity !== 'simple' && (
+              <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load next steps panel</p></Card>}>
+                <NextStepsPanel
+                  userProgress={userProgress}
+                  projectData={projectData}
+                  onStepClick={(stepId) => {
+                    console.log('Navigate to step:', stepId);
+                    // TODO: Implement navigation to specific step
+                  }}
+                  deviceInfo={deviceInfo}
+                />
+              </ErrorBoundary>
+            )}
           </div>
-        </LoadingOverlay>
+
+          {/* Mobile-specific quick actions */}
+          {deviceInfo.isMobile && (
+            <div className="fixed bottom-4 right-4 z-50">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => retry(loadUserData)}
+                disabled={isLoading}
+                className="rounded-full shadow-lg bg-white"
+              >
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+        </LoadingStates.LoadingOverlay>
       </div>
     </ErrorBoundary>
   );
