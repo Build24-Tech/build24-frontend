@@ -332,11 +332,11 @@ export const commonValidationRules = {
       const numValue = Number(value);
       const inRange = numValue >= min && numValue <= max;
       return {
-        isValid: !value || inRange,
-        errors: value && !inRange
+        isValid: value === null || value === undefined || value === '' || inRange,
+        errors: value !== null && value !== undefined && value !== '' && !inRange
           ? [`${fieldName} must be between ${min} and ${max}`]
           : [],
-        suggestions: value && !inRange
+        suggestions: value !== null && value !== undefined && value !== '' && !inRange
           ? [`Please enter a value between ${min} and ${max}`]
           : [],
       };

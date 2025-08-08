@@ -129,9 +129,18 @@ describe('ErrorBoundary', () => {
   });
 
   test('retry button works correctly', () => {
+    // Create a component that can be controlled to throw or not throw
+    let shouldThrow = true;
+    const ControlledThrowError = () => {
+      if (shouldThrow) {
+        throw new Error('Test error');
+      }
+      return <div>No error</div>;
+    };
+
     const { rerender } = render(
       <ErrorBoundary>
-        <ThrowError shouldThrow={true} />
+        <ControlledThrowError />
       </ErrorBoundary>
     );
 
@@ -141,15 +150,11 @@ describe('ErrorBoundary', () => {
     expect(retryButton).toBeInTheDocument();
     expect(retryButton).toHaveTextContent('Try Again (3 left)');
 
+    // Change the component to not throw before clicking retry
+    shouldThrow = false;
     fireEvent.click(retryButton);
 
     // After retry, should show the component without error
-    rerender(
-      <ErrorBoundary>
-        <ThrowError shouldThrow={false} />
-      </ErrorBoundary>
-    );
-
     expect(screen.getByText('No error')).toBeInTheDocument();
   });
 
@@ -160,16 +165,21 @@ describe('ErrorBoundary', () => {
       </ErrorBoundary>
     );
 
-    const retryButton = screen.getByRole('button', { name: /try again/i });
-
+    // Initial state - 3 retries left
+    let retryButton = screen.getByRole('button', { name: /try again/i });
     expect(retryButton).toHaveTextContent('Try Again (3 left)');
 
+    // First retry - should show error again with 2 left
     fireEvent.click(retryButton);
+    retryButton = screen.getByRole('button', { name: /try again/i });
     expect(retryButton).toHaveTextContent('Try Again (2 left)');
 
+    // Second retry - should show error again with 1 left
     fireEvent.click(retryButton);
+    retryButton = screen.getByRole('button', { name: /try again/i });
     expect(retryButton).toHaveTextContent('Try Again (1 left)');
 
+    // Third retry - should exhaust retries and hide retry button
     fireEvent.click(retryButton);
     expect(screen.queryByRole('button', { name: /try again/i })).not.toBeInTheDocument();
   });
@@ -203,12 +213,13 @@ describe('ErrorBoundary', () => {
     );
 
     const reportButton = screen.getByRole('button', { name: /report error/i });
-    expect(reportButton).toHaveTextContent('Report Error (ID: r_123_abc)');
+    // The error ID is sliced to show last 8 characters, so "error_123_abc" becomes "_123_abc"
+    expect(reportButton).toHaveTextContent('Report Error (ID: _123_abc)');
 
     fireEvent.click(reportButton);
 
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('"errorId":"error_123_abc"')
+      expect.stringContaining('"errorId": "error_123_abc"')
     );
   });
 
