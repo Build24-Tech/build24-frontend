@@ -7,7 +7,7 @@ import { toast } from '@/hooks/use-toast';
 import { ProjectDataService } from '@/lib/launch-essentials-firestore';
 import { progressTracker } from '@/lib/progress-tracker';
 import { LaunchPhase, ProjectData, UserProgress } from '@/types/launch-essentials';
-import { Loader2, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { NextStepsPanel } from './NextStepsPanel';
 import { OverviewCard } from './OverviewCard';
@@ -21,8 +21,33 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
   const { user } = useAuth();
   const [userProgress, setUserProgress] = useState<UserProgress | null>(null);
   const [projectData, setProjectData] = useState<ProjectData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const {
+    executeWithErrorHandling,
+    isLoading,
+    error,
+    clearError,
+    isOnline,
+    retry,
+    canRetry,
+    createPersistenceError,
+    createNetworkError,
+  } = useErrorHandling({
+    onError: (error, errorId) => {
+      console.error('Dashboard error:', error, errorId);
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+    },
+    onSuccess: () => {
+      toast({
+        title: 'Success',
+        description: 'Data loaded successfully',
+      });
+    },
+  });
 
   useEffect(() => {
     if (!user) {
@@ -36,9 +61,11 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
   const loadUserData = async () => {
     if (!user) return;
 
-    try {
-      setLoading(true);
-      setError(null);
+    const result = await executeWithErrorHandling(async () => {
+      // Check network connectivity
+      if (!isOnline) {
+        throw createNetworkError('You are currently offline. Please check your connection.', 0, false);
+      }
 
       // Get user's projects
       const projects = await ProjectDataService.getUserProjects(user.uid);
@@ -47,6 +74,7 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
         // No projects yet - show empty state
         setUserProgress(null);
         setProjectData(null);
+        return { projects: [], project: null, progress: null };
       } else {
         // Use the first project for now (in future, allow project selection)
         const project = projects[0];
@@ -55,24 +83,26 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
         // Get progress for this project
         const progress = await progressTracker.getProgress(user.uid, project.id);
         setUserProgress(progress);
+
+        return { projects, project, progress };
       }
-    } catch (err) {
-      console.error('Error loading user data:', err);
-      setError('Failed to load your progress. Please try again.');
-      toast({
-        title: 'Error',
-        description: 'Failed to load your progress. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setLoading(false);
-    }
+    }, {
+      userId: user.uid,
+      operation: 'load_user_data',
+    });
+
+    return result;
   };
 
   const handleCreateProject = async () => {
     if (!user) return;
 
-    try {
+    const result = await executeWithErrorHandling(async () => {
+      // Check network connectivity
+      if (!isOnline) {
+        throw createNetworkError('Cannot create project while offline. Please check your connection.', 0, false);
+      }
+
       // Create a new project
       const newProject = await ProjectDataService.createProject({
         userId: user.uid,
@@ -94,16 +124,16 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
       setProjectData(newProject);
       setUserProgress(progress);
 
+      return { project: newProject, progress };
+    }, {
+      userId: user.uid,
+      operation: 'create_project',
+    });
+
+    if (result) {
       toast({
         title: 'Project Created',
         description: 'Your new product launch project has been created!',
-      });
-    } catch (err) {
-      console.error('Error creating project:', err);
-      toast({
-        title: 'Error',
-        description: 'Failed to create project. Please try again.',
-        variant: 'destructive',
       });
     }
   };
@@ -129,13 +159,10 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
     );
   }
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <div className="flex items-center space-x-2">
-          <Loader2 className="h-6 w-6 animate-spin" />
-          <span>Loading your dashboard...</span>
-        </div>
+        <LoadingSpinner size="lg" text="Loading your dashboard..." />
       </div>
     );
   }
@@ -143,17 +170,13 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
   if (error) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <CardTitle className="text-red-600">Error</CardTitle>
-            <CardDescription>{error}</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button onClick={loadUserData} className="w-full">
-              Try Again
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="w-full max-w-lg">
+          <ErrorDisplay
+            error={error}
+            onRetry={canRetry ? () => retry(loadUserData) : undefined}
+            onDismiss={clearError}
+          />
+        </div>
       </div>
     );
   }
@@ -180,67 +203,96 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
   }
 
   return (
-    <div className={`space-y-6 ${className}`}>
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
-            {projectData.name}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {projectData.description}
-          </p>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Button variant="outline" size="sm">
-            Project Settings
-          </Button>
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            New Project
-          </Button>
-        </div>
-      </div>
+    <ErrorBoundary>
+      <div className={`space-y-6 ${className}`}>
+        <NetworkStatus isOnline={isOnline} />
 
-      {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <OverviewCard
-          title="Overall Progress"
-          progress={progressTracker.calculateProgress(userProgress)}
-          userProgress={userProgress}
-          projectData={projectData}
-        />
-        <OverviewCard
-          title="Current Phase"
-          progress={progressTracker.calculateProgress(userProgress)}
-          userProgress={userProgress}
-          projectData={projectData}
-          variant="current-phase"
-        />
-        <OverviewCard
-          title="Next Steps"
-          progress={progressTracker.calculateProgress(userProgress)}
-          userProgress={userProgress}
-          projectData={projectData}
-          variant="next-steps"
-        />
-      </div>
+        <LoadingOverlay isLoading={isLoading} text="Updating dashboard...">
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                {projectData.name}
+              </h1>
+              <p className="text-gray-600 mt-1">
+                {projectData.description}
+              </p>
+            </div>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => retry(loadUserData)}
+                disabled={isLoading}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button variant="outline" size="sm">
+                Project Settings
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleCreateProject}
+                disabled={isLoading || !isOnline}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Project
+              </Button>
+            </div>
+          </div>
 
-      {/* Phase Progress Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <PhaseProgress
-          userProgress={userProgress}
-          onPhaseClick={handlePhaseClick}
-        />
-        <NextStepsPanel
-          userProgress={userProgress}
-          projectData={projectData}
-          onStepClick={(stepId) => {
-            console.log('Navigate to step:', stepId);
-            // TODO: Implement navigation to specific step
-          }}
-        />
+          {/* Overview Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load overview</p></Card>}>
+              <OverviewCard
+                title="Overall Progress"
+                progress={progressTracker.calculateProgress(userProgress)}
+                userProgress={userProgress}
+                projectData={projectData}
+              />
+            </ErrorBoundary>
+            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load current phase</p></Card>}>
+              <OverviewCard
+                title="Current Phase"
+                progress={progressTracker.calculateProgress(userProgress)}
+                userProgress={userProgress}
+                projectData={projectData}
+                variant="current-phase"
+              />
+            </ErrorBoundary>
+            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load next steps</p></Card>}>
+              <OverviewCard
+                title="Next Steps"
+                progress={progressTracker.calculateProgress(userProgress)}
+                userProgress={userProgress}
+                projectData={projectData}
+                variant="next-steps"
+              />
+            </ErrorBoundary>
+          </div>
+
+          {/* Phase Progress Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load phase progress</p></Card>}>
+              <PhaseProgress
+                userProgress={userProgress}
+                onPhaseClick={handlePhaseClick}
+              />
+            </ErrorBoundary>
+            <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load next steps panel</p></Card>}>
+              <NextStepsPanel
+                userProgress={userProgress}
+                projectData={projectData}
+                onStepClick={(stepId) => {
+                  console.log('Navigate to step:', stepId);
+                  // TODO: Implement navigation to specific step
+                }}
+              />
+            </ErrorBoundary>
+          </div>
+        </LoadingOverlay>
       </div>
-    </div>
+    </ErrorBoundary>
   );
 }
