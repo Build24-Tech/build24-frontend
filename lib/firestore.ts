@@ -1,4 +1,4 @@
-import { UserLanguage, UserProfile, UserStatus } from '@/types/user';
+import { ThemePreference, UserLanguage, UserProfile, UserStatus } from '@/types/user';
 import { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -6,7 +6,7 @@ import { db } from './firebase';
 /**
  * Creates or updates a user profile in Firestore
  */
-export const createUserProfile = async (user: User, status: UserStatus = 'onboarding', emailUpdates: boolean = false, language: UserLanguage = 'en'): Promise<void> => {
+export const createUserProfile = async (user: User, status: UserStatus = 'onboarding', emailUpdates: boolean = false, language: UserLanguage = 'en', theme: ThemePreference = 'system'): Promise<void> => {
   try {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
@@ -23,6 +23,7 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
         status,
         emailUpdates,
         language,
+        theme,
         createdAt: timestamp,
         updatedAt: timestamp,
       };

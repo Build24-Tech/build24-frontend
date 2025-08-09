@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import LanguageSelector from './LanguageSelector';
+import { ThemeToggle } from './ThemeToggle';
 
 export default function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -43,6 +44,7 @@ export default function Header() {
               About
             </Link>
             <LanguageSelector variant="compact" />
+            <ThemeToggle />
             <Button asChild variant="outline" className="border-yellow-400 text-black hover:bg-yellow-400 hover:text-black bg-yellow-400">
               <Link
                 href={user ? href(currentLang, '/dashboard') : href(currentLang, '/login')}
@@ -87,9 +89,15 @@ export default function Header() {
               >
                 About
               </Link>
-              <div className="flex items-center gap-2 py-2">
-                <span className="text-gray-300">Language:</span>
-                <LanguageSelector />
+              <div className="flex items-center gap-4 py-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-300">Language:</span>
+                  <LanguageSelector />
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-gray-300">Theme:</span>
+                  <ThemeToggle />
+                </div>
               </div>
               <Button asChild variant="default" className="w-fit bg-yellow-400 text-black hover:bg-yellow-500 hover:text-black">
                 <Link
