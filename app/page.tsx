@@ -35,11 +35,11 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen bg-background text-foreground">
 
       {/* Hero Section */}
-      <section id="hero" className="relative bg-black text-white py-20 md:py-32 hero-glow">
-        <div className="absolute inset-0 bg-grid-gray-800/20 [mask-image:linear-gradient(to_bottom,white_5%,transparent_90%)] hero-glow-inner"></div>
+      <section id="hero" className="relative bg-background text-foreground py-20 md:py-32 hero-glow">
+        <div className="absolute inset-0 bg-grid-foreground/20 [mask-image:linear-gradient(to_bottom,white_5%,transparent_90%)] hero-glow-inner"></div>
         <div className="absolute -inset-4 bg-yellow-400 rounded-full blur-3xl opacity-10"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-4xl mx-auto text-center">

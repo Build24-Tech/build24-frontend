@@ -2,6 +2,8 @@ export type UserStatus = 'active' | 'inactive' | 'onboarding';
 
 export type UserLanguage = 'en' | 'cn' | 'jp' | 'vn';
 
+export type ThemePreference = 'light' | 'dark' | 'system';
+
 export interface UserProfile {
   uid: string;
   email: string;
@@ -10,6 +12,7 @@ export interface UserProfile {
   status: UserStatus;
   emailUpdates: boolean;
   language: UserLanguage;
+  theme: ThemePreference;
   createdAt: number;
   updatedAt: number;
 }
