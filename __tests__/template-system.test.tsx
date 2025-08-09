@@ -109,15 +109,15 @@ describe('TemplateEditor', () => {
     render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
     expect(screen.getByText('Market Research Template')).toBeInTheDocument();
-    expect(screen.getByLabelText('Market Size')).toBeInTheDocument();
-    expect(screen.getByLabelText('Growth Rate')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Market Size/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Growth Rate/)).toBeInTheDocument();
   });
 
   it('should handle field value changes', async () => {
     const user = userEvent.setup();
     render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
-    const marketSizeInput = screen.getByLabelText('Market Size');
+    const marketSizeInput = screen.getByLabelText(/Market Size/);
     await user.type(marketSizeInput, 'Large market');
 
     expect(marketSizeInput).toHaveValue('Large market');
@@ -138,10 +138,10 @@ describe('TemplateEditor', () => {
     const user = userEvent.setup();
     render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
-    const marketSizeInput = screen.getByLabelText('Market Size');
+    const marketSizeInput = screen.getByLabelText(/Market Size/);
     await user.type(marketSizeInput, 'Large market');
 
-    const growthRateInput = screen.getByLabelText('Growth Rate');
+    const growthRateInput = screen.getByLabelText(/Growth Rate/);
     await user.type(growthRateInput, '15');
 
     const saveButton = screen.getByText('Save Template');
@@ -167,11 +167,11 @@ describe('TemplateEditor', () => {
 
     render(<TemplateEditor template={templateWithVariousFields} onSave={mockOnSave} />);
 
-    expect(screen.getByLabelText('Text Field')).toBeInTheDocument();
-    expect(screen.getByLabelText('Number Field')).toBeInTheDocument();
-    expect(screen.getByLabelText('Textarea Field')).toBeInTheDocument();
-    expect(screen.getByLabelText('Select Field')).toBeInTheDocument();
-    expect(screen.getByLabelText('Checkbox Field')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Text Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Number Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Textarea Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Select Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Checkbox Field/)).toBeInTheDocument();
   });
 
   it('should handle initial data', () => {
@@ -269,9 +269,11 @@ describe('TemplateManager', () => {
 
     // Should show confirmation dialog
     expect(screen.getByText('Delete Template')).toBeInTheDocument();
-    expect(screen.getByText('Are you sure you want to delete this template?')).toBeInTheDocument();
+    expect(screen.getByText(/Are you sure you want to delete this template/)).toBeInTheDocument();
 
-    const confirmButton = screen.getByText('Delete');
+    // Find the delete button within the modal (should be the last one)
+    const allDeleteButtons = screen.getAllByText('Delete');
+    const confirmButton = allDeleteButtons[allDeleteButtons.length - 1]; // Modal delete button is last
     await user.click(confirmButton);
 
     expect(mockOnTemplateDelete).toHaveBeenCalledWith('template1');
@@ -307,10 +309,10 @@ describe('TemplateManager', () => {
     await user.click(createButton);
 
     // Should show template creation form
-    expect(screen.getByText('Create Template')).toBeInTheDocument();
-    expect(screen.getByLabelText('Template Name')).toBeInTheDocument();
-    expect(screen.getByLabelText('Category')).toBeInTheDocument();
-    expect(screen.getByLabelText('Description')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Create Template/ })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Template Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Category/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Description/)).toBeInTheDocument();
   });
 
   it('should handle template import', async () => {
@@ -326,7 +328,7 @@ describe('TemplateManager', () => {
     await user.click(importButton);
 
     // Should show file input for template import
-    expect(screen.getByText('Import Template')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /Import Template/ })).toBeInTheDocument();
     expect(screen.getByText('Select template file to import')).toBeInTheDocument();
   });
 
@@ -339,7 +341,7 @@ describe('TemplateManager', () => {
       />
     );
 
-    const categoryFilter = screen.getByLabelText('Filter by category');
+    const categoryFilter = screen.getByLabelText(/Filter by category/);
     await user.selectOptions(categoryFilter, 'validation');
 
     // Should show only validation templates
