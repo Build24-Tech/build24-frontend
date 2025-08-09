@@ -10,6 +10,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
 import LanguageSelector from './LanguageSelector';
+import { ThemeLogo } from './ThemeLogo';
 import { ThemeToggle } from './ThemeToggle';
 
 export default function Header() {
@@ -19,28 +20,28 @@ export default function Header() {
   const currentLang = (params?.lang as UserLanguage) || 'en';
 
   return (
-    <header className="sticky top-0 z-50 bg-black/90 backdrop-blur-sm border-b border-gray-800">
+    <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
           <Link href={href(currentLang, '/')} className="text-2xl font-bold text-yellow-400">
-            <Image
-              src="/domain.light.svg"
+            <ThemeLogo
+              type="domain"
               alt="Build24"
               width={180}
-              height={180}
+              height={80}
               className="w-[180px] h-[80px]"
             />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <Link href={href(currentLang, '/blog')} className="text-gray-300 hover:text-white transition-colors">
+            <Link href={href(currentLang, '/blog')} className="text-muted-foreground hover:text-foreground transition-colors">
               Blog
             </Link>
-            <Link href={href(currentLang, '/projects')} className="text-gray-300 hover:text-white transition-colors">
+            <Link href={href(currentLang, '/projects')} className="text-muted-foreground hover:text-foreground transition-colors">
               Projects
             </Link>
-            <Link href={href(currentLang, '/about')} className="text-gray-300 hover:text-white transition-colors">
+            <Link href={href(currentLang, '/about')} className="text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
             <LanguageSelector variant="compact" />
@@ -57,7 +58,7 @@ export default function Header() {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-white"
+            className="md:hidden text-foreground"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -66,36 +67,36 @@ export default function Header() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-800">
+          <div className="md:hidden py-4 border-t border-border">
             <nav className="flex flex-col gap-4">
               <Link
                 href={href(currentLang, '/blog')}
-                className="text-gray-300 hover:text-white transition-colors py-2"
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Blog
               </Link>
               <Link
                 href={href(currentLang, '/projects')}
-                className="text-gray-300 hover:text-white transition-colors py-2"
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 Projects
               </Link>
               <Link
                 href={href(currentLang, '/about')}
-                className="text-gray-300 hover:text-white transition-colors py-2"
+                className="text-muted-foreground hover:text-foreground transition-colors py-2"
                 onClick={() => setIsMenuOpen(false)}
               >
                 About
               </Link>
               <div className="flex items-center gap-4 py-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-300">Language:</span>
+                  <span className="text-muted-foreground">Language:</span>
                   <LanguageSelector />
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-gray-300">Theme:</span>
+                  <span className="text-muted-foreground">Theme:</span>
                   <ThemeToggle />
                 </div>
               </div>
@@ -105,8 +106,8 @@ export default function Header() {
                   onClick={() => setIsMenuOpen(false)}
                   className="flex items-center gap-2"
                 >
-                  <Image
-                    src="/domain.light.svg"
+                  <ThemeLogo
+                    type="domain"
                     alt={user ? "Dashboard" : "Join"}
                     width={16}
                     height={16}

@@ -58,7 +58,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${spaceGrotesk.className} scroll-smooth`} suppressHydrationWarning>
-      <body className={`${spaceGrotesk.variable} font-space-grotesk`}>
+      <body className={`${spaceGrotesk.variable} font-space-grotesk bg-background text-foreground`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"

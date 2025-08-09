@@ -44,14 +44,24 @@ This file tracks the development tasks for the Build24 project. Work on the firs
   - ✅ No hardcoded colors found - all use CSS custom properties
   - ✅ Theme switching works across all pages and components
 
-- [ ] **Add theme switching tests** (Optional - can be done later)
+- [ ] **Add theme switching tests**
   - Write unit tests for theme switching functionality
   - Test theme persistence and user preference storage
   - Verify auto mode system theme detection
   - Test theme switching UI component interactions
 
+- [x] **Enhance theme component** ✅ COMPLETED
+  - ✅ Menu Theme Switcher should have background color
+  - ✅ Inverse color for light mode. All page should have background color in light mode: #F9FAFB, text color: #111827
+  - ✅ Banner / hero section should have background color in light mode: #F9FAFB, text color: #111827
+  - ✅ Footer should have background color in light mode: #F9FAFB, text color: #111827
 
-
+- [x] **Fix UI theme switching bugs** ✅ COMPLETED
+  - ✅ Button in header should have background color in light mode, button should have pointer cursor, dropdown should have background color in light mode, dropdown should always on top
+  - ✅ Logo for light mode and dark mode has been updated, use the right one (build24_logo_dark.svg and build24_logo_light.svg, domain.dark.svg and domain.light.svg)
+  - ✅ Header should have background color in light mode and dark mode. (Now it's transparent so don't see and text)
+  - ✅ All pages text and background color should be inverse in light mode and dark mode
+  
 ## Completed Tasks
 
 - [x] Create robots.txt and sitemap.xml

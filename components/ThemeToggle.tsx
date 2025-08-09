@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useThemePreference } from '@/hooks/useThemePreference';
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { ChevronDown, Monitor, Moon, Sun } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 export function ThemeToggle() {
@@ -58,15 +58,19 @@ export function ThemeToggle() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
+        <Button 
+          variant="outline" 
+          className="border-gray-700 bg-gray-900 cursor-pointer"
+        >
           {getThemeIcon()}
-          <span className="sr-only">Toggle theme - Current: {getThemeLabel()}</span>
+          <span className="ml-2">{getThemeLabel()}</span>
+          <ChevronDown className="ml-2 h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[120px]">
+      <DropdownMenuContent className="bg-gray-900 border-gray-700">
         <DropdownMenuItem
           onClick={() => setTheme('light')}
-          className={`cursor-pointer ${theme === 'light' ? 'bg-accent' : ''}`}
+          className="text-white hover:bg-gray-800 cursor-pointer"
         >
           <Sun className="mr-2 h-4 w-4" />
           <span>Light</span>
@@ -76,7 +80,7 @@ export function ThemeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme('dark')}
-          className={`cursor-pointer ${theme === 'dark' ? 'bg-accent' : ''}`}
+          className="text-white hover:bg-gray-800 cursor-pointer"
         >
           <Moon className="mr-2 h-4 w-4" />
           <span>Dark</span>
@@ -86,7 +90,7 @@ export function ThemeToggle() {
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme('system')}
-          className={`cursor-pointer ${theme === 'system' ? 'bg-accent' : ''}`}
+          className="text-white hover:bg-gray-800 cursor-pointer"
         >
           <Monitor className="mr-2 h-4 w-4" />
           <span>Auto</span>
