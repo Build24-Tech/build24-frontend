@@ -154,11 +154,15 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div
+        className="flex items-center justify-center min-h-[400px]"
+        role="main"
+        aria-label="Authentication required"
+      >
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>Sign In Required</CardTitle>
-            <CardDescription>
+            <CardTitle id="auth-title">Sign In Required</CardTitle>
+            <CardDescription id="auth-description">
               Please sign in to access your product launch dashboard
             </CardDescription>
           </CardHeader>
@@ -169,7 +173,12 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div
+        className="flex items-center justify-center min-h-[400px]"
+        role="main"
+        aria-live="polite"
+        aria-label="Loading dashboard"
+      >
         <LoadingSpinner size="lg" text="Loading your dashboard..." />
       </div>
     );
@@ -177,7 +186,12 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div
+        className="flex items-center justify-center min-h-[400px]"
+        role="main"
+        aria-live="assertive"
+        aria-label="Error occurred"
+      >
         <div className="w-full max-w-lg">
           <ErrorDisplay
             error={error}
@@ -191,17 +205,25 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
 
   if (!projectData || !userProgress) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
+      <div
+        className="flex items-center justify-center min-h-[400px]"
+        role="main"
+        aria-label="Welcome to Launch Essentials"
+      >
         <Card className="w-full max-w-md">
           <CardHeader className="text-center">
-            <CardTitle>Welcome to Launch Essentials</CardTitle>
-            <CardDescription>
+            <CardTitle id="welcome-title">Welcome to Launch Essentials</CardTitle>
+            <CardDescription id="welcome-description">
               Get started by creating your first product launch project
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={handleCreateProject} className="w-full">
-              <Plus className="h-4 w-4 mr-2" />
+            <Button
+              onClick={handleCreateProject}
+              className="w-full"
+              aria-describedby="welcome-description"
+            >
+              <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
               Create Your First Project
             </Button>
           </CardContent>
@@ -231,42 +253,63 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
       <div
         className={`${getResponsiveSpacing(deviceInfo, 'md')} space-y-4 md:space-y-6 ${className}`}
         {...(deviceInfo.touchSupported ? touchGestures : {})}
+        role="main"
+        aria-label="Product Launch Dashboard"
+        id="main-content"
       >
         {/* Offline indicator for mobile */}
         {deviceInfo.isMobile && isOffline && (
-          <div className="bg-amber-100 border border-amber-300 rounded-lg p-3 text-sm text-amber-800">
+          <div
+            className="bg-amber-100 border border-amber-300 rounded-lg p-3 text-sm text-amber-800"
+            role="alert"
+            aria-live="polite"
+          >
             You're currently offline. Some features may be limited.
           </div>
         )}
 
         <LoadingStates.LoadingOverlay isLoading={isLoading} text="Updating dashboard...">
           {/* Header - Mobile optimized */}
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
+          <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
             <div className="min-w-0 flex-1">
-              <h1 className={`${getResponsiveTextSize(deviceInfo, '2xl')} font-bold text-gray-900 truncate`}>
+              <h1
+                className={`${getResponsiveTextSize(deviceInfo, '2xl')} font-bold text-gray-900 truncate`}
+                id="project-title"
+              >
                 {projectData.name}
               </h1>
-              <p className={`${getResponsiveTextSize(deviceInfo, 'sm')} text-gray-600 mt-1 ${deviceInfo.isMobile ? 'line-clamp-2' : ''}`}>
+              <p
+                className={`${getResponsiveTextSize(deviceInfo, 'sm')} text-gray-600 mt-1 ${deviceInfo.isMobile ? 'line-clamp-2' : ''}`}
+                id="project-description"
+              >
                 {projectData.description}
               </p>
             </div>
 
             {/* Action buttons - Responsive layout */}
-            <div className={`flex ${deviceInfo.isMobile ? 'flex-col gap-2' : 'items-center space-x-2'}`}>
+            <nav
+              className={`flex ${deviceInfo.isMobile ? 'flex-col gap-2' : 'items-center space-x-2'}`}
+              aria-label="Dashboard actions"
+            >
               {!deviceInfo.isMobile && (
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={() => retry(loadUserData)}
                   disabled={isLoading}
+                  aria-label="Refresh dashboard data"
                 >
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                  <RefreshCw className="h-4 w-4 mr-2" aria-hidden="true" />
                   Refresh
                 </Button>
               )}
 
               {complexity !== 'simple' && (
-                <Button variant="outline" size={deviceInfo.isMobile ? 'default' : 'sm'}>
+                <Button
+                  variant="outline"
+                  size={deviceInfo.isMobile ? 'default' : 'sm'}
+                  aria-label="Open project settings"
+                >
                   Project Settings
                 </Button>
               )}
@@ -276,15 +319,20 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
                 onClick={handleCreateProject}
                 disabled={isLoading || !isOnline}
                 className="w-full sm:w-auto"
+                aria-label="Create a new product launch project"
+                aria-describedby={!isOnline ? 'offline-warning' : undefined}
               >
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" aria-hidden="true" />
                 {deviceInfo.isMobile ? 'New Project' : 'New'}
               </Button>
-            </div>
-          </div>
+            </nav>
+          </header>
 
           {/* Overview Cards - Responsive grid */}
-          <div className={`grid ${getResponsiveGridCols(deviceInfo, { mobile: 1, tablet: 2, desktop: 3 })} gap-4 md:gap-6`}>
+          <section
+            className={`grid ${getResponsiveGridCols(deviceInfo, { mobile: 1, tablet: 2, desktop: 3 })} gap-4 md:gap-6`}
+            aria-label="Project overview"
+          >
             <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load overview</p></Card>}>
               <OverviewCard
                 title="Overall Progress"
@@ -318,10 +366,13 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
                 deviceInfo={deviceInfo}
               />
             </ErrorBoundary>
-          </div>
+          </section>
 
           {/* Phase Progress Grid - Responsive layout */}
-          <div className={`grid ${deviceInfo.isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}>
+          <section
+            className={`grid ${deviceInfo.isMobile ? 'grid-cols-1 gap-4' : 'grid-cols-1 lg:grid-cols-2 gap-6'}`}
+            aria-label="Phase progress and next steps"
+          >
             <ErrorBoundary fallback={<Card className="p-4"><p>Failed to load phase progress</p></Card>}>
               <PhaseProgress
                 userProgress={userProgress}
@@ -344,7 +395,7 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
                 />
               </ErrorBoundary>
             )}
-          </div>
+          </section>
 
           {/* Mobile-specific quick actions */}
           {deviceInfo.isMobile && (
@@ -355,8 +406,10 @@ export function LaunchEssentialsDashboard({ className }: LaunchEssentialsDashboa
                 onClick={() => retry(loadUserData)}
                 disabled={isLoading}
                 className="rounded-full shadow-lg bg-white"
+                aria-label="Refresh dashboard data"
               >
-                <RefreshCw className="h-4 w-4" />
+                <RefreshCw className="h-4 w-4" aria-hidden="true" />
+                <span className="sr-only">Refresh</span>
               </Button>
             </div>
           )}

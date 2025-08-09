@@ -66,8 +66,17 @@ export function ResponsiveNavigation({
   // Desktop navigation renderer
   const renderDesktopNav = (
     <div className="hidden lg:block">
-      <div className={`font-medium ${getResponsiveTextSize(deviceInfo, 'lg')} mb-4`}>{title}</div>
-      <nav className="space-y-1">
+      <div
+        className={`font-medium ${getResponsiveTextSize(deviceInfo, 'lg')} mb-4`}
+        id="navigation-title"
+      >
+        {title}
+      </div>
+      <nav
+        className="space-y-1"
+        aria-labelledby="navigation-title"
+        role="navigation"
+      >
         {items.map((item) => {
           if (item.children) {
             return (
@@ -81,6 +90,7 @@ export function ResponsiveNavigation({
                   )}
                   aria-expanded={openGroups[item.id]}
                   aria-controls={`group-${item.id}`}
+                  aria-label={`${item.label} section, ${openGroups[item.id] ? 'expanded' : 'collapsed'}`}
                 >
                   <span>{item.label}</span>
                   <ChevronDown
@@ -95,6 +105,8 @@ export function ResponsiveNavigation({
                   <div
                     id={`group-${item.id}`}
                     className="pl-4 ml-2 border-l border-gray-200 space-y-1"
+                    role="group"
+                    aria-labelledby={`group-${item.id}-label`}
                   >
                     {item.children.map((child) => (
                       <Link
@@ -108,7 +120,10 @@ export function ResponsiveNavigation({
                       >
                         <span>{child.label}</span>
                         {child.progress !== undefined && child.progress === 100 && (
-                          <Check className="h-4 w-4 text-green-500" aria-label="Completed" />
+                          <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+                        )}
+                        {child.progress !== undefined && child.progress === 100 && (
+                          <span className="sr-only">Completed</span>
                         )}
                       </Link>
                     ))}
@@ -130,7 +145,10 @@ export function ResponsiveNavigation({
             >
               <span>{item.label}</span>
               {item.progress !== undefined && item.progress === 100 && (
-                <Check className="h-4 w-4 text-green-500" aria-label="Completed" />
+                <Check className="h-4 w-4 text-green-500" aria-hidden="true" />
+              )}
+              {item.progress !== undefined && item.progress === 100 && (
+                <span className="sr-only">Completed</span>
               )}
             </Link>
           );
