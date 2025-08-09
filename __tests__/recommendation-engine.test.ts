@@ -1,666 +1,456 @@
 import { RecommendationEngine } from '@/lib/recommendation-engine';
-import {
-  LaunchPhase,
-  PhaseProgress,
-  ProjectContext,
-  ProjectData,
-  ProjectStage,
-  StepProgress,
-  UserProgress
-} from '@/types/launch-essentials';
+import { LaunchPhase, ProjectData, ProjectStage, StepStatus, UserProgress } from '@/types/launch-essentials';
 
 describe('RecommendationEngine', () => {
-  let engine: RecommendationEngine;
-  let mockUserProgress: UserProgress;
-  let mockProjectData: ProjectData;
-  let mockProjectContext: ProjectContext;
-
-  beforeEach(() => {
-    engine = new RecommendationEngine();
-
-    // Create mock data
-    const now = new Date();
-
-    const createMockStepProgress = (stepId: string, status: 'not_started' | 'in_progress' | 'completed' | 'skipped' = 'not_started'): StepProgress => ({
-      stepId,
-      status,
-      data: {},
-      completedAt: status === 'completed' ? now : undefined,
-      notes: undefined
-    });
-
-    const createMockPhaseProgress = (phase: LaunchPhase, steps: StepProgress[]): PhaseProgress => ({
-      phase,
-      steps,
-      completionPercentage: Math.round((steps.filter(s => s.status === 'completed').length / steps.length) * 100),
-      startedAt: now,
-      completedAt: steps.every(s => s.status === 'completed' || s.status === 'skipped') ? now : undefined
-    });
-
-    mockUserProgress = {
-      userId: 'test-user',
-      projectId: 'test-project',
-      currentPhase: 'validation',
-      phases: {
-        validation: createMockPhaseProgress('validation', [
-          createMockStepProgress('market-research', 'completed'),
-          createMockStepProgress('competitor-analysis', 'in_progress'),
-          createMockStepProgress('target-audience', 'not_started')
-        ]),
-        definition: createMockPhaseProgress('definition', [
-          createMockStepProgress('value-proposition', 'not_started'),
-          createMockStepProgress('feature-prioritization', 'not_started')
-        ]),
-        technical: createMockPhaseProgress('technical', [
-          createMockStepProgress('technical-stack', 'not_started')
-        ]),
-        marketing: createMockPhaseProgress('marketing', [
-          createMockStepProgress('pricing-strategy', 'not_started')
-        ]),
-        operations: createMockPhaseProgress('operations', [
-          createMockStepProgress('team-structure', 'not_started')
-        ]),
-        financial: createMockPhaseProgress('financial', [
-          createMockStepProgress('financial-projections', 'not_started')
-        ]),
-        risk: createMockPhaseProgress('risk', [
-          createMockStepProgress('risk-assessment', 'not_started')
-        ]),
-        optimization: createMockPhaseProgress('optimization', [
-          createMockStepProgress('analytics-setup', 'not_started')
-        ])
+  const mockUserProgress: UserProgress = {
+    userId: 'test-user',
+    projectId: 'test-project',
+    currentPhase: 'validation' as LaunchPhase,
+    phases: {
+      validation: {
+        phase: 'validation' as LaunchPhase,
+        steps: [
+          { stepId: 'market-research', status: 'completed' as StepStatus, data: { marketSize: 'large' } },
+          { stepId: 'competitor-analysis', status: 'in_progress' as StepStatus, data: {} },
+          { stepId: 'user-validation', status: 'not_started' as StepStatus, data: {} }
+        ],
+        completionPercentage: 33,
+        startedAt: new Date()
       },
-      createdAt: now,
-      updatedAt: now
-    };
+      definition: {
+        phase: 'definition' as LaunchPhase,
+        steps: [],
+        completionPercentage: 0,
+        startedAt: new Date()
+      }
+    } as any,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
 
-    mockProjectData = {
-      id: 'test-project',
-      userId: 'test-user',
-      name: 'Test Project',
-      description: 'A test project',
-      industry: 'saas',
-      targetMarket: 'small-business',
-      stage: 'validation',
-      data: {
-        validation: {
-          marketResearch: {
-            marketSize: 1000000,
-            growthRate: 0.15,
-            trends: ['trend1', 'trend2'],
-            sources: ['source1', 'source2']
-          },
-          competitorAnalysis: {
-            competitors: [],
-            competitiveAdvantage: 'test advantage',
-            marketGap: 'test gap'
-          },
-          targetAudience: {
-            personas: [],
-            interviewResults: [],
-            validationScore: 75
-          },
-          validationReport: {
-            recommendation: 'go',
-            reasoning: 'test reasoning',
-            nextSteps: ['step1', 'step2']
+  const mockProjectData: ProjectData = {
+    id: 'test-project',
+    userId: 'test-user',
+    name: 'Test Project',
+    description: 'A test project',
+    industry: 'Technology',
+    targetMarket: 'Developers',
+    stage: 'concept' as ProjectStage,
+    data: {
+      validation: {
+        marketResearch: { marketSize: 'large', growthRate: 15 }
+      }
+    },
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  describe('getNextSteps', () => {
+    it('should recommend next steps based on current progress', () => {
+      const recommendations = RecommendationEngine.getNextSteps(mockUserProgress);
+
+      expect(recommendations).toHaveLength(3);
+      expect(recommendations[0]).toEqual({
+        id: 'complete-competitor-analysis',
+        title: 'Complete Competitor Analysis',
+        description: 'Finish analyzing your competitors to understand the competitive landscape',
+        priority: 'high',
+        phase: 'validation',
+        estimatedTime: '2-4 hours',
+        category: 'immediate'
+      });
+    });
+
+    it('should recommend phase transition when current phase is complete', () => {
+      const completedValidationProgress = {
+        ...mockUserProgress,
+        phases: {
+          ...mockUserProgress.phases,
+          validation: {
+            ...mockUserProgress.phases.validation,
+            completionPercentage: 100,
+            steps: [
+              { stepId: 'market-research', status: 'completed' as StepStatus, data: {} },
+              { stepId: 'competitor-analysis', status: 'completed' as StepStatus, data: {} },
+              { stepId: 'user-validation', status: 'completed' as StepStatus, data: {} }
+            ]
           }
         }
-      },
-      createdAt: now,
-      updatedAt: now
-    };
+      };
 
-    mockProjectContext = {
-      projectId: 'test-project',
-      industry: 'saas',
-      stage: 'validation',
-      teamSize: 2,
-      budget: 50000,
-      timeline: '6 months'
-    };
-  });
+      const recommendations = RecommendationEngine.getNextSteps(completedValidationProgress);
 
-  describe('calculateNextSteps', () => {
-    it('should return next step recommendation when there is an incomplete step', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      expect(recommendations.length).toBeGreaterThan(0);
-      const nextStepRec = recommendations.find(r => r.id === 'next-step-competitor-analysis');
-      expect(nextStepRec).toBeDefined();
-      expect(nextStepRec?.type).toBe('next-step');
-      expect(nextStepRec?.title).toContain('Competitor Analysis');
-      expect(nextStepRec?.priority).toBe('high');
-      expect(nextStepRec?.category).toBe('validation');
-      expect(nextStepRec?.actionItems).toHaveLength(3);
+      expect(recommendations).toContainEqual(
+        expect.objectContaining({
+          id: 'start-definition-phase',
+          title: 'Start Product Definition Phase',
+          phase: 'definition',
+          category: 'phase-transition'
+        })
+      );
     });
 
-    it('should return phase progression recommendation when current phase is mostly complete', () => {
-      // Mark most validation steps as completed
-      mockUserProgress.phases.validation.steps[1].status = 'completed';
-      mockUserProgress.phases.validation.steps[2].status = 'completed';
-      mockUserProgress.phases.validation.completionPercentage = 100;
+    it('should handle empty progress gracefully', () => {
+      const emptyProgress: UserProgress = {
+        userId: 'test-user',
+        projectId: 'test-project',
+        currentPhase: 'validation' as LaunchPhase,
+        phases: {} as any,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      };
 
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
+      const recommendations = RecommendationEngine.getNextSteps(emptyProgress);
 
-      const phaseRecommendation = recommendations.find(r => r.id.includes('phase-progression'));
-      expect(phaseRecommendation).toBeDefined();
-      expect(phaseRecommendation?.title).toContain('Definition Phase');
-    });
-
-    it('should return critical path recommendations for industry-specific phases', () => {
-      // Set low completion for critical SaaS phases
-      mockUserProgress.phases.technical.completionPercentage = 30;
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      const criticalRecommendation = recommendations.find(r => r.id.includes('critical-technical'));
-      expect(criticalRecommendation).toBeDefined();
-      expect(criticalRecommendation?.priority).toBe('high');
-    });
-
-    it('should return milestone recommendations based on overall completion', () => {
-      // Set overall completion to around 30% (between 25% and 50%)
-      // Complete validation (1/8 phases = 12.5%) and half of definition (6.25%) = ~19%
-      // Need to complete more to reach 25-50% range
-      mockUserProgress.phases.validation.steps.forEach(step => step.status = 'completed');
-      mockUserProgress.phases.validation.completionPercentage = 100;
-      mockUserProgress.phases.definition.steps.forEach(step => step.status = 'completed');
-      mockUserProgress.phases.definition.completionPercentage = 100;
-      mockUserProgress.phases.technical.steps[0].status = 'completed';
-      mockUserProgress.phases.technical.completionPercentage = 100;
-      // This should give us around 37.5% overall completion (3/8 phases)
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      const milestoneRecommendation = recommendations.find(r => r.id === 'milestone-quarter');
-      expect(milestoneRecommendation).toBeDefined();
-      expect(milestoneRecommendation?.title).toContain('Quarter Milestone');
-    });
-
-    it('should prioritize recommendations correctly', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      // High priority recommendations should come first
-      const priorities = recommendations.map(r => r.priority);
-      const highPriorityFirst = priorities.indexOf('high');
-      const mediumPriorityFirst = priorities.indexOf('medium');
-
-      if (highPriorityFirst !== -1 && mediumPriorityFirst !== -1) {
-        expect(highPriorityFirst).toBeLessThan(mediumPriorityFirst);
-      }
+      expect(recommendations).toHaveLength(1);
+      expect(recommendations[0]).toEqual({
+        id: 'start-validation',
+        title: 'Start Product Validation',
+        description: 'Begin validating your product idea with market research',
+        priority: 'high',
+        phase: 'validation',
+        estimatedTime: '1-2 hours',
+        category: 'getting-started'
+      });
     });
   });
 
   describe('suggestResources', () => {
-    it('should return industry-specific resources', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
+    it('should suggest relevant resources based on project context', () => {
+      const context = {
+        phase: 'validation' as LaunchPhase,
+        industry: 'Technology',
+        targetMarket: 'Developers',
+        currentStep: 'market-research'
+      };
 
-      const industryResources = resources.filter(r => r.tags.includes('saas'));
-      expect(industryResources.length).toBeGreaterThan(0);
+      const resources = RecommendationEngine.suggestResources(context);
+
+      expect(resources).toContainEqual(
+        expect.objectContaining({
+          id: 'market-research-guide',
+          title: 'Market Research for Tech Products',
+          type: 'guide',
+          category: 'validation',
+          relevanceScore: expect.any(Number)
+        })
+      );
+
+      expect(resources).toContainEqual(
+        expect.objectContaining({
+          id: 'developer-survey-tools',
+          title: 'Developer Survey Tools',
+          type: 'tool',
+          category: 'validation'
+        })
+      );
     });
 
-    it('should return stage-specific resources', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
+    it('should prioritize resources by relevance score', () => {
+      const context = {
+        phase: 'validation' as LaunchPhase,
+        industry: 'Technology',
+        targetMarket: 'Developers',
+        currentStep: 'competitor-analysis'
+      };
 
-      const stageResources = resources.filter(r => r.tags.includes('validation'));
-      expect(stageResources.length).toBeGreaterThan(0);
+      const resources = RecommendationEngine.suggestResources(context);
+
+      // Resources should be sorted by relevance score (descending)
+      for (let i = 0; i < resources.length - 1; i++) {
+        expect(resources[i].relevanceScore).toBeGreaterThanOrEqual(resources[i + 1].relevanceScore);
+      }
     });
 
-    it('should return phase-specific resources based on current progress', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
+    it('should limit number of suggested resources', () => {
+      const context = {
+        phase: 'validation' as LaunchPhase,
+        industry: 'Technology',
+        targetMarket: 'Developers',
+        currentStep: 'market-research'
+      };
 
-      const phaseResources = resources.filter(r => r.tags.includes('validation'));
-      expect(phaseResources.length).toBeGreaterThan(0);
-    });
+      const resources = RecommendationEngine.suggestResources(context, 3);
 
-    it('should return budget-appropriate resources for low budget projects', () => {
-      const lowBudgetContext = { ...mockProjectContext, budget: 5000 };
-      const resources = engine.suggestResources(lowBudgetContext, mockUserProgress);
-
-      const budgetResources = resources.filter(r => r.tags.includes('budget'));
-      expect(budgetResources.length).toBeGreaterThan(0);
-    });
-
-    it('should return solo founder resources for single-person teams', () => {
-      const soloContext = { ...mockProjectContext, teamSize: 1 };
-      const resources = engine.suggestResources(soloContext, mockUserProgress);
-
-      const soloResources = resources.filter(r => r.tags.includes('solo'));
-      expect(soloResources.length).toBeGreaterThan(0);
-    });
-
-    it('should deduplicate resources', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
-
-      const resourceIds = resources.map(r => r.id);
-      const uniqueIds = [...new Set(resourceIds)];
-      expect(resourceIds.length).toBe(uniqueIds.length);
+      expect(resources).toHaveLength(3);
     });
   });
 
   describe('identifyRisks', () => {
-    it('should identify insufficient validation risk', () => {
-      // Set low validation completion
-      mockUserProgress.phases.validation.completionPercentage = 30;
-      mockUserProgress.currentPhase = 'definition';
+    it('should identify risks based on project data', () => {
+      const risks = RecommendationEngine.identifyRisks(mockProjectData, mockUserProgress);
 
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      const validationRisk = risks.find(r => r.category === 'market');
-      expect(validationRisk).toBeDefined();
-      expect(validationRisk?.description).toContain('market validation');
+      expect(risks).toContainEqual(
+        expect.objectContaining({
+          id: 'incomplete-validation',
+          title: 'Incomplete Market Validation',
+          description: 'Validation phase is not complete, which may lead to building the wrong product',
+          severity: 'medium',
+          category: 'validation',
+          impact: 'Product-market fit issues'
+        })
+      );
     });
 
-    it('should identify technical planning lag risk', () => {
-      // Set technical completion < 40% and overall completion > 60%
-      mockUserProgress.phases.technical.completionPercentage = 30;
-      mockUserProgress.phases.validation.completionPercentage = 100;
-      mockUserProgress.phases.definition.completionPercentage = 100;
-      mockUserProgress.phases.marketing.completionPercentage = 100;
-      mockUserProgress.phases.operations.completionPercentage = 100;
-      mockUserProgress.phases.financial.completionPercentage = 100;
-      mockUserProgress.phases.risk.completionPercentage = 100;
-      mockUserProgress.phases.optimization.completionPercentage = 100;
-      // This gives overall completion > 60% with technical < 40%
+    it('should identify technical risks for tech projects', () => {
+      const techProject = {
+        ...mockProjectData,
+        industry: 'Technology',
+        data: {
+          technical: {
+            complexity: 'high',
+            teamExperience: 'low'
+          }
+        }
+      };
 
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
+      const risks = RecommendationEngine.identifyRisks(techProject, mockUserProgress);
 
-      const technicalRisk = risks.find(r => r.description.includes('Technical planning'));
-      expect(technicalRisk).toBeDefined();
-      expect(technicalRisk?.category).toBe('technical');
+      expect(risks).toContainEqual(
+        expect.objectContaining({
+          id: 'technical-complexity',
+          title: 'High Technical Complexity',
+          severity: 'high',
+          category: 'technical'
+        })
+      );
     });
 
-    it('should identify financial planning risk', () => {
-      // Set financial completion < 30% and overall completion > 50%
-      mockUserProgress.phases.financial.completionPercentage = 20;
-      mockUserProgress.phases.validation.completionPercentage = 100;
-      mockUserProgress.phases.definition.completionPercentage = 100;
-      mockUserProgress.phases.technical.completionPercentage = 100;
-      mockUserProgress.phases.marketing.completionPercentage = 100;
-      mockUserProgress.phases.operations.completionPercentage = 100;
-      mockUserProgress.phases.risk.completionPercentage = 100;
-      mockUserProgress.phases.optimization.completionPercentage = 100;
-      // This gives overall completion > 50% with financial < 30%
+    it('should identify market risks based on validation data', () => {
+      const projectWithSmallMarket = {
+        ...mockProjectData,
+        data: {
+          validation: {
+            marketResearch: { marketSize: 'small', growthRate: -5 }
+          }
+        }
+      };
 
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
+      const risks = RecommendationEngine.identifyRisks(projectWithSmallMarket, mockUserProgress);
 
-      const financialRisk = risks.find(r => r.description.includes('Financial planning'));
-      expect(financialRisk).toBeDefined();
-      expect(financialRisk?.category).toBe('financial');
+      expect(risks).toContainEqual(
+        expect.objectContaining({
+          id: 'small-market-size',
+          title: 'Limited Market Size',
+          severity: 'high',
+          category: 'market'
+        })
+      );
     });
 
-    it('should identify timeline risks for inactive projects', () => {
-      // Set old update date
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 35);
-      mockUserProgress.updatedAt = oldDate;
+    it('should prioritize risks by severity', () => {
+      const risks = RecommendationEngine.identifyRisks(mockProjectData, mockUserProgress);
 
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      const timelineRisk = risks.find(r => r.category === 'timeline');
-      expect(timelineRisk).toBeDefined();
-      expect(timelineRisk?.description).toContain('inactive');
-    });
-
-    it('should prioritize risks correctly', () => {
-      // Create multiple risks
-      mockUserProgress.phases.validation.completionPercentage = 30;
-      mockUserProgress.currentPhase = 'definition';
-      mockUserProgress.phases.financial.completionPercentage = 20;
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      // Risks should be sorted by priority (high to low)
+      const severityOrder = ['high', 'medium', 'low'];
       for (let i = 0; i < risks.length - 1; i++) {
-        expect(risks[i].priority).toBeGreaterThanOrEqual(risks[i + 1].priority);
+        const currentIndex = severityOrder.indexOf(risks[i].severity);
+        const nextIndex = severityOrder.indexOf(risks[i + 1].severity);
+        expect(currentIndex).toBeLessThanOrEqual(nextIndex);
       }
     });
+  });
 
-    it('should calculate risk probability based on project characteristics', () => {
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
+  describe('getPersonalizedRecommendations', () => {
+    it('should provide personalized recommendations based on user behavior', () => {
+      const userBehavior = {
+        completedPhases: ['validation'],
+        averageTimePerStep: 120, // minutes
+        preferredWorkingHours: 'evening',
+        strugglingAreas: ['financial-planning']
+      };
 
-      risks.forEach(risk => {
-        expect(['low', 'medium', 'high']).toContain(risk.probability);
-        expect(['low', 'medium', 'high']).toContain(risk.impact);
-        expect(typeof risk.priority).toBe('number');
-        expect(risk.priority).toBeGreaterThanOrEqual(1);
-        expect(risk.priority).toBeLessThanOrEqual(3);
-      });
+      const recommendations = RecommendationEngine.getPersonalizedRecommendations(
+        mockUserProgress,
+        mockProjectData,
+        userBehavior
+      );
+
+      expect(recommendations).toContainEqual(
+        expect.objectContaining({
+          id: 'financial-planning-help',
+          title: 'Financial Planning Assistance',
+          description: expect.stringContaining('struggling'),
+          category: 'personalized'
+        })
+      );
+    });
+
+    it('should suggest time management based on user patterns', () => {
+      const userBehavior = {
+        completedPhases: [],
+        averageTimePerStep: 300, // 5 hours - very slow
+        preferredWorkingHours: 'morning',
+        strugglingAreas: []
+      };
+
+      const recommendations = RecommendationEngine.getPersonalizedRecommendations(
+        mockUserProgress,
+        mockProjectData,
+        userBehavior
+      );
+
+      expect(recommendations).toContainEqual(
+        expect.objectContaining({
+          id: 'time-management',
+          title: 'Time Management Tips',
+          category: 'productivity'
+        })
+      );
     });
   });
 
-  describe('generatePersonalizedRecommendations', () => {
-    it('should return first-time user recommendations when no behavior pattern exists', () => {
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'new-user',
-        mockUserProgress,
-        mockProjectData
+  describe('getContentSuggestions', () => {
+    it('should suggest relevant content based on current context', () => {
+      const context = {
+        phase: 'validation' as LaunchPhase,
+        step: 'market-research',
+        industry: 'Technology',
+        userInput: 'mobile app for developers'
+      };
+
+      const suggestions = RecommendationEngine.getContentSuggestions(context);
+
+      expect(suggestions).toContainEqual(
+        expect.objectContaining({
+          id: 'mobile-app-market-research',
+          title: 'Mobile App Market Research Template',
+          type: 'template',
+          relevanceScore: expect.any(Number)
+        })
       );
 
-      expect(recommendations.length).toBeGreaterThan(0);
-      const welcomeRec = recommendations.find(r => r.id === 'first-time-welcome');
-      expect(welcomeRec).toBeDefined();
-      expect(welcomeRec?.title).toContain('Welcome');
-    });
-
-    it('should provide completion boost recommendations for low completion rate users', () => {
-      // Update user behavior pattern with low completion rate
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
-
-      // Simulate low completion by setting most steps as not started
-      Object.values(mockUserProgress.phases).forEach(phase => {
-        phase.steps.forEach(step => {
-          step.status = 'not_started';
-        });
-      });
-
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
+      expect(suggestions).toContainEqual(
+        expect.objectContaining({
+          id: 'developer-tools-analysis',
+          title: 'Developer Tools Market Analysis',
+          type: 'example'
+        })
       );
-
-      const boostRec = recommendations.find(r => r.id === 'completion-boost');
-      expect(boostRec).toBeDefined();
-      expect(boostRec?.title).toContain('Completion Rate');
     });
 
-    it('should provide stuck point help when user has common stuck points', () => {
-      // First update behavior pattern to create stuck points
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
+    it('should handle empty or minimal context', () => {
+      const context = {
+        phase: 'validation' as LaunchPhase,
+        step: 'market-research'
+      };
 
-      // Manually add stuck points (simulating long-running in-progress steps)
-      const behaviorPattern = {
+      const suggestions = RecommendationEngine.getContentSuggestions(context);
+
+      expect(suggestions).toHaveLength(0);
+    });
+
+    it('should rank suggestions by relevance', () => {
+      const context = {
+        phase: 'validation' as LaunchPhase,
+        step: 'market-research',
+        industry: 'Technology',
+        userInput: 'AI-powered mobile app for developers'
+      };
+
+      const suggestions = RecommendationEngine.getContentSuggestions(context);
+
+      // Should be sorted by relevance score
+      for (let i = 0; i < suggestions.length - 1; i++) {
+        expect(suggestions[i].relevanceScore).toBeGreaterThanOrEqual(suggestions[i + 1].relevanceScore);
+      }
+    });
+  });
+
+  describe('calculateRecommendationScore', () => {
+    it('should calculate accurate recommendation scores', () => {
+      const recommendation = {
+        id: 'test-rec',
+        title: 'Test Recommendation',
+        description: 'A test recommendation',
+        priority: 'high' as const,
+        phase: 'validation' as LaunchPhase,
+        category: 'immediate' as const
+      };
+
+      const context = {
+        currentPhase: 'validation' as LaunchPhase,
+        completionPercentage: 50,
+        urgentAreas: ['validation'],
+        userPreferences: { focusAreas: ['market-research'] }
+      };
+
+      const score = RecommendationEngine.calculateRecommendationScore(recommendation, context);
+
+      expect(score).toBeGreaterThan(0);
+      expect(score).toBeLessThanOrEqual(100);
+    });
+
+    it('should give higher scores to urgent recommendations', () => {
+      const urgentRec = {
+        id: 'urgent-rec',
+        title: 'Urgent Recommendation',
+        description: 'An urgent recommendation',
+        priority: 'high' as const,
+        phase: 'validation' as LaunchPhase,
+        category: 'immediate' as const
+      };
+
+      const normalRec = {
+        id: 'normal-rec',
+        title: 'Normal Recommendation',
+        description: 'A normal recommendation',
+        priority: 'low' as const,
+        phase: 'validation' as LaunchPhase,
+        category: 'future' as const
+      };
+
+      const context = {
+        currentPhase: 'validation' as LaunchPhase,
+        completionPercentage: 50,
+        urgentAreas: ['validation'],
+        userPreferences: {}
+      };
+
+      const urgentScore = RecommendationEngine.calculateRecommendationScore(urgentRec, context);
+      const normalScore = RecommendationEngine.calculateRecommendationScore(normalRec, context);
+
+      expect(urgentScore).toBeGreaterThan(normalScore);
+    });
+  });
+
+  describe('Edge Cases and Error Handling', () => {
+    it('should handle null or undefined inputs gracefully', () => {
+      expect(() => {
+        RecommendationEngine.getNextSteps(null as any);
+      }).not.toThrow();
+
+      expect(() => {
+        RecommendationEngine.suggestResources(null as any);
+      }).not.toThrow();
+
+      expect(() => {
+        RecommendationEngine.identifyRisks(null as any, null as any);
+      }).not.toThrow();
+    });
+
+    it('should handle malformed data structures', () => {
+      const malformedProgress = {
         userId: 'test-user',
-        completionRate: 0.6,
-        averageTimePerPhase: {} as Record<LaunchPhase, number>,
-        commonStuckPoints: ['market-research'],
-        preferredResourceTypes: ['article'],
-        lastActiveDate: new Date()
+        projectId: 'test-project',
+        currentPhase: 'invalid-phase' as any,
+        phases: null,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
 
-      // Set a step to in_progress that matches stuck point
-      mockUserProgress.phases.validation.steps[0].status = 'in_progress';
-
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      // Note: This test might not find the stuck point help because the behavior pattern
-      // is not actually stored in the engine. This is a limitation of the current test setup.
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('suggestContent', () => {
-    it('should return template suggestions for current phase', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 50000,
-        completedSteps: ['market-research'],
-        userInput: { targetAudience: 'small businesses' }
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.templateSuggestions.length).toBeGreaterThan(0);
-      expect(suggestions.templateSuggestions).toContain('Customer Interview Script');
+      expect(() => {
+        RecommendationEngine.getNextSteps(malformedProgress);
+      }).not.toThrow();
     });
 
-    it('should return framework adjustments for industry', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 50000,
-        completedSteps: [],
-        userInput: {}
-      };
+    it('should return empty arrays for invalid inputs', () => {
+      const recommendations = RecommendationEngine.getNextSteps({} as any);
+      const resources = RecommendationEngine.suggestResources({} as any);
+      const risks = RecommendationEngine.identifyRisks({} as any, {} as any);
 
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.frameworkAdjustments.length).toBeGreaterThan(0);
-      expect(suggestions.frameworkAdjustments.some(adj => adj.includes('saas'))).toBe(true);
-    });
-
-    it('should return budget-specific adjustments for low budget projects', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 5000,
-        completedSteps: [],
-        userInput: {}
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.frameworkAdjustments).toContain('Focus on lean validation methods');
-      expect(suggestions.frameworkAdjustments).toContain('Prioritize free and low-cost tools');
-    });
-
-    it('should return solo founder adjustments for single-person teams', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 1,
-        budget: 50000,
-        completedSteps: [],
-        userInput: {}
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.frameworkAdjustments).toContain('Adapt processes for solo founder');
-      expect(suggestions.frameworkAdjustments).toContain('Consider outsourcing non-core activities');
-    });
-
-    it('should generate content ideas from user input', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 50000,
-        completedSteps: [],
-        userInput: {
-          targetAudience: 'small business owners who struggle with inventory management',
-          problemStatement: 'Current solutions are too complex and expensive'
-        }
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.contentIdeas.length).toBeGreaterThan(0);
-      expect(suggestions.contentIdeas.some(idea => idea.includes('targetAudience'))).toBe(true);
-    });
-  });
-
-  describe('updateUserBehaviorPattern', () => {
-    it('should create new behavior pattern for new user', () => {
-      engine.updateUserBehaviorPattern('new-user', mockUserProgress);
-
-      // Test that the pattern was created by generating recommendations
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'new-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      // Should not return first-time user recommendations anymore
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should update completion rate based on progress', () => {
-      // Set some steps as completed
-      mockUserProgress.phases.validation.steps[0].status = 'completed';
-      mockUserProgress.phases.validation.steps[1].status = 'completed';
-
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
-
-      // The behavior pattern should now reflect the completion rate
-      // This is tested indirectly through the recommendations
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should track time spent on phases when provided', () => {
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress, 'market-research', 3600000); // 1 hour
-
-      // Time tracking is internal, so we test indirectly
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should identify stuck points for long-running in-progress steps', () => {
-      // Set a step as in-progress with old completion date to simulate being stuck
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 10);
-      mockUserProgress.phases.validation.steps[1].status = 'in_progress';
-      mockUserProgress.phases.validation.steps[1].completedAt = oldDate;
-
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
-
-      // Stuck points are tracked internally and affect future recommendations
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-  });
-
-  describe('edge cases and error handling', () => {
-    it('should handle empty progress gracefully', () => {
-      const emptyProgress: UserProgress = {
-        ...mockUserProgress,
-        phases: {
-          validation: { phase: 'validation', steps: [], completionPercentage: 0, startedAt: new Date() },
-          definition: { phase: 'definition', steps: [], completionPercentage: 0, startedAt: new Date() },
-          technical: { phase: 'technical', steps: [], completionPercentage: 0, startedAt: new Date() },
-          marketing: { phase: 'marketing', steps: [], completionPercentage: 0, startedAt: new Date() },
-          operations: { phase: 'operations', steps: [], completionPercentage: 0, startedAt: new Date() },
-          financial: { phase: 'financial', steps: [], completionPercentage: 0, startedAt: new Date() },
-          risk: { phase: 'risk', steps: [], completionPercentage: 0, startedAt: new Date() },
-          optimization: { phase: 'optimization', steps: [], completionPercentage: 0, startedAt: new Date() }
-        }
-      };
-
-      const recommendations = engine.calculateNextSteps(emptyProgress);
-      expect(recommendations).toHaveLength(0);
-
-      const risks = engine.identifyRisks(mockProjectData, emptyProgress);
-      expect(risks.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle unknown industry gracefully', () => {
-      const unknownIndustryContext = { ...mockProjectContext, industry: 'unknown-industry' };
-      const resources = engine.suggestResources(unknownIndustryContext);
-
-      expect(resources.length).toBeGreaterThan(0); // Should still return generic resources
-    });
-
-    it('should handle missing project data gracefully', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress);
-      expect(recommendations.length).toBeGreaterThan(0);
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-      expect(risks.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle all phases completed', () => {
-      // Mark all phases as completed
-      Object.values(mockUserProgress.phases).forEach(phase => {
-        phase.steps.forEach(step => {
-          step.status = 'completed';
-        });
-        phase.completionPercentage = 100;
-        phase.completedAt = new Date();
-      });
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress);
-      // Should still return some recommendations (like optimization or review)
-      expect(recommendations.length).toBeGreaterThanOrEqual(0);
-    });
-  });
-
-  describe('recommendation accuracy and quality', () => {
-    it('should provide actionable recommendations', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      recommendations.forEach(rec => {
-        expect(rec.title).toBeTruthy();
-        expect(rec.description).toBeTruthy();
-        expect(rec.actionItems.length).toBeGreaterThan(0);
-        expect(['high', 'medium', 'low']).toContain(rec.priority);
-        expect(['next-step', 'resource', 'risk', 'optimization']).toContain(rec.type);
-      });
-    });
-
-    it('should provide relevant resources for context', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
-
-      resources.forEach(resource => {
-        expect(resource.title).toBeTruthy();
-        expect(resource.description).toBeTruthy();
-        expect(resource.tags.length).toBeGreaterThan(0);
-        expect(['article', 'tool', 'template', 'video', 'book']).toContain(resource.type);
-      });
-    });
-
-    it('should identify meaningful risks', () => {
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      risks.forEach(risk => {
-        expect(risk.title).toBeTruthy();
-        expect(risk.description).toBeTruthy();
-        expect(['technical', 'market', 'financial', 'operational', 'timeline']).toContain(risk.category);
-        expect(['low', 'medium', 'high']).toContain(risk.probability);
-        expect(['low', 'medium', 'high']).toContain(risk.impact);
-        expect(typeof risk.priority).toBe('number');
-      });
-    });
-
-    it('should provide contextually appropriate content suggestions', () => {
-      const context = {
-        currentPhase: 'marketing' as LaunchPhase,
-        projectStage: 'development' as ProjectStage,
-        industry: 'ecommerce',
-        teamSize: 5,
-        budget: 100000,
-        completedSteps: ['market-research', 'competitor-analysis'],
-        userInput: { channels: ['social-media', 'email'], budget: 10000 }
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.templateSuggestions.length).toBeGreaterThan(0);
-      expect(suggestions.frameworkAdjustments.length).toBeGreaterThan(0);
-      expect(suggestions.contentIdeas.length).toBeGreaterThan(0);
-
-      // Should include marketing-specific templates
-      expect(suggestions.templateSuggestions.some(t => t.includes('Marketing'))).toBe(true);
+      expect(recommendations).toEqual([]);
+      expect(resources).toEqual([]);
+      expect(risks).toEqual([]);
     });
   });
 });

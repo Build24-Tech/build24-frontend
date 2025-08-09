@@ -1,276 +1,185 @@
-import { ValidationFramework } from '@/app/launch-essentials/components/ValidationFramework';
-import { ProjectData, UserProgress } from '@/types/launch-essentials';
-import { fireEvent, render, screen } from '@testing-library/react';
+import ValidationFramework from '@/app/launch-essentials/components/ValidationFramework';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 
-// Mock the auth context
-jest.mock('@/contexts/AuthContext', () => ({
-  useAuth: () => ({
-    user: { uid: 'test-user-id' }
-  })
-}));
-
-// Mock the toast hook
-jest.mock('@/hooks/use-toast', () => ({
-  toast: jest.fn()
-}));
-
-// Mock Firebase services
-jest.mock('@/lib/launch-essentials-firestore', () => ({
-  ProjectDataService: {
-    updateProjectPhaseData: jest.fn().mockResolvedValue(undefined)
-  },
-  UserProgressService: {
-    updateStepProgress: jest.fn().mockResolvedValue(undefined),
-    getUserProgress: jest.fn().mockResolvedValue({
-      userId: 'test-user-id',
-      projectId: 'test-project-id',
-      currentPhase: 'validation',
-      phases: {
-        validation: {
-          phase: 'validation',
-          steps: [],
-          completionPercentage: 0,
-          startedAt: new Date()
-        }
-      },
-      createdAt: new Date(),
-      updatedAt: new Date()
-    })
-  }
-}));
-
-// Test data
-const mockProjectData: ProjectData = {
-  id: 'test-project-id',
-  userId: 'test-user-id',
-  name: 'Test Product',
-  description: 'A test product for validation',
-  industry: 'Technology',
-  targetMarket: 'B2B',
-  stage: 'validation',
-  data: {
-    validation: {
-      marketResearch: {
-        marketSize: 1000000000,
-        growthRate: 15.5,
-        trends: ['AI adoption', 'Remote work'],
-        sources: ['Industry report', 'Survey data']
-      },
-      competitorAnalysis: {
-        competitors: [],
-        competitiveAdvantage: '',
-        marketGap: ''
-      },
-      targetAudience: {
-        personas: [],
-        interviewResults: [],
-        validationScore: 0
-      },
-      validationReport: {
-        recommendation: 'go',
-        reasoning: '',
-        nextSteps: []
-      }
-    }
-  },
-  createdAt: new Date(),
-  updatedAt: new Date()
-};
-
-const mockUserProgress: UserProgress = {
-  userId: 'test-user-id',
-  projectId: 'test-project-id',
-  currentPhase: 'validation',
-  phases: {
-    validation: {
-      phase: 'validation',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    definition: {
-      phase: 'definition',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    technical: {
-      phase: 'technical',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    marketing: {
-      phase: 'marketing',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    operations: {
-      phase: 'operations',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    financial: {
-      phase: 'financial',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    risk: {
-      phase: 'risk',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    },
-    optimization: {
-      phase: 'optimization',
-      steps: [],
-      completionPercentage: 0,
-      startedAt: new Date()
-    }
-  },
-  createdAt: new Date(),
-  updatedAt: new Date()
-};
-
-describe('ValidationFramework Integration', () => {
-  it('renders all validation components successfully', () => {
-    render(
-      <ValidationFramework
-        projectData={mockProjectData}
-        userProgress={mockUserProgress}
-      />
+// Mock the validation components
+jest.mock('@/app/launch-essentials/components/validation/MarketResearch', () => {
+  return function MockMarketResearch({ onSave }: { onSave: (data: any) => void }) {
+    return (
+      <div data-testid="market-research">
+        <h3>Market Research</h3>
+        <button onClick={() => onSave({ marketSize: 'large', trends: ['growth'] })}>
+          Save Market Research
+        </button>
+      </div>
     );
-
-    // Check main framework renders
-    expect(screen.getByText('Product Validation Framework')).toBeInTheDocument();
-    expect(screen.getByText('Validate your product idea before investing in development')).toBeInTheDocument();
-
-    // Check navigation steps are present
-    expect(screen.getByText('Validation Steps')).toBeInTheDocument();
-
-    // Check save button is present
-    expect(screen.getByText('Save Progress')).toBeInTheDocument();
-  });
-
-  it('displays market research data correctly', () => {
-    render(
-      <ValidationFramework
-        projectData={mockProjectData}
-        userProgress={mockUserProgress}
-      />
-    );
-
-    // Should show market analysis with existing data
-    expect(screen.getByText('Market Analysis')).toBeInTheDocument();
-    expect(screen.getByText('$1.0B')).toBeInTheDocument();
-    expect(screen.getByText('15.5% annually')).toBeInTheDocument();
-  });
-
-  it('shows validation step completion status', () => {
-    render(
-      <ValidationFramework
-        projectData={mockProjectData}
-        userProgress={mockUserProgress}
-      />
-    );
-
-    // Market research should show as complete due to existing data
-    const marketResearchSteps = screen.getAllByText('Market Research');
-    expect(marketResearchSteps.length).toBeGreaterThan(0);
-  });
-
-  it('allows navigation between different validation steps', () => {
-    render(
-      <ValidationFramework
-        projectData={mockProjectData}
-        userProgress={mockUserProgress}
-      />
-    );
-
-    // Find and click competitor analysis step
-    const competitorButton = screen.getByText('Competitor Analysis');
-    fireEvent.click(competitorButton);
-
-    // Should show competitor analysis content
-    expect(screen.getByText('Analysis Frameworks')).toBeInTheDocument();
-    expect(screen.getByText('Direct vs Indirect Competitors')).toBeInTheDocument();
-  });
-
-  it('shows appropriate templates and frameworks', () => {
-    render(
-      <ValidationFramework
-        projectData={mockProjectData}
-        userProgress={mockUserProgress}
-      />
-    );
-
-    // Market research templates should be visible
-    expect(screen.getByText('Research Templates')).toBeInTheDocument();
-    expect(screen.getByText('TAM/SAM/SOM Analysis')).toBeInTheDocument();
-    expect(screen.getByText('Market Trends Analysis')).toBeInTheDocument();
-  });
+  };
 });
 
-describe('Validation Logic Integration', () => {
-  it('calculates validation scores correctly', () => {
-    // Test the scoring logic that would be used in the components
-    const marketData = {
-      marketSize: 1000000000,
-      growthRate: 15.5,
-      trends: ['AI adoption', 'Remote work'],
-      sources: ['Industry report', 'Survey data']
-    };
+jest.mock('@/app/launch-essentials/components/validation/CompetitorAnalysis', () => {
+  return function MockCompetitorAnalysis({ onSave }: { onSave: (data: any) => void }) {
+    return (
+      <div data-testid="competitor-analysis">
+        <h3>Competitor Analysis</h3>
+        <button onClick={() => onSave({ competitors: ['competitor1'], strengths: ['feature1'] })}>
+          Save Competitor Analysis
+        </button>
+      </div>
+    );
+  };
+});
 
-    // Market research scoring logic
-    let marketScore = 0;
-    if (marketData.marketSize > 0) marketScore += 40;
-    if (marketData.growthRate > 0) marketScore += 30;
-    if (marketData.trends.length > 0) marketScore += 20;
-    if (marketData.sources.length > 0) marketScore += 10;
+jest.mock('@/app/launch-essentials/components/validation/TargetAudienceValidation', () => {
+  return function MockTargetAudienceValidation({ onSave }: { onSave: (data: any) => void }) {
+    return (
+      <div data-testid="target-audience">
+        <h3>Target Audience Validation</h3>
+        <button onClick={() => onSave({ personas: ['persona1'], segments: ['segment1'] })}>
+          Save Target Audience
+        </button>
+      </div>
+    );
+  };
+});
 
-    expect(marketScore).toBe(100);
+jest.mock('@/app/launch-essentials/components/validation/ValidationReport', () => {
+  return function MockValidationReport({ data }: { data: any }) {
+    return (
+      <div data-testid="validation-report">
+        <h3>Validation Report</h3>
+        <div>Market Size: {data?.marketResearch?.marketSize || 'Not set'}</div>
+        <div>Competitors: {data?.competitorAnalysis?.competitors?.length || 0}</div>
+        <div>Personas: {data?.targetAudience?.personas?.length || 0}</div>
+      </div>
+    );
+  };
+});
+
+describe('ValidationFramework Integration', () => {
+  const mockOnSave = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
   });
 
-  it('generates appropriate recommendations based on scores', () => {
-    const generateRecommendation = (score: number) => {
-      if (score >= 75) return 'go';
-      if (score <= 40) return 'no-go';
-      return 'pivot';
-    };
+  it('should render all validation steps', () => {
+    render(<ValidationFramework onSave={mockOnSave} />);
 
-    expect(generateRecommendation(85)).toBe('go');
-    expect(generateRecommendation(60)).toBe('pivot');
-    expect(generateRecommendation(30)).toBe('no-go');
+    expect(screen.getByText('Product Validation Framework')).toBeInTheDocument();
+    expect(screen.getByTestId('market-research')).toBeInTheDocument();
+    expect(screen.getByTestId('competitor-analysis')).toBeInTheDocument();
+    expect(screen.getByTestId('target-audience')).toBeInTheDocument();
+    expect(screen.getByTestId('validation-report')).toBeInTheDocument();
   });
 
-  it('validates form data correctly', () => {
-    // Test validation logic for competitor data
-    const validCompetitor = {
-      name: 'Test Competitor',
-      description: 'A valid competitor description',
-      marketShare: 25,
-      pricing: 99.99
+  it('should handle market research data flow', async () => {
+    const user = userEvent.setup();
+    render(<ValidationFramework onSave={mockOnSave} />);
+
+    const saveButton = screen.getByText('Save Market Research');
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Market Size: large')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle competitor analysis data flow', async () => {
+    const user = userEvent.setup();
+    render(<ValidationFramework onSave={mockOnSave} />);
+
+    const saveButton = screen.getByText('Save Competitor Analysis');
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Competitors: 1')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle target audience data flow', async () => {
+    const user = userEvent.setup();
+    render(<ValidationFramework onSave={mockOnSave} />);
+
+    const saveButton = screen.getByText('Save Target Audience');
+    await user.click(saveButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Personas: 1')).toBeInTheDocument();
+    });
+  });
+
+  it('should aggregate all validation data when saving', async () => {
+    const user = userEvent.setup();
+    render(<ValidationFramework onSave={mockOnSave} />);
+
+    // Save data from each component
+    await user.click(screen.getByText('Save Market Research'));
+    await user.click(screen.getByText('Save Competitor Analysis'));
+    await user.click(screen.getByText('Save Target Audience'));
+
+    // Save the overall framework
+    const mainSaveButton = screen.getByText('Save Validation Framework');
+    await user.click(mainSaveButton);
+
+    expect(mockOnSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        marketResearch: expect.objectContaining({
+          marketSize: 'large',
+          trends: ['growth']
+        }),
+        competitorAnalysis: expect.objectContaining({
+          competitors: ['competitor1'],
+          strengths: ['feature1']
+        }),
+        targetAudience: expect.objectContaining({
+          personas: ['persona1'],
+          segments: ['segment1']
+        }),
+        completedAt: expect.any(String)
+      })
+    );
+  });
+
+  it('should handle initial data correctly', () => {
+    const initialData = {
+      marketResearch: { marketSize: 'medium', trends: ['stable'] },
+      competitorAnalysis: { competitors: ['comp1', 'comp2'], strengths: ['price'] },
+      targetAudience: { personas: ['persona1'], segments: ['segment1'] }
     };
 
-    const invalidCompetitor = {
-      name: '',
-      description: '',
-      marketShare: -5,
-      pricing: -10
-    };
+    render(<ValidationFramework onSave={mockOnSave} initialData={initialData} />);
 
-    // Validation checks
-    expect(validCompetitor.name.length).toBeGreaterThan(0);
-    expect(validCompetitor.description.length).toBeGreaterThan(0);
-    expect(validCompetitor.marketShare).toBeGreaterThanOrEqual(0);
-    expect(validCompetitor.pricing).toBeGreaterThanOrEqual(0);
+    expect(screen.getByText('Market Size: medium')).toBeInTheDocument();
+    expect(screen.getByText('Competitors: 2')).toBeInTheDocument();
+    expect(screen.getByText('Personas: 1')).toBeInTheDocument();
+  });
 
-    expect(invalidCompetitor.name.length).toBe(0);
-    expect(invalidCompetitor.description.length).toBe(0);
-    expect(invalidCompetitor.marketShare).toBeLessThan(0);
-    expect(invalidCompetitor.pricing).toBeLessThan(0);
+  it('should show validation progress', async () => {
+    const user = userEvent.setup();
+    render(<ValidationFramework onSave={mockOnSave} />);
+
+    // Initially no progress
+    expect(screen.getByText('Market Size: Not set')).toBeInTheDocument();
+    expect(screen.getByText('Competitors: 0')).toBeInTheDocument();
+    expect(screen.getByText('Personas: 0')).toBeInTheDocument();
+
+    // After saving market research
+    await user.click(screen.getByText('Save Market Research'));
+    await waitFor(() => {
+      expect(screen.getByText('Market Size: large')).toBeInTheDocument();
+    });
+  });
+
+  it('should handle validation errors gracefully', async () => {
+    const user = userEvent.setup();
+    const mockOnSaveWithError = jest.fn().mockRejectedValue(new Error('Save failed'));
+
+    render(<ValidationFramework onSave={mockOnSaveWithError} />);
+
+    const saveButton = screen.getByText('Save Validation Framework');
+    await user.click(saveButton);
+
+    // Should handle the error without crashing
+    expect(mockOnSaveWithError).toHaveBeenCalled();
   });
 });
