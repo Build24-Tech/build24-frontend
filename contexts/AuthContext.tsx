@@ -27,6 +27,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateLanguage: (language: UserLanguage) => Promise<void>;
+  refreshUserProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -166,6 +167,17 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const refreshUserProfile = async (): Promise<void> => {
+    if (user) {
+      try {
+        const profile = await getUserProfile(user.uid);
+        setUserProfile(profile);
+      } catch (error) {
+        console.error('Error refreshing user profile:', error);
+      }
+    }
+  };
+
   const value: AuthContextType = {
     user,
     userProfile,
@@ -178,6 +190,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     resetPassword,
     updateLanguage,
+    refreshUserProfile,
   };
 
   return (

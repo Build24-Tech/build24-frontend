@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/contexts/AuthContext';
 import type { Metadata } from 'next';
+import { ThemeProvider } from 'next-themes';
 import localFont from 'next/font/local';
 
 const spaceGrotesk = localFont({
@@ -56,14 +57,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${spaceGrotesk.className} scroll-smooth`}>
-      <body className={`${spaceGrotesk.variable} font-space-grotesk`}>
-        <AuthProvider>
-          <Header />
-          <main>{children}</main>
-          <Footer />
-          <Toaster />
-        </AuthProvider>
+    <html lang="en" className={`${spaceGrotesk.className} scroll-smooth`} suppressHydrationWarning>
+      <body className={`${spaceGrotesk.variable} font-space-grotesk bg-background text-foreground`}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          themes={['light', 'dark', 'system']}
+          storageKey="build24-theme"
+          disableTransitionOnChange={false}
+        >
+          <AuthProvider>
+            <Header />
+            <main>{children}</main>
+            <Footer />
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
