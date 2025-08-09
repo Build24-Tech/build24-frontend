@@ -8,6 +8,48 @@ This file tracks the development tasks for the Build24 project. Work on the firs
 
 ## Open Tasks
 
+### Theme Switching System Implementation
+- [ ] **Set up ThemeProvider in app layout**
+  - Configure next-themes ThemeProvider with light/dark/auto modes
+  - Add proper theme attribute and storage key configuration
+  - Ensure theme persistence across page reloads
+
+- [ ] **Create theme switching UI component**
+  - Build a theme toggle component with three options: Light, Dark, Auto
+  - Add proper icons for each theme mode
+  - Include visual feedback for current active theme
+  - Position component in header or settings area
+
+- [ ] **Implement theme storage in user settings**
+  - Add theme preference field to user Firestore document
+  - Create hooks for reading/writing theme preference to user profile
+  - Sync theme preference with next-themes local storage
+  - Handle theme preference for authenticated vs anonymous users
+
+- [ ] **Configure Tailwind CSS for dark mode**
+  - Ensure dark mode classes are properly configured in tailwind.config.ts
+  - Add dark mode variants for all UI components
+  - Test all existing components in both light and dark themes
+  - Update CSS custom properties for theme-aware colors
+
+- [ ] **Implement auto theme detection**
+  - Configure system theme detection using next-themes
+  - Add proper handling for prefers-color-scheme media query
+  - Ensure smooth transitions between theme changes
+  - Test auto mode switching when system theme changes
+
+- [ ] **Update existing components for theme support**
+  - Review and update all UI components to support dark mode
+  - Ensure proper contrast ratios in both themes
+  - Update any hardcoded colors to use theme-aware CSS variables
+  - Test theme switching across all pages and components
+
+- [ ] **Add theme switching tests**
+  - Write unit tests for theme switching functionality
+  - Test theme persistence and user preference storage
+  - Verify auto mode system theme detection
+  - Test theme switching UI component interactions
+
 
 
 ## Completed Tasks
