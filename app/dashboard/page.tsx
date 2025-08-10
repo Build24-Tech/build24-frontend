@@ -69,7 +69,7 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
                 <h2 className="text-xl font-bold mb-4">Your Profile</h2>
                 <div className="space-y-3">
@@ -102,6 +102,18 @@ export default function DashboardPage() {
                     </Link>
                   </Button>
                 </div>
+              </div>
+
+              <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
+                <h2 className="text-xl font-bold mb-4">Knowledge Hub</h2>
+                <p className="text-gray-400 text-sm mb-4">
+                  Explore psychological theories and persuasion techniques to enhance your product building.
+                </p>
+                <Button asChild className="w-full bg-blue-600 text-white hover:bg-blue-500">
+                  <Link href="/dashboard/knowledge-hub">
+                    Explore Knowledge Hub
+                  </Link>
+                </Button>
               </div>
             </div>
           </div>

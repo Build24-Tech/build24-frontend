@@ -195,7 +195,7 @@ export function ExportReportPanel({ projectData, progress, className }: ExportRe
                   <Checkbox
                     id="include-charts"
                     checked={includeCharts}
-                    onCheckedChange={setIncludeCharts}
+                    onCheckedChange={(checked) => setIncludeCharts(checked === true)}
                   />
                   <Label htmlFor="include-charts" className="text-sm">
                     Include charts and visualizations
@@ -205,7 +205,7 @@ export function ExportReportPanel({ projectData, progress, className }: ExportRe
                   <Checkbox
                     id="stakeholder-view"
                     checked={stakeholderView}
-                    onCheckedChange={setStakeholderView}
+                    onCheckedChange={(checked) => setStakeholderView(checked === true)}
                   />
                   <Label htmlFor="stakeholder-view" className="text-sm">
                     Stakeholder-friendly view (hide sensitive data)
