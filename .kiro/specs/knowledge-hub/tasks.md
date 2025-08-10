@@ -12,14 +12,14 @@
   - Implement validation schemas using Zod for data integrity
   - _Requirements: 2.1, 3.1, 4.1_
 
-- [ ] 3. Implement theory content loading system
+- [x] 3. Implement theory content loading system
   - Create lib/theories.ts service for loading markdown-based theory content
   - Implement content parsing with frontmatter metadata extraction
   - Add caching mechanism for theory content and metadata
   - Create error handling for content loading failures
   - _Requirements: 2.1, 2.2, 2.3_
 
-- [ ] 4. Build category navigation component
+- [-] 4. Build category navigation component
   - Create CategoryNavigation component with theory category filtering
   - Implement active category state management
   - Add category-based theory count indicators
