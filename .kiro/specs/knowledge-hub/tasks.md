@@ -40,7 +40,7 @@
   - Create filter state management with URL parameter sync
   - _Requirements: 3.1, 3.2, 3.3, 3.4_
 
-- [ ] 7. Build theory detail view component
+- [x] 7. Build theory detail view component
   - Create TheoryDetailView component for full theory content display
   - Implement markdown content rendering with syntax highlighting
   - Add visual diagram and media content support

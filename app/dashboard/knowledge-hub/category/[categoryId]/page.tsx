@@ -1,88 +1,17 @@
 'use client';
 
+import { useBookmarkManager } from '@/components/knowledge-hub/BookmarkManager';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Bookmark, Clock, Filter, Search } from 'lucide-react';
+import { getAllTheories } from '@/lib/theories';
+import { DIFFICULTY_LEVEL_LABELS, Theory, TheoryCategory } from '@/types/knowledge-hub';
+import { Bookmark, BookmarkCheck, Clock, Filter, Search, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
-
-// Mock data for theories - this will be replaced with actual data loading in future tasks
-const mockTheories = {
-  'cognitive-biases': [
-    {
-      id: 'anchoring-bias',
-      title: 'Anchoring Bias',
-      summary: 'The tendency to rely heavily on the first piece of information encountered when making decisions.',
-      difficulty: 'beginner',
-      readTime: 3,
-      relevance: ['marketing', 'ux'],
-      isBookmarked: false,
-      isPremium: false
-    },
-    {
-      id: 'scarcity-principle',
-      title: 'Scarcity Principle',
-      summary: 'People value things more when they perceive them as rare or limited in availability.',
-      difficulty: 'beginner',
-      readTime: 4,
-      relevance: ['marketing', 'sales'],
-      isBookmarked: false,
-      isPremium: false
-    }
-  ],
-  'persuasion-principles': [
-    {
-      id: 'cialdini-reciprocity',
-      title: 'Reciprocity Principle',
-      summary: 'People feel obligated to return favors and treat others as they have been treated.',
-      difficulty: 'intermediate',
-      readTime: 5,
-      relevance: ['marketing', 'sales'],
-      isBookmarked: false,
-      isPremium: false
-    }
-  ],
-  'behavioral-economics': [
-    {
-      id: 'loss-aversion',
-      title: 'Loss Aversion',
-      summary: 'People prefer avoiding losses over acquiring equivalent gains - losses feel twice as powerful as gains.',
-      difficulty: 'intermediate',
-      readTime: 6,
-      relevance: ['marketing', 'ux'],
-      isBookmarked: false,
-      isPremium: true
-    }
-  ],
-  'ux-psychology': [
-    {
-      id: 'fitts-law',
-      title: "Fitts' Law",
-      summary: 'The time to acquire a target is a function of the distance to and size of the target.',
-      difficulty: 'beginner',
-      readTime: 4,
-      relevance: ['ux'],
-      isBookmarked: false,
-      isPremium: false
-    }
-  ],
-  'emotional-triggers': [
-    {
-      id: 'fear-of-missing-out',
-      title: 'Fear of Missing Out (FOMO)',
-      summary: 'The anxiety that others might be having rewarding experiences from which one is absent.',
-      difficulty: 'beginner',
-      readTime: 3,
-      relevance: ['marketing', 'sales'],
-      isBookmarked: false,
-      isPremium: false
-    }
-  ]
-};
+import { useEffect, useMemo, useState } from 'react';
 
 const categoryInfo = {
   'cognitive-biases': {
@@ -118,20 +47,49 @@ export default function CategoryPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [difficultyFilter, setDifficultyFilter] = useState('all');
   const [relevanceFilter, setRelevanceFilter] = useState('all');
+  const [theories, setTheories] = useState<Theory[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const { isBookmarked, toggleBookmark } = useBookmarkManager();
 
   const category = categoryInfo[categoryId as keyof typeof categoryInfo];
-  const theories = mockTheories[categoryId as keyof typeof mockTheories] || [];
+
+  // Load theories for this category
+  useEffect(() => {
+    const loadCategoryTheories = async () => {
+      try {
+        setIsLoading(true);
+        const allTheories = await getAllTheories();
+        const categoryTheories = allTheories.filter(
+          theory => theory.category === categoryId as TheoryCategory
+        );
+        setTheories(categoryTheories);
+      } catch (error) {
+        console.error('Failed to load theories:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (categoryId) {
+      loadCategoryTheories();
+    }
+  }, [categoryId]);
 
   const filteredTheories = useMemo(() => {
     return theories.filter(theory => {
       const matchesSearch = theory.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         theory.summary.toLowerCase().includes(searchQuery.toLowerCase());
-      const matchesDifficulty = difficultyFilter === 'all' || theory.difficulty === difficultyFilter;
-      const matchesRelevance = relevanceFilter === 'all' || theory.relevance.includes(relevanceFilter);
+      const matchesDifficulty = difficultyFilter === 'all' || theory.metadata.difficulty === difficultyFilter;
+      const matchesRelevance = relevanceFilter === 'all' || theory.metadata.relevance.includes(relevanceFilter as any);
 
       return matchesSearch && matchesDifficulty && matchesRelevance;
     });
   }, [theories, searchQuery, difficultyFilter, relevanceFilter]);
+
+  const handleBookmarkToggle = async (theoryId: string) => {
+    await toggleBookmark(theoryId);
+  };
 
   if (!category) {
     return (
@@ -201,75 +159,120 @@ export default function CategoryPage() {
         </CardContent>
       </Card>
 
-      {/* Theories Grid */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {filteredTheories.map((theory) => (
-          <Card key={theory.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors group">
-            <CardHeader className="pb-4">
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge
-                      variant="secondary"
-                      className={`text-xs ${theory.difficulty === 'beginner' ? 'bg-green-500/10 text-green-400' :
-                          theory.difficulty === 'intermediate' ? 'bg-yellow-500/10 text-yellow-400' :
-                            'bg-red-500/10 text-red-400'
+      {/* Loading State */}
+      {isLoading ? (
+        <div className="grid md:grid-cols-2 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <Card key={i} className="bg-gray-900 border-gray-800">
+              <CardHeader className="pb-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 space-y-2">
+                    <div className="flex items-center gap-2">
+                      <div className="h-5 w-16 bg-gray-700 rounded animate-pulse" />
+                      <div className="h-5 w-12 bg-gray-700 rounded animate-pulse" />
+                    </div>
+                    <div className="h-6 w-3/4 bg-gray-700 rounded animate-pulse" />
+                  </div>
+                  <div className="h-8 w-8 bg-gray-700 rounded animate-pulse" />
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <div className="h-4 w-full bg-gray-700 rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-gray-700 rounded animate-pulse" />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="h-4 w-24 bg-gray-700 rounded animate-pulse" />
+                  <div className="h-8 w-20 bg-gray-700 rounded animate-pulse" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        /* Theories Grid */
+        <div className="grid md:grid-cols-2 gap-6">
+          {filteredTheories.map((theory) => {
+            const theoryIsBookmarked = isBookmarked(theory.id);
+            const isPremium = !!theory.premiumContent;
+
+            return (
+              <Card key={theory.id} className="bg-gray-900 border-gray-800 hover:border-gray-700 transition-colors group">
+                <CardHeader className="pb-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs ${theory.metadata.difficulty === 'beginner' ? 'bg-green-500/10 text-green-400' :
+                              theory.metadata.difficulty === 'intermediate' ? 'bg-yellow-500/10 text-yellow-400' :
+                                'bg-red-500/10 text-red-400'
+                            }`}
+                        >
+                          {DIFFICULTY_LEVEL_LABELS[theory.metadata.difficulty]}
+                        </Badge>
+                        {isPremium && (
+                          <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 text-xs">
+                            <Star className="w-3 h-3 mr-1" />
+                            Premium
+                          </Badge>
+                        )}
+                      </div>
+                      <CardTitle className="text-xl group-hover:text-yellow-400 transition-colors">
+                        {theory.title}
+                      </CardTitle>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={`h-8 w-8 ml-2 ${theoryIsBookmarked ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'
                         }`}
+                      onClick={() => handleBookmarkToggle(theory.id)}
+                      aria-label={theoryIsBookmarked ? 'Remove bookmark' : 'Add bookmark'}
                     >
-                      {theory.difficulty}
-                    </Badge>
-                    {theory.isPremium && (
-                      <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 text-xs">
-                        Premium
-                      </Badge>
-                    )}
+                      {theoryIsBookmarked ? (
+                        <BookmarkCheck className="w-4 h-4 fill-current" />
+                      ) : (
+                        <Bookmark className="w-4 h-4" />
+                      )}
+                    </Button>
                   </div>
-                  <CardTitle className="text-xl group-hover:text-yellow-400 transition-colors">
-                    {theory.title}
-                  </CardTitle>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className={`ml-2 ${theory.isBookmarked ? 'text-yellow-400' : 'text-gray-400 hover:text-yellow-400'}`}
-                >
-                  <Bookmark className="w-4 h-4" />
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <CardDescription className="text-gray-400 line-clamp-3">
-                {theory.summary}
-              </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <CardDescription className="text-gray-400 line-clamp-3">
+                    {theory.summary}
+                  </CardDescription>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4 text-sm text-gray-500">
-                  <div className="flex items-center space-x-1">
-                    <Clock className="w-4 h-4" />
-                    <span>{theory.readTime} min read</span>
-                  </div>
-                  <div className="flex space-x-1">
-                    {theory.relevance.map((tag) => (
-                      <Badge key={tag} variant="outline" className="text-xs border-gray-700 text-gray-400">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4 text-sm text-gray-500">
+                      <div className="flex items-center space-x-1">
+                        <Clock className="w-4 h-4" />
+                        <span>{theory.metadata.readTime} min read</span>
+                      </div>
+                      <div className="flex space-x-1">
+                        {theory.metadata.relevance.slice(0, 2).map((relevanceType) => (
+                          <Badge key={relevanceType} variant="outline" className="text-xs border-gray-700 text-gray-400">
+                            {relevanceType}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
 
-                <Button asChild size="sm" className="bg-yellow-400 text-black hover:bg-yellow-300">
-                  <Link href={`/dashboard/knowledge-hub/theory/${theory.id}`}>
-                    Read Theory
-                  </Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                    <Button asChild size="sm" className="bg-yellow-400 text-black hover:bg-yellow-300">
+                      <Link href={`/dashboard/knowledge-hub/theory/${theory.id}`}>
+                        Read Theory
+                      </Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
 
       {/* No Results */}
-      {filteredTheories.length === 0 && (
+      {!isLoading && filteredTheories.length === 0 && (
         <Card className="bg-gray-900 border-gray-800">
           <CardContent className="text-center py-12">
             <Filter className="w-12 h-12 text-gray-600 mx-auto mb-4" />
