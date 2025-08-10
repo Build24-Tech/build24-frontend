@@ -26,7 +26,7 @@
   - Style component using existing Build24 design system
   - _Requirements: 1.3, 3.2_
 
-- [-] 5. Create theory card and list components
+- [x] 5. Create theory card and list components
   - Implement TheoryCard component for theory grid/list display
   - Add theory metadata display (category, difficulty, read time)
   - Create TheoryList component with responsive grid layout
