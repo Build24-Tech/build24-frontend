@@ -108,10 +108,10 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
     <div className="flex flex-col gap-4 mb-8">
       <div className="flex flex-wrap gap-4 items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-gray-400">Sort by:</span>
+          <span className="dark:text-gray-400 text-gray-600">Sort by:</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="border-gray-700 bg-gray-900">
+              <Button variant="outline" className="dark:border-gray-700 border-gray-300 dark:bg-gray-900 bg-gray-100">
                 {sortOption === 'newest' && 'Newest'}
                 {sortOption === 'oldest' && 'Oldest'}
                 {sortOption === 'author' && 'Author'}
@@ -119,12 +119,12 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
                 <ChevronDown className="ml-2 h-4 w-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-gray-900 border-gray-700">
+            <DropdownMenuContent className="dark:bg-gray-900 bg-white dark:border-gray-700 border-gray-300">
               <DropdownMenuRadioGroup value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-                <DropdownMenuRadioItem value="newest" className="text-white hover:bg-gray-800">Newest</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="oldest" className="text-white hover:bg-gray-800">Oldest</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="author" className="text-white hover:bg-gray-800">Author</DropdownMenuRadioItem>
-                <DropdownMenuRadioItem value="category" className="text-white hover:bg-gray-800">Category</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="newest" className="dark:text-white text-black dark:hover:bg-gray-800 hover:bg-gray-100">Newest</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="oldest" className="dark:text-white text-black dark:hover:bg-gray-800 hover:bg-gray-100">Oldest</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="author" className="dark:text-white text-black dark:hover:bg-gray-800 hover:bg-gray-100">Author</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="category" className="dark:text-white text-black dark:hover:bg-gray-800 hover:bg-gray-100">Category</DropdownMenuRadioItem>
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -134,7 +134,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
           {activeFilters.length > 0 && (
             <Button
               variant="ghost"
-              className="text-gray-400 hover:text-white"
+              className="dark:text-gray-400 text-gray-600 hover:dark:text-white hover:text-black"
               onClick={() => setActiveFilters([])}
             >
               Clear filters
@@ -148,7 +148,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
         {/* Languages filter */}
         {allLanguages.length > 0 && (
           <div>
-            <h3 className="text-gray-400 mb-2">Languages</h3>
+            <h3 className="dark:text-gray-400 text-gray-600 mb-2">Languages</h3>
             <div className="flex flex-wrap gap-2">
               {allLanguages.map((language) => (
                 <Button
@@ -158,7 +158,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
                   className={
                     isFilterActive({ type: 'language', value: language })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
-                      : "border-gray-700 bg-gray-900 hover:bg-gray-800"
+                      : "dark:border-gray-700 border-gray-300 dark:bg-gray-900 bg-gray-100 dark:hover:bg-gray-800 hover:bg-gray-200"
                   }
                   onClick={() => toggleFilter({ type: 'language', value: language })}
                 >
@@ -175,7 +175,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
         {/* Categories filter */}
         {allCategories.length > 0 && (
           <div>
-            <h3 className="text-gray-400 mb-2">Categories</h3>
+            <h3 className="dark:text-gray-400 text-gray-600 mb-2">Categories</h3>
             <div className="flex flex-wrap gap-2">
               {allCategories.map((category) => (
                 <Button
@@ -185,7 +185,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
                   className={
                     isFilterActive({ type: 'category', value: category })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
-                      : "border-gray-700 bg-gray-900 hover:bg-gray-800"
+                      : "dark:border-gray-700 border-gray-300 dark:bg-gray-900 bg-gray-100 dark:hover:bg-gray-800 hover:bg-gray-200"
                   }
                   onClick={() => toggleFilter({ type: 'category', value: category })}
                 >
@@ -202,7 +202,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
         {/* Authors filter */}
         {allAuthors.length > 0 && (
           <div>
-            <h3 className="text-gray-400 mb-2">Authors</h3>
+            <h3 className="dark:text-gray-400 text-gray-600 mb-2">Authors</h3>
             <div className="flex flex-wrap gap-2">
               {allAuthors.map((author) => (
                 <Button
@@ -212,7 +212,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
                   className={
                     isFilterActive({ type: 'author', value: author })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
-                      : "border-gray-700 bg-gray-900 hover:bg-gray-800"
+                      : "dark:border-gray-700 border-gray-300 dark:bg-gray-900 bg-gray-100 dark:hover:bg-gray-800 hover:bg-gray-200"
                   }
                   onClick={() => toggleFilter({ type: 'author', value: author })}
                 >
@@ -229,7 +229,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
         {/* Tags filter */}
         {allTags.length > 0 && (
           <div>
-            <h3 className="text-gray-400 mb-2">Tags</h3>
+            <h3 className="dark:text-gray-400 text-gray-600 mb-2">Tags</h3>
             <div className="flex flex-wrap gap-2">
               {allTags.map((tag) => (
                 <Button
@@ -239,7 +239,7 @@ export default function BlogFilters({ posts, onFilterChange, currentLanguage }: 
                   className={
                     isFilterActive({ type: 'tag', value: tag })
                       ? "bg-yellow-400 text-black hover:bg-yellow-500"
-                      : "border-gray-700 bg-gray-900 hover:bg-gray-800"
+                      : "dark:border-gray-700 border-gray-300 dark:bg-gray-900 bg-gray-100 dark:hover:bg-gray-800 hover:bg-gray-200"
                   }
                   onClick={() => toggleFilter({ type: 'tag', value: tag })}
                 >

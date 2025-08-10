@@ -36,7 +36,7 @@ export default async function LangBlogPage({
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen dark:bg-black dark:text-white bg-white text-black">
       <Hero currentLanguage={currentLanguage} />
 
       <div id="blog-posts" className="container mx-auto px-4 py-16">

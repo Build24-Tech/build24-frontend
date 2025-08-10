@@ -20,7 +20,7 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {posts.map((post: Post) => (
             <Link href={createLanguageUrl(post.slug || 'not-found', currentLanguage, post.customUrl)} key={post.id} className="block h-full">
-              <Card className="bg-gray-900 border-gray-700 hover:border-gray-600 transition-all duration-300 group h-full flex flex-col">
+              <Card className="dark:bg-gray-900 bg-gray-100 dark:border-gray-700 border-gray-300 hover:dark:border-gray-600 hover:border-gray-400 transition-all duration-300 group h-full flex flex-col">
                 {/* Feature Image */}
                 <div className="w-full aspect-video overflow-hidden relative">
                   {post.coverImage ? (
@@ -32,8 +32,8 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-800">
-                      <span className="text-gray-500">No image</span>
+                    <div className="w-full h-full flex items-center justify-center dark:bg-gray-800 bg-gray-200">
+                      <span className="dark:text-gray-500 text-gray-600">No image</span>
                     </div>
                   )}
                 </div>
@@ -45,16 +45,16 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
                       </Badge>
                     )}
                   </div>
-                  <CardTitle className="text-white group-hover:text-yellow-400 transition-colors line-clamp-2">
+                  <CardTitle className="dark:text-white text-black group-hover:text-yellow-600 dark:group-hover:text-yellow-400 transition-colors line-clamp-2">
                     {post.title || 'Untitled Post'}
                   </CardTitle>
-                  <CardDescription className="text-gray-400 line-clamp-3">
+                  <CardDescription className="dark:text-gray-400 text-gray-600 line-clamp-3">
                     {post.description || 'No description available'}
                   </CardDescription>
                 </CardHeader>
 
                 <CardContent>
-                  <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
+                  <div className="flex items-center gap-4 text-sm dark:text-gray-500 text-gray-600 mb-4">
                     <div className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
                       {post.date ? new Date(post.date).toLocaleDateString() : 'No date'}
@@ -72,7 +72,7 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
                         <Badge
                           key={index}
                           variant="outline"
-                          className="border-gray-600 text-gray-300 text-xs"
+                          className="dark:border-gray-600 border-gray-400 dark:text-gray-300 text-gray-700 text-xs"
                         >
                           {tag}
                         </Badge>
@@ -81,7 +81,7 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
                   </div>
 
                   <div className="mt-auto">
-                    <Button className="bg-black text-white hover:bg-gray-800 w-full cursor-pointer select-none">
+                    <Button className="dark:bg-black bg-gray-800 text-white hover:bg-gray-700 dark:hover:bg-gray-800 w-full cursor-pointer select-none">
                       <span className="flex items-center gap-2">
                         Read More <ArrowRight className="w-4 h-4" />
                       </span>
@@ -93,9 +93,9 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-gray-900 rounded-lg">
+        <div className="text-center py-20 dark:bg-gray-900 bg-gray-100 rounded-lg">
           <h3 className="text-xl font-medium mb-4">No Blog Posts Available</h3>
-          <p className="text-gray-400">Try changing your filters or check back later for new content.</p>
+          <p className="dark:text-gray-400 text-gray-600">Try changing your filters or check back later for new content.</p>
         </div>
       )}
     </>

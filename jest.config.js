@@ -11,16 +11,29 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   testMatch: [
-    '**/__tests__/**/*.(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)'
+    '**/__tests__/**/*.test.{js,ts,tsx}',
+    '**/*.test.{js,ts,tsx}'
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/coverage/',
   ],
   collectCoverageFrom: [
     'lib/**/*.{ts,tsx}',
     'components/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    'hooks/**/*.{ts,tsx}',
     '!**/*.d.ts',
     '!**/node_modules/**',
+    '!**/*.config.{js,ts}',
+    '!**/coverage/**',
+    '!**/.next/**',
   ],
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  moduleFileExtensions: ['js', 'jsx', 'ts', 'tsx', 'json'],
+  testTimeout: 10000,
+  maxWorkers: '50%',
+  workerIdleMemoryLimit: '512MB',
 };
 
 module.exports = createJestConfig(customJestConfig);
