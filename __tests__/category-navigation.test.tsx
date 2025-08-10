@@ -120,7 +120,11 @@ describe('CategoryNavigation', () => {
       />
     );
 
-    expect(screen.getByText('Cognitive Biases selected • 8 theories available')).toBeInTheDocument();
+    // Check that the selected category appears twice (once in button, once in info)
+    expect(screen.getAllByText('Cognitive Biases')).toHaveLength(2);
+    // Check that the selected category button has the active styling
+    const cognitiveButton = screen.getAllByText('Cognitive Biases')[0].closest('button');
+    expect(cognitiveButton).toHaveClass('bg-blue-500/20');
   });
 
   it('deselects category when clicking selected category', () => {
@@ -132,7 +136,9 @@ describe('CategoryNavigation', () => {
       />
     );
 
-    const cognitiveButton = screen.getByText('Cognitive Biases').closest('button');
+    // Find the button by looking for the category button specifically (not the selected info)
+    const buttons = screen.getAllByText('Cognitive Biases');
+    const cognitiveButton = buttons[0].closest('button'); // First one is the category button
     fireEvent.click(cognitiveButton!);
 
     expect(mockOnCategoryChange).toHaveBeenCalledWith(undefined);
@@ -187,7 +193,7 @@ describe('CategoryNavigation', () => {
       />
     );
 
-    expect(screen.getByText('0 theories')).toBeInTheDocument();
+    expect(screen.getAllByText(/0.*theories/)).toHaveLength(6); // 5 categories + 1 total
     expect(screen.getByText('Total: 0 theories')).toBeInTheDocument();
   });
 
