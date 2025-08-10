@@ -33,7 +33,7 @@
   - Implement loading states and skeleton components
   - _Requirements: 2.1, 2.2_
 
-- [ ] 6. Implement search and filtering functionality
+- [x] 6. Implement search and filtering functionality
   - Create SearchAndFilter component with text input and filter controls
   - Implement client-side search across theory titles, summaries, and tags
   - Add difficulty level and relevance type filtering
