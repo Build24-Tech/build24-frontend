@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useProgressTracker } from '@/hooks/use-progress-tracker';
 import {
   AccessLevel,
   DIFFICULTY_LEVEL_COLORS,
@@ -28,7 +29,7 @@ import {
   Share2
 } from 'lucide-react';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface TheoryDetailViewProps {
   theory: Theory;
@@ -49,13 +50,31 @@ export function TheoryDetailView({
 }: TheoryDetailViewProps) {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
 
-  const isPremiumContent = theory.premiumContent && userAccess === AccessLevel.FREE;
+  const { markTheoryAsRead, updateBookmark } = useProgressTracker();
+
   const categoryLabel = THEORY_CATEGORY_LABELS[theory.category];
   const difficultyLabel = DIFFICULTY_LEVEL_LABELS[theory.metadata.difficulty];
   const difficultyColor = DIFFICULTY_LEVEL_COLORS[theory.metadata.difficulty];
 
+  // Mark theory as read when component mounts (with a delay to simulate reading time)
+  useEffect(() => {
+    if (!hasMarkedAsRead && theory) {
+      const timer = setTimeout(() => {
+        markTheoryAsRead(theory.id, theory.category, theory.metadata.readTime);
+        setHasMarkedAsRead(true);
+      }, 3000); // Mark as read after 3 seconds of viewing
+
+      return () => clearTimeout(timer);
+    }
+  }, [theory, hasMarkedAsRead, markTheoryAsRead]);
+
   const handleBookmarkToggle = () => {
+    // Update progress tracker
+    updateBookmark(theory.id, !isBookmarked);
+
+    // Call the original callback if provided
     if (onBookmarkToggle) {
       onBookmarkToggle(theory.id);
     }
@@ -105,8 +124,8 @@ export function TheoryDetailView({
             size="sm"
             onClick={handleBookmarkToggle}
             className={`${isBookmarked
-                ? 'text-yellow-400 hover:text-yellow-300'
-                : 'text-gray-400 hover:text-yellow-400'
+              ? 'text-yellow-400 hover:text-yellow-300'
+              : 'text-gray-400 hover:text-yellow-400'
               }`}
           >
             {isBookmarked ? (
