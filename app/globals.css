@@ -77,6 +77,62 @@
     --chart-5: 340 75% 55%;
   }
 }
+/* Mobile Touch Optimizations */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* Focus visible for better keyboard navigation */
+.focus-visible:focus {
+  outline: 2px solid rgb(251 191 36);
+  outline-offset: 2px;
+}
+
+/* Improved tap targets for mobile */
+@media (max-width: 768px) {
+  button, 
+  [role="button"], 
+  input[type="button"], 
+  input[type="submit"], 
+  a {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Ensure text is readable on mobile */
+  body {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .bg-gray-900 {
+    background-color: rgb(0 0 0);
+  }
+  
+  .text-gray-400 {
+    color: rgb(156 163 175);
+  }
+  
+  .border-gray-800 {
+    border-color: rgb(75 85 99);
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* Interactive Example Animations */
 @keyframes fade-in {
   from {

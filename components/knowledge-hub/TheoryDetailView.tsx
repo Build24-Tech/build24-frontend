@@ -125,22 +125,24 @@ export function TheoryDetailView({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6 sm:space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <Button
           variant="ghost"
           size="sm"
           asChild
-          className="text-gray-400 hover:text-white"
+          className="text-gray-400 hover:text-white self-start focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black"
+          aria-label={`Back to ${categoryLabel} category`}
         >
           <Link href={`/dashboard/knowledge-hub/category/${theory.category}`}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to {categoryLabel}
+            <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Back to {categoryLabel}</span>
+            <span className="sm:hidden">Back</span>
           </Link>
         </Button>
 
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 self-start sm:self-auto">
           <Button
             variant="ghost"
             size="sm"
@@ -148,64 +150,71 @@ export function TheoryDetailView({
             className={`${isBookmarked
               ? 'text-yellow-400 hover:text-yellow-300'
               : 'text-gray-400 hover:text-yellow-400'
-              }`}
+              } focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black touch-manipulation`}
+            aria-label={isBookmarked ? 'Remove bookmark' : 'Add bookmark'}
           >
             {isBookmarked ? (
-              <BookmarkCheck className="w-4 h-4 mr-2" />
+              <BookmarkCheck className="w-4 h-4 mr-1 sm:mr-2" aria-hidden="true" />
             ) : (
-              <Bookmark className="w-4 h-4 mr-2" />
+              <Bookmark className="w-4 h-4 mr-1 sm:mr-2" aria-hidden="true" />
             )}
-            {isBookmarked ? 'Bookmarked' : 'Bookmark'}
+            <span className="hidden sm:inline">{isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+            <span className="sm:hidden">{isBookmarked ? 'Saved' : 'Save'}</span>
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
             onClick={handleShare}
-            className="text-gray-400 hover:text-white"
+            className="text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-black touch-manipulation"
+            aria-label="Share this theory"
           >
-            <Share2 className="w-4 h-4 mr-2" />
-            Share
+            <Share2 className="w-4 h-4 mr-1 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Share</span>
           </Button>
         </div>
-      </div>
+      </header>
 
       {/* Theory Header */}
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div className="space-y-4">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
             <Badge
               variant="secondary"
-              className={`${difficultyColor.replace('bg-', 'bg-').replace('-500', '-500/10')} ${difficultyColor.replace('bg-', 'text-').replace('-500', '-400')}`}
+              className={`${difficultyColor.replace('bg-', 'bg-').replace('-500', '-500/10')} ${difficultyColor.replace('bg-', 'text-').replace('-500', '-400')} text-xs sm:text-sm`}
+              aria-label={`Difficulty level: ${difficultyLabel}`}
             >
               {difficultyLabel}
             </Badge>
 
             {theory.premiumContent && (
-              <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400">
-                <Crown className="w-3 h-3 mr-1" />
+              <Badge variant="secondary" className="bg-yellow-500/10 text-yellow-400 text-xs sm:text-sm" aria-label="Premium content">
+                <Crown className="w-3 h-3 mr-1" aria-hidden="true" />
                 Premium
               </Badge>
             )}
 
-            <div className="flex items-center space-x-1 text-sm text-gray-500">
-              <Clock className="w-4 h-4" />
+            <div className="flex items-center space-x-1 text-xs sm:text-sm text-gray-500" aria-label={`Reading time: ${theory.metadata.readTime} minutes`}>
+              <Clock className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
               <span>{theory.metadata.readTime} min read</span>
             </div>
           </div>
 
-          <h1 className="text-4xl font-bold text-white">{theory.title}</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
+            {theory.title}
+          </h1>
 
-          <p className="text-xl text-gray-400 leading-relaxed">
+          <p className="text-base sm:text-lg lg:text-xl text-gray-400 leading-relaxed">
             {theory.summary}
           </p>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2" role="list" aria-label="Theory relevance tags">
             {theory.metadata.relevance.map((relevanceType) => (
               <Badge
                 key={relevanceType}
                 variant="outline"
-                className="border-gray-700 text-gray-400"
+                className="border-gray-700 text-gray-400 text-xs sm:text-sm"
+                role="listitem"
               >
                 {RELEVANCE_TYPE_LABELS[relevanceType]}
               </Badge>
@@ -215,8 +224,8 @@ export function TheoryDetailView({
       </div>
 
       {/* Main Content */}
-      <div className="grid lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 space-y-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="lg:col-span-2 space-y-6 sm:space-y-8" role="main">
           {/* Theory Description */}
           <Card className="bg-gray-900 border-gray-800">
             <CardHeader>
@@ -393,38 +402,40 @@ export function TheoryDetailView({
         </div>
 
         {/* Sidebar */}
-        <div className="lg:col-span-1 space-y-6">
+        <aside className="lg:col-span-1 space-y-4 sm:space-y-6" role="complementary" aria-label="Theory information and related content">
           {/* Quick Info */}
           <Card className="bg-gray-900 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Info</CardTitle>
+            <CardHeader className="pb-3 sm:pb-4">
+              <CardTitle className="text-base sm:text-lg">Quick Info</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-3 sm:space-y-4 pt-0">
               <div>
-                <p className="text-sm text-gray-400 mb-1">Category</p>
+                <p className="text-xs sm:text-sm text-gray-400 mb-1">Category</p>
                 <Link
                   href={`/dashboard/knowledge-hub/category/${theory.category}`}
-                  className="text-yellow-400 hover:text-yellow-300 transition-colors"
+                  className="text-yellow-400 hover:text-yellow-300 transition-colors text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900 rounded"
+                  aria-label={`View all theories in ${categoryLabel} category`}
                 >
                   {categoryLabel}
                 </Link>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Difficulty</p>
-                <p className="capitalize">{difficultyLabel}</p>
+                <p className="text-xs sm:text-sm text-gray-400 mb-1">Difficulty</p>
+                <p className="capitalize text-sm sm:text-base">{difficultyLabel}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Read Time</p>
-                <p>{theory.metadata.readTime} minutes</p>
+                <p className="text-xs sm:text-sm text-gray-400 mb-1">Read Time</p>
+                <p className="text-sm sm:text-base">{theory.metadata.readTime} minutes</p>
               </div>
               <div>
-                <p className="text-sm text-gray-400 mb-1">Best For</p>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-xs sm:text-sm text-gray-400 mb-1">Best For</p>
+                <div className="flex flex-wrap gap-1" role="list" aria-label="Best use cases">
                   {theory.metadata.relevance.map((relevanceType) => (
                     <Badge
                       key={relevanceType}
                       variant="outline"
                       className="text-xs border-gray-700 text-gray-400"
+                      role="listitem"
                     >
                       {RELEVANCE_TYPE_LABELS[relevanceType]}
                     </Badge>
@@ -486,19 +497,19 @@ export function TheoryDetailView({
               </div>
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      {/* Cross-Linked Related Content */}
-      <div className="mt-12">
-        <RelatedContent
-          theory={theory}
-          maxItems={8}
-          showPersonalized={true}
-          className="border-t border-gray-800 pt-8"
-        />
       </div>
     </div>
+
+      {/* Cross-Linked Related Content */ }
+  <div className="mt-12">
+    <RelatedContent
+      theory={theory}
+      maxItems={8}
+      showPersonalized={true}
+      className="border-t border-gray-800 pt-8"
+    />
+  </div>
+    </div >
   );
 }
 

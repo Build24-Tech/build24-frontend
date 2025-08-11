@@ -66,29 +66,31 @@ export function CategoryNavigation({
   };
 
   return (
-    <Card className="bg-gray-900 border-gray-800 p-6">
+    <Card className="bg-gray-900 border-gray-800 p-4 sm:p-6">
       <div className="space-y-4">
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-white">Categories</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-white">Categories</h3>
           <Button
             variant="ghost"
             size="sm"
             onClick={handleShowAllClick}
             className={cn(
-              "text-sm transition-colors",
+              "text-xs sm:text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900",
               !selectedCategory
                 ? "text-yellow-400 bg-yellow-400/10 hover:bg-yellow-400/20"
                 : "text-gray-400 hover:text-white"
             )}
+            aria-label="Show all categories"
           >
-            <Grid3X3 className="w-4 h-4 mr-2" />
-            Show All
+            <Grid3X3 className="w-4 h-4 mr-1 sm:mr-2" aria-hidden="true" />
+            <span className="hidden sm:inline">Show All</span>
+            <span className="sm:hidden">All</span>
           </Button>
         </div>
 
         {/* Category List */}
-        <div className="space-y-2">
+        <div className="space-y-2" role="group" aria-label="Theory categories">
           {categories.map((category) => {
             const IconComponent = CATEGORY_ICONS[category];
             const isSelected = selectedCategory === category;
@@ -102,22 +104,24 @@ export function CategoryNavigation({
                 key={category}
                 onClick={() => handleCategoryClick(category)}
                 className={cn(
-                  "w-full flex items-center justify-between p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02]",
+                  "w-full flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-all duration-200 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900 touch-manipulation",
                   isSelected ? activeColors : baseColors
                 )}
+                aria-pressed={isSelected}
+                aria-label={`${THEORY_CATEGORY_LABELS[category]} category, ${count} theories`}
               >
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
                   <div className={cn(
-                    "p-2 rounded-md",
+                    "p-1.5 sm:p-2 rounded-md flex-shrink-0",
                     isSelected ? "bg-current/20" : "bg-current/10"
                   )}>
-                    <IconComponent className="w-4 h-4" />
+                    <IconComponent className="w-3 h-3 sm:w-4 sm:h-4" aria-hidden="true" />
                   </div>
-                  <div className="text-left">
-                    <div className="font-medium text-sm">
+                  <div className="text-left min-w-0 flex-1">
+                    <div className="font-medium text-xs sm:text-sm truncate">
                       {THEORY_CATEGORY_LABELS[category]}
                     </div>
-                    <div className="text-xs opacity-75">
+                    <div className="text-xs opacity-75 hidden sm:block">
                       {count} {count === 1 ? 'theory' : 'theories'}
                     </div>
                   </div>
@@ -126,11 +130,12 @@ export function CategoryNavigation({
                 <Badge
                   variant="secondary"
                   className={cn(
-                    "text-xs font-semibold",
+                    "text-xs font-semibold flex-shrink-0 ml-2",
                     isSelected
                       ? "bg-current/20 text-current border-current/30"
                       : "bg-gray-800 text-gray-300 border-gray-700"
                   )}
+                  aria-hidden="true"
                 >
                   {count}
                 </Badge>
@@ -141,8 +146,8 @@ export function CategoryNavigation({
 
         {/* Selected Category Info */}
         {selectedCategory && (
-          <div className="mt-4 p-3 rounded-lg bg-gray-800/50 border border-gray-700">
-            <div className="text-sm text-gray-300">
+          <div className="mt-4 p-2 sm:p-3 rounded-lg bg-gray-800/50 border border-gray-700" role="status" aria-live="polite">
+            <div className="text-xs sm:text-sm text-gray-300">
               <span className="text-yellow-400 font-medium">
                 {THEORY_CATEGORY_LABELS[selectedCategory]}
               </span>
@@ -153,7 +158,7 @@ export function CategoryNavigation({
 
         {/* Total Count */}
         <div className="pt-2 border-t border-gray-800">
-          <div className="text-xs text-gray-500 text-center">
+          <div className="text-xs text-gray-500 text-center" role="status">
             Total: {Object.values(theoryCounts).reduce((sum, count) => sum + count, 0)} theories
           </div>
         </div>

@@ -74,6 +74,7 @@ export default function KnowledgeHubLayout({
   const params = useParams();
   const currentLang = (params?.lang as UserLanguage) || 'en';
   const [searchQuery, setSearchQuery] = useState('');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Progress tracking
   const {
@@ -112,25 +113,27 @@ export default function KnowledgeHubLayout({
 
   return (
     <div className="min-h-screen bg-black text-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4 sm:py-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
-            <div className="flex items-center space-x-4">
+          <header className="flex items-center justify-between mb-6 sm:mb-8">
+            <div className="flex items-center space-x-2 sm:space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 asChild
                 className="text-gray-400 hover:text-white"
+                aria-label="Back to Dashboard"
               >
                 <Link href="/dashboard">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Dashboard
+                  <ArrowLeft className="w-4 h-4 sm:mr-2" />
+                  <span className="hidden sm:inline">Back to Dashboard</span>
                 </Link>
               </Button>
             </div>
 
-            <div className="flex items-center space-x-4">
+            {/* Desktop Header Actions */}
+            <div className="hidden lg:flex items-center space-x-4">
               {/* Search Bar */}
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -139,6 +142,7 @@ export default function KnowledgeHubLayout({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-64 bg-gray-900 border-gray-800 focus:border-yellow-400"
+                  aria-label="Search theories"
                 />
               </div>
 
@@ -167,14 +171,123 @@ export default function KnowledgeHubLayout({
                 </Link>
               </Button>
             </div>
-          </div>
 
-          <div className="grid lg:grid-cols-4 gap-8">
-            {/* Sidebar Navigation */}
-            <div className="lg:col-span-1">
+            {/* Mobile Menu Button */}
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="lg:hidden text-gray-400 hover:text-white"
+                  aria-label="Open navigation menu"
+                >
+                  <Menu className="w-5 h-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-80 bg-gray-900 border-gray-800">
+                <SheetHeader>
+                  <SheetTitle className="text-yellow-400">Knowledge Hub</SheetTitle>
+                </SheetHeader>
+
+                <div className="mt-6 space-y-6">
+                  {/* Mobile Search */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                    <Input
+                      placeholder="Search theories..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10 bg-gray-800 border-gray-700 focus:border-yellow-400"
+                      aria-label="Search theories"
+                    />
+                  </div>
+
+                  {/* Mobile Navigation */}
+                  <nav className="space-y-2" role="navigation" aria-label="Knowledge Hub categories">
+                    {navigationItems.map((item) => {
+                      const IconComponent = item.icon;
+                      const active = isActive(item.href);
+
+                      return (
+                        <Link
+                          key={item.id}
+                          href={item.href}
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          className={`flex items-center space-x-3 px-3 py-3 rounded-lg text-sm transition-colors ${active
+                            ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/20'
+                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                            }`}
+                          aria-current={active ? 'page' : undefined}
+                        >
+                          <IconComponent className="w-5 h-5" />
+                          <span>{item.name}</span>
+                        </Link>
+                      );
+                    })}
+                  </nav>
+
+                  {/* Mobile User Actions */}
+                  <div className="space-y-2 pt-4 border-t border-gray-800">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="w-full justify-start text-gray-400 hover:text-yellow-400"
+                    >
+                      <Link href="/dashboard/knowledge-hub/bookmarks" onClick={() => setIsMobileMenuOpen(false)}>
+                        <Bookmark className="w-4 h-4 mr-3" />
+                        Bookmarks
+                      </Link>
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="w-full justify-start text-gray-400 hover:text-yellow-400"
+                    >
+                      <Link href="/dashboard/knowledge-hub/progress" onClick={() => setIsMobileMenuOpen(false)}>
+                        <User className="w-4 h-4 mr-3" />
+                        Progress
+                      </Link>
+                    </Button>
+                  </div>
+
+                  {/* Mobile Progress Summary */}
+                  <div className="pt-4 border-t border-gray-800">
+                    <h4 className="font-semibold mb-3 text-sm text-gray-300">Your Progress</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Theories Read</span>
+                        <Badge variant="secondary" className="bg-gray-800 text-gray-300">
+                          {userProgress?.stats.theoriesRead || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Bookmarks</span>
+                        <Badge variant="secondary" className="bg-gray-800 text-gray-300">
+                          {userProgress?.bookmarkedTheories.length || 0}
+                        </Badge>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Badges</span>
+                        <Badge variant="secondary" className="bg-gray-800 text-gray-300">
+                          {userProgress?.badges.length || 0}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </header>
+
+          <div className="grid lg:grid-cols-4 gap-6 lg:gap-8">
+            {/* Desktop Sidebar Navigation */}
+            <aside className="hidden lg:block lg:col-span-1" role="complementary" aria-label="Knowledge Hub navigation">
               <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 sticky top-8">
                 <h3 className="font-semibold mb-4 text-yellow-400">Categories</h3>
-                <nav className="space-y-2">
+                <nav className="space-y-2" role="navigation" aria-label="Knowledge Hub categories">
                   {navigationItems.map((item) => {
                     const IconComponent = item.icon;
                     const active = isActive(item.href);
@@ -183,12 +296,13 @@ export default function KnowledgeHubLayout({
                       <Link
                         key={item.id}
                         href={item.href}
-                        className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${active
+                        className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900 ${active
                           ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/20'
                           : 'text-gray-400 hover:text-white hover:bg-gray-800'
                           }`}
+                        aria-current={active ? 'page' : undefined}
                       >
-                        <IconComponent className="w-4 h-4" />
+                        <IconComponent className="w-4 h-4" aria-hidden="true" />
                         <span>{item.name}</span>
                       </Link>
                     );
@@ -231,12 +345,12 @@ export default function KnowledgeHubLayout({
                   </div>
                 </div>
               </div>
-            </div>
+            </aside>
 
             {/* Main Content */}
-            <div className="lg:col-span-3">
+            <main className="lg:col-span-3" role="main">
               {children}
-            </div>
+            </main>
           </div>
         </div>
       </div>
