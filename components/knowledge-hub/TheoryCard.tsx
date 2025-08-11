@@ -31,9 +31,14 @@ export function TheoryCard({
   showPremiumBadge = true,
   className
 }: TheoryCardProps) {
+  const { trackBookmark } = useAnalytics();
+
   const handleBookmarkClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onBookmarkToggle(theory.id);
+
+    // Track bookmark analytics
+    trackBookmark(theory.id, isBookmarked ? 'unbookmark' : 'bookmark');
   };
 
   const handleCardClick = () => {
@@ -138,6 +143,11 @@ export function TheoryCard({
             )}
           </div>
         )}
+
+        {/* Analytics */}
+        <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+          <TheoryAnalyticsCompact theoryId={theory.id} />
+        </div>
       </CardContent>
     </Card>
   );

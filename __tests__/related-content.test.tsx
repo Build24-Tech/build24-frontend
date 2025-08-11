@@ -4,10 +4,13 @@ import '@testing-library/jest-dom';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 // Mock the cross-linking service
+const mockGetCrossLinksForTheory = jest.fn();
+const mockGetPersonalizedRecommendations = jest.fn();
+
 jest.mock('@/lib/cross-linking-service', () => ({
   getCrossLinkingService: jest.fn(() => ({
-    getCrossLinksForTheory: jest.fn(),
-    getPersonalizedRecommendations: jest.fn()
+    getCrossLinksForTheory: mockGetCrossLinksForTheory,
+    getPersonalizedRecommendations: mockGetPersonalizedRecommendations
   }))
 }));
 
@@ -106,16 +109,10 @@ const mockPersonalizedRecs = [
 ];
 
 describe('RelatedContent', () => {
-  let mockCrossLinkingService: any;
-
   beforeEach(() => {
     jest.clearAllMocks();
-
-    const { getCrossLinkingService } = require('@/lib/cross-linking-service');
-    mockCrossLinkingService = getCrossLinkingService();
-
-    mockCrossLinkingService.getCrossLinksForTheory.mockResolvedValue(mockRelatedContent);
-    mockCrossLinkingService.getPersonalizedRecommendations.mockResolvedValue(mockPersonalizedRecs);
+    mockGetCrossLinksForTheory.mockResolvedValue(mockRelatedContent);
+    mockGetPersonalizedRecommendations.mockResolvedValue(mockPersonalizedRecs);
   });
 
   it('should render loading state initially', () => {
@@ -127,17 +124,23 @@ describe('RelatedContent', () => {
   it('should load and display related content', async () => {
     render(<RelatedContent theory={mockTheory} />);
 
+    // Wait for loading to complete
+    await waitFor(() => {
+      expect(screen.queryByTestId('related-content-loading')).not.toBeInTheDocument();
+    });
+
+    // Check if the service was called
+    expect(mockGetCrossLinksForTheory).toHaveBeenCalledWith(
+      mockTheory,
+      undefined,
+      expect.any(Object)
+    );
+
     await waitFor(() => {
       expect(screen.getByText('Scarcity Principle')).toBeInTheDocument();
       expect(screen.getByText('The Psychology of Pricing')).toBeInTheDocument();
       expect(screen.getByText('Pricing Optimizer')).toBeInTheDocument();
     });
-
-    expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledWith(
-      mockTheory,
-      undefined,
-      expect.any(Object)
-    );
   });
 
   it('should display personalized recommendations when user progress is provided', async () => {
@@ -154,7 +157,7 @@ describe('RelatedContent', () => {
       expect(screen.getByText('Loss Aversion')).toBeInTheDocument();
     });
 
-    expect(mockCrossLinkingService.getPersonalizedRecommendations).toHaveBeenCalledWith(
+    expect(mockGetPersonalizedRecommendations).toHaveBeenCalledWith(
       mockUserProgress,
       5
     );
@@ -174,14 +177,14 @@ describe('RelatedContent', () => {
     });
 
     expect(screen.queryByText('Recommended for You')).not.toBeInTheDocument();
-    expect(mockCrossLinkingService.getPersonalizedRecommendations).not.toHaveBeenCalled();
+    expect(mockGetPersonalizedRecommendations).not.toHaveBeenCalled();
   });
 
   it('should group content by type', async () => {
     render(<RelatedContent theory={mockTheory} />);
 
     await waitFor(() => {
-      expect(screen.getByText('Related Theorys')).toBeInTheDocument();
+      expect(screen.getByText('Related Theories')).toBeInTheDocument();
       expect(screen.getByText('Related Blog Posts')).toBeInTheDocument();
       expect(screen.getByText('Related Projects')).toBeInTheDocument();
     });
@@ -198,7 +201,7 @@ describe('RelatedContent', () => {
   });
 
   it('should handle error state', async () => {
-    mockCrossLinkingService.getCrossLinksForTheory.mockRejectedValue(new Error('Test error'));
+    mockGetCrossLinksForTheory.mockRejectedValue(new Error('Test error'));
 
     render(<RelatedContent theory={mockTheory} />);
 
@@ -208,7 +211,7 @@ describe('RelatedContent', () => {
   });
 
   it('should show try again button on error', async () => {
-    mockCrossLinkingService.getCrossLinksForTheory.mockRejectedValue(new Error('Test error'));
+    mockGetCrossLinksForTheory.mockRejectedValue(new Error('Test error'));
 
     render(<RelatedContent theory={mockTheory} />);
 
@@ -219,7 +222,7 @@ describe('RelatedContent', () => {
   });
 
   it('should retry loading when try again is clicked', async () => {
-    mockCrossLinkingService.getCrossLinksForTheory
+    mockGetCrossLinksForTheory
       .mockRejectedValueOnce(new Error('Test error'))
       .mockResolvedValueOnce(mockRelatedContent);
 
@@ -234,12 +237,12 @@ describe('RelatedContent', () => {
       expect(screen.getByText('Scarcity Principle')).toBeInTheDocument();
     });
 
-    expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledTimes(2);
+    expect(mockGetCrossLinksForTheory).toHaveBeenCalledTimes(2);
   });
 
   it('should show empty state when no content is found', async () => {
-    mockCrossLinkingService.getCrossLinksForTheory.mockResolvedValue([]);
-    mockCrossLinkingService.getPersonalizedRecommendations.mockResolvedValue([]);
+    mockGetCrossLinksForTheory.mockResolvedValue([]);
+    mockGetPersonalizedRecommendations.mockResolvedValue([]);
 
     render(<RelatedContent theory={mockTheory} />);
 
@@ -253,7 +256,7 @@ describe('RelatedContent', () => {
     render(<RelatedContent theory={mockTheory} maxItems={2} />);
 
     await waitFor(() => {
-      expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledWith(
+      expect(mockGetCrossLinksForTheory).toHaveBeenCalledWith(
         mockTheory,
         undefined,
         {
@@ -277,14 +280,14 @@ describe('RelatedContent', () => {
     const { rerender } = render(<RelatedContent theory={mockTheory} />);
 
     await waitFor(() => {
-      expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledTimes(1);
+      expect(mockGetCrossLinksForTheory).toHaveBeenCalledTimes(1);
     });
 
     const newTheory = { ...mockTheory, id: 'new-theory' };
     rerender(<RelatedContent theory={newTheory} />);
 
     await waitFor(() => {
-      expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledTimes(2);
+      expect(mockGetCrossLinksForTheory).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -294,7 +297,7 @@ describe('RelatedContent', () => {
     );
 
     await waitFor(() => {
-      expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledTimes(1);
+      expect(mockGetCrossLinksForTheory).toHaveBeenCalledTimes(1);
     });
 
     const newUserProgress = { ...mockUserProgress, userId: 'new-user' };
@@ -303,7 +306,7 @@ describe('RelatedContent', () => {
     );
 
     await waitFor(() => {
-      expect(mockCrossLinkingService.getCrossLinksForTheory).toHaveBeenCalledTimes(2);
+      expect(mockGetCrossLinksForTheory).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -351,7 +354,11 @@ describe('RelatedContent', () => {
 });
 
 describe('RelatedContentSection', () => {
-  const mockItems = mockRelatedContent.filter(item => item.type === 'theory');
+  beforeEach(() => {
+    jest.clearAllMocks();
+    mockGetCrossLinksForTheory.mockResolvedValue(mockRelatedContent);
+    mockGetPersonalizedRecommendations.mockResolvedValue(mockPersonalizedRecs);
+  });
 
   it('should not render when no items are provided', () => {
     const { container } = render(
@@ -373,7 +380,7 @@ describe('RelatedContentSection', () => {
       description: `Description ${i}`
     }));
 
-    mockCrossLinkingService.getCrossLinksForTheory.mockResolvedValue(manyItems);
+    mockGetCrossLinksForTheory.mockResolvedValue(manyItems);
 
     render(<RelatedContent theory={mockTheory} />);
 
@@ -391,7 +398,7 @@ describe('RelatedContentSection', () => {
       description: `Description ${i}`
     }));
 
-    mockCrossLinkingService.getCrossLinksForTheory.mockResolvedValue(manyItems);
+    mockGetCrossLinksForTheory.mockResolvedValue(manyItems);
 
     render(<RelatedContent theory={mockTheory} />);
 

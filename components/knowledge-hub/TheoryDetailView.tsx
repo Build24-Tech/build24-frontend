@@ -54,6 +54,8 @@ export function TheoryDetailView({
   const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
 
   const { markTheoryAsRead, updateBookmark } = useProgressTracker();
+  const { trackBookmark } = useAnalytics();
+  const { startReading, stopReading, isReading } = useReadingTimer(theory.id);
 
   // Check if user has premium access based on userAccess prop
   const hasPremiumAccess = userAccess === AccessLevel.PREMIUM;
@@ -61,6 +63,19 @@ export function TheoryDetailView({
   const categoryLabel = THEORY_CATEGORY_LABELS[theory.category];
   const difficultyLabel = DIFFICULTY_LEVEL_LABELS[theory.metadata.difficulty];
   const difficultyColor = DIFFICULTY_LEVEL_COLORS[theory.metadata.difficulty];
+
+  // Start reading timer when component mounts
+  useEffect(() => {
+    if (theory) {
+      startReading();
+    }
+
+    return () => {
+      if (isReading) {
+        stopReading();
+      }
+    };
+  }, [theory, startReading, stopReading, isReading]);
 
   // Mark theory as read when component mounts (with a delay to simulate reading time)
   useEffect(() => {
@@ -77,6 +92,9 @@ export function TheoryDetailView({
   const handleBookmarkToggle = () => {
     // Update progress tracker
     updateBookmark(theory.id, !isBookmarked);
+
+    // Track bookmark analytics
+    trackBookmark(theory.id, isBookmarked ? 'unbookmark' : 'bookmark');
 
     // Call the original callback if provided
     if (onBookmarkToggle) {
@@ -445,6 +463,9 @@ export function TheoryDetailView({
               </CardContent>
             </Card>
           )}
+
+          {/* Analytics */}
+          <TheoryAnalytics theoryId={theory.id} />
 
           {/* Tags */}
           <Card className="bg-gray-900 border-gray-800">

@@ -31,7 +31,6 @@ interface RelatedContentSectionProps {
   title: string;
   items: RelatedContentType[];
   icon: React.ReactNode;
-  emptyMessage: string;
   maxDisplay?: number;
 }
 
@@ -170,19 +169,23 @@ export function RelatedContent({
   return (
     <div className={`space-y-8 ${className}`}>
       {/* Related Content Sections */}
-      {Object.entries(groupedContent).map(([type, items]) => (
-        <RelatedContentSection
-          key={type}
-          title={`Related ${getContentTypeLabel(type)}s`}
-          items={items}
-          icon={getContentIcon(type)}
-          emptyMessage={`No related ${type}s found`}
-          maxDisplay={type === 'theory' ? 3 : 2}
-        />
-      ))}
+      {Object.entries(groupedContent).map(([type, items]) => {
+        const pluralLabel = type === 'theory' ? 'Theories' :
+          type === 'blog-post' ? 'Blog Posts' :
+            type === 'project' ? 'Projects' : 'Content';
+        return (
+          <RelatedContentSection
+            key={type}
+            title={`Related ${pluralLabel}`}
+            items={items}
+            icon={getContentIcon(type)}
+            maxDisplay={type === 'theory' ? 3 : 2}
+          />
+        );
+      })}
 
       {/* Personalized Recommendations */}
-      {showPersonalized && personalizedRecs.length > 0 && (
+      {showPersonalized && personalizedRecs && personalizedRecs.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-4">
             <Star className="h-5 w-5 text-yellow-500" />
@@ -257,7 +260,7 @@ export function RelatedContent({
       )}
 
       {/* Empty State */}
-      {relatedContent.length === 0 && personalizedRecs.length === 0 && (
+      {(relatedContent || []).length === 0 && (!personalizedRecs || personalizedRecs.length === 0) && (
         <div className="text-center py-8">
           <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 mb-4">No related content found</p>
@@ -274,11 +277,36 @@ function RelatedContentSection({
   title,
   items,
   icon,
-  emptyMessage,
   maxDisplay = 3
 }: RelatedContentSectionProps) {
   const [showAll, setShowAll] = useState(false);
   const displayItems = showAll ? items : items.slice(0, maxDisplay);
+
+  const getContentTypeColor = (type: string) => {
+    switch (type) {
+      case 'theory':
+        return 'bg-blue-500/10 text-blue-600 border-blue-200';
+      case 'blog-post':
+        return 'bg-green-500/10 text-green-600 border-green-200';
+      case 'project':
+        return 'bg-purple-500/10 text-purple-600 border-purple-200';
+      default:
+        return 'bg-gray-500/10 text-gray-600 border-gray-200';
+    }
+  };
+
+  const getContentTypeLabel = (type: string) => {
+    switch (type) {
+      case 'theory':
+        return 'Theory';
+      case 'blog-post':
+        return 'Blog Post';
+      case 'project':
+        return 'Project';
+      default:
+        return 'Content';
+    }
+  };
 
   if (items.length === 0) {
     return null;
@@ -342,29 +370,4 @@ function RelatedContentSection({
   );
 }
 
-// Helper functions (moved outside component to avoid re-creation)
-function getContentTypeColor(type: string) {
-  switch (type) {
-    case 'theory':
-      return 'bg-blue-500/10 text-blue-600 border-blue-200';
-    case 'blog-post':
-      return 'bg-green-500/10 text-green-600 border-green-200';
-    case 'project':
-      return 'bg-purple-500/10 text-purple-600 border-purple-200';
-    default:
-      return 'bg-gray-500/10 text-gray-600 border-gray-200';
-  }
-}
 
-function getContentTypeLabel(type: string) {
-  switch (type) {
-    case 'theory':
-      return 'Theory';
-    case 'blog-post':
-      return 'Blog Post';
-    case 'project':
-      return 'Project';
-    default:
-      return 'Content';
-  }
-}

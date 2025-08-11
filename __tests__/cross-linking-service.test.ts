@@ -2,13 +2,19 @@ import { CrossLinkingService, getCrossLinkingService } from '@/lib/cross-linking
 import { DifficultyLevel, RelevanceType, Theory, TheoryCategory, UserProgress } from '@/types/knowledge-hub';
 
 // Mock the recommendation engine
+const mockGetRelatedTheories = jest.fn();
+const mockGetContentRecommendations = jest.fn();
+const mockUpdateTheories = jest.fn();
+const mockUpdateBlogPosts = jest.fn();
+const mockUpdateProjects = jest.fn();
+
 jest.mock('@/lib/recommendation-engine', () => ({
   getRecommendationEngine: jest.fn(() => ({
-    getRelatedTheories: jest.fn(),
-    getContentRecommendations: jest.fn(),
-    updateTheories: jest.fn(),
-    updateBlogPosts: jest.fn(),
-    updateProjects: jest.fn()
+    getRelatedTheories: mockGetRelatedTheories,
+    getContentRecommendations: mockGetContentRecommendations,
+    updateTheories: mockUpdateTheories,
+    updateBlogPosts: mockUpdateBlogPosts,
+    updateProjects: mockUpdateProjects
   }))
 }));
 
@@ -80,22 +86,25 @@ const mockRelatedTheories: Theory[] = [
 
 describe('CrossLinkingService', () => {
   let service: CrossLinkingService;
-  let mockRecommendationEngine: any;
+
 
   beforeEach(() => {
     // Reset mocks
     jest.clearAllMocks();
 
-    // Get the mocked recommendation engine
-    const { getRecommendationEngine } = require('@/lib/recommendation-engine');
-    mockRecommendationEngine = getRecommendationEngine();
+    // Set up default mock return values
+    mockGetRelatedTheories.mockReturnValue(mockRelatedTheories);
+    mockGetContentRecommendations.mockReturnValue([]);
+    mockUpdateTheories.mockReturnValue(undefined);
+    mockUpdateBlogPosts.mockReturnValue(undefined);
+    mockUpdateProjects.mockReturnValue(undefined);
 
     service = new CrossLinkingService();
   });
 
   describe('getCrossLinksForTheory', () => {
     beforeEach(() => {
-      mockRecommendationEngine.getRelatedTheories.mockReturnValue(mockRelatedTheories);
+      mockGetRelatedTheories.mockReturnValue(mockRelatedTheories);
     });
 
     it('should generate cross-links for a theory', async () => {
@@ -159,7 +168,7 @@ describe('CrossLinkingService', () => {
     it('should handle user progress when provided', async () => {
       await service.getCrossLinksForTheory(mockTheory, mockUserProgress);
 
-      expect(mockRecommendationEngine.getRelatedTheories).toHaveBeenCalledWith(
+      expect(mockGetRelatedTheories).toHaveBeenCalledWith(
         mockTheory,
         mockUserProgress,
         expect.any(Number)
@@ -167,7 +176,7 @@ describe('CrossLinkingService', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockRecommendationEngine.getRelatedTheories.mockImplementation(() => {
+      mockGetRelatedTheories.mockImplementation(() => {
         throw new Error('Test error');
       });
 
@@ -182,7 +191,7 @@ describe('CrossLinkingService', () => {
         summary: 'This is a very long summary that should be truncated because it exceeds the maximum length limit that we have set for descriptions in the cross-linking system to ensure good user experience.'
       };
 
-      mockRecommendationEngine.getRelatedTheories.mockReturnValue([longSummaryTheory]);
+      mockGetRelatedTheories.mockReturnValue([longSummaryTheory]);
 
       const crossLinks = await service.getCrossLinksForTheory(mockTheory);
       const theoryLink = crossLinks.find(link => link.type === 'theory');
@@ -198,7 +207,7 @@ describe('CrossLinkingService', () => {
 
   describe('getPersonalizedRecommendations', () => {
     beforeEach(() => {
-      mockRecommendationEngine.getContentRecommendations.mockReturnValue([
+      mockGetContentRecommendations.mockReturnValue([
         {
           theory: mockRelatedTheories[0],
           score: 0.8,
@@ -212,13 +221,13 @@ describe('CrossLinkingService', () => {
 
       expect(recommendations).toBeDefined();
       expect(Array.isArray(recommendations)).toBe(true);
-      expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalled();
+      expect(mockGetContentRecommendations).toHaveBeenCalled();
     });
 
     it('should analyze user preferences', async () => {
       await service.getPersonalizedRecommendations(mockUserProgress, 5);
 
-      expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalledWith(
+      expect(mockGetContentRecommendations).toHaveBeenCalledWith(
         expect.arrayContaining([
           TheoryCategory.COGNITIVE_BIASES,
           TheoryCategory.PERSUASION_PRINCIPLES
@@ -229,7 +238,7 @@ describe('CrossLinkingService', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockRecommendationEngine.getContentRecommendations.mockImplementation(() => {
+      mockGetContentRecommendations.mockImplementation(() => {
         throw new Error('Test error');
       });
 
@@ -241,7 +250,7 @@ describe('CrossLinkingService', () => {
     it('should respect limit parameter', async () => {
       await service.getPersonalizedRecommendations(mockUserProgress, 3);
 
-      expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalledWith(
+      expect(mockGetContentRecommendations).toHaveBeenCalledWith(
         expect.any(Array),
         mockUserProgress,
         3
@@ -279,7 +288,7 @@ describe('CrossLinkingService', () => {
 
   describe('getTrendingContent', () => {
     beforeEach(() => {
-      mockRecommendationEngine.getContentRecommendations.mockReturnValue([
+      mockGetContentRecommendations.mockReturnValue([
         {
           theory: mockRelatedTheories[0],
           score: 0.9,
@@ -293,13 +302,13 @@ describe('CrossLinkingService', () => {
 
       expect(trending).toBeDefined();
       expect(Array.isArray(trending)).toBe(true);
-      expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalled();
+      expect(mockGetContentRecommendations).toHaveBeenCalled();
     });
 
     it('should respect limit parameter', async () => {
       await service.getTrendingContent(3);
 
-      expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalledWith(
+      expect(mockGetContentRecommendations).toHaveBeenCalledWith(
         expect.any(Array),
         undefined,
         3
@@ -307,7 +316,7 @@ describe('CrossLinkingService', () => {
     });
 
     it('should handle errors gracefully', async () => {
-      mockRecommendationEngine.getContentRecommendations.mockImplementation(() => {
+      mockGetContentRecommendations.mockImplementation(() => {
         throw new Error('Test error');
       });
 
@@ -322,7 +331,7 @@ describe('CrossLinkingService', () => {
       const theories = [mockTheory];
       await service.updateRecommendationData(theories);
 
-      expect(mockRecommendationEngine.updateTheories).toHaveBeenCalledWith(theories);
+      expect(mockUpdateTheories).toHaveBeenCalledWith(theories);
     });
 
     it('should update blog posts when provided', async () => {
@@ -339,7 +348,7 @@ describe('CrossLinkingService', () => {
 
       await service.updateRecommendationData(theories, blogPosts);
 
-      expect(mockRecommendationEngine.updateBlogPosts).toHaveBeenCalledWith(blogPosts);
+      expect(mockUpdateBlogPosts).toHaveBeenCalledWith(blogPosts);
     });
 
     it('should update projects when provided', async () => {
@@ -355,11 +364,11 @@ describe('CrossLinkingService', () => {
 
       await service.updateRecommendationData(theories, undefined, projects);
 
-      expect(mockRecommendationEngine.updateProjects).toHaveBeenCalledWith(projects);
+      expect(mockUpdateProjects).toHaveBeenCalledWith(projects);
     });
 
     it('should handle errors gracefully', async () => {
-      mockRecommendationEngine.updateTheories.mockImplementation(() => {
+      mockUpdateTheories.mockImplementation(() => {
         throw new Error('Test error');
       });
 
@@ -397,13 +406,13 @@ describe('Category-related tag mapping', () => {
       category: TheoryCategory.COGNITIVE_BIASES
     };
 
-    mockRecommendationEngine.getRelatedTheories.mockReturnValue([]);
+    mockGetRelatedTheories.mockReturnValue([]);
 
     await service.getCrossLinksForTheory(cognitiveTheory);
 
     // The service should internally use appropriate tags for cognitive biases
     // This is tested indirectly through the cross-links generation
-    expect(mockRecommendationEngine.getRelatedTheories).toHaveBeenCalled();
+    expect(mockGetRelatedTheories).toHaveBeenCalled();
   });
 
   it('should handle different theory categories', async () => {
@@ -416,11 +425,11 @@ describe('Category-related tag mapping', () => {
 
     for (const category of categories) {
       const theory = { ...mockTheory, category };
-      mockRecommendationEngine.getRelatedTheories.mockReturnValue([]);
+      mockGetRelatedTheories.mockReturnValue([]);
 
       await service.getCrossLinksForTheory(theory);
 
-      expect(mockRecommendationEngine.getRelatedTheories).toHaveBeenCalled();
+      expect(mockGetRelatedTheories).toHaveBeenCalled();
     }
   });
 });
@@ -430,7 +439,7 @@ describe('User preference analysis', () => {
 
   beforeEach(() => {
     service = new CrossLinkingService();
-    mockRecommendationEngine.getContentRecommendations.mockReturnValue([]);
+    mockGetContentRecommendations.mockReturnValue([]);
   });
 
   it('should prioritize user explored categories', async () => {
@@ -448,7 +457,7 @@ describe('User preference analysis', () => {
 
     await service.getPersonalizedRecommendations(userWithPreferences);
 
-    expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalledWith(
+    expect(mockGetContentRecommendations).toHaveBeenCalledWith(
       expect.arrayContaining([
         TheoryCategory.COGNITIVE_BIASES,
         TheoryCategory.UX_PSYCHOLOGY,
@@ -470,6 +479,6 @@ describe('User preference analysis', () => {
 
     await service.getPersonalizedRecommendations(newUser);
 
-    expect(mockRecommendationEngine.getContentRecommendations).toHaveBeenCalled();
+    expect(mockGetContentRecommendations).toHaveBeenCalled();
   });
 });

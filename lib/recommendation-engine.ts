@@ -75,7 +75,15 @@ export class RecommendationEngine {
     limit: number = 5
   ): Theory[] {
     const scores = this.theories
-      .filter(theory => theory.id !== currentTheory.id)
+      .filter(theory => {
+        // Exclude current theory
+        if (theory.id === currentTheory.id) return false;
+
+        // Exclude already read theories if user progress is available
+        if (userProgress && userProgress.readTheories.includes(theory.id)) return false;
+
+        return true;
+      })
       .map(theory => ({
         theory,
         score: this.calculateTheoryRelatedness(currentTheory, theory, userProgress)

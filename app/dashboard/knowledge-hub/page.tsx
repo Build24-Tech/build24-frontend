@@ -1,9 +1,11 @@
 'use client';
 
+import { ContentRecommendationPanel } from '@/components/knowledge-hub/ContentRecommendationPanel';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { href } from '@/lib/language-utils';
+import { TheoryCategory } from '@/types/knowledge-hub';
 import { UserLanguage } from '@/types/user';
 import { BookOpen, Brain, TrendingUp, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
@@ -151,13 +153,18 @@ export default function KnowledgeHubPage() {
         </Card>
       </div>
 
-      {/* Content Recommendations */}
-      <div className="mt-12">
-        <ContentRecommendationPanel
-          categories={categories.map(cat => cat.category)}
-          maxRecommendations={6}
-          showTrending={true}
-        />
+      {/* Trending Content */}
+      <div className="mt-12 grid lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-2">
+          <ContentRecommendationPanel
+            categories={categories.map(cat => cat.category)}
+            maxRecommendations={6}
+            showTrending={true}
+          />
+        </div>
+        <div>
+          <PopularContent limit={5} />
+        </div>
       </div>
 
       {/* Getting Started */}
