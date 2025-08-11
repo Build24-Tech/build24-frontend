@@ -27,6 +27,9 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import InteractiveExample from './InteractiveExample';
+import { PremiumContentPreview } from './PremiumContentPreview';
+import { PremiumGate } from './PremiumGate';
 
 interface TheoryDetailViewProps {
   theory: Theory;
@@ -50,6 +53,7 @@ export function TheoryDetailView({
   const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
 
   const { markTheoryAsRead, updateBookmark } = useProgressTracker();
+  const hasPremiumAccess = useHasPremiumAccess();
 
   const categoryLabel = THEORY_CATEGORY_LABELS[theory.category];
   const difficultyLabel = DIFFICULTY_LEVEL_LABELS[theory.metadata.difficulty];
@@ -286,18 +290,32 @@ export function TheoryDetailView({
 
           {/* Premium Content */}
           {theory.premiumContent && (
-            <Card className="bg-gray-900 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-yellow-400 flex items-center">
-                  <Crown className="w-5 h-5 mr-2" />
-                  Premium Content
-                </CardTitle>
-                <CardDescription>
-                  Extended case studies and advanced applications
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {userAccess === AccessLevel.PREMIUM ? (
+            <PremiumGate
+              showPreview={true}
+              previewContent={<PremiumContentPreview premiumContent={theory.premiumContent} />}
+              upgradePrompt={{
+                title: `Unlock ${theory.title} Premium Content`,
+                description: 'Get access to extended case studies, downloadable resources, and advanced implementation guides.',
+                features: [
+                  'Extended case studies with real-world examples',
+                  'Downloadable templates and A/B test scripts',
+                  'Advanced implementation techniques',
+                  'Expert insights and best practices',
+                  'Priority access to new content updates'
+                ]
+              }}
+            >
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <CardTitle className="text-yellow-400 flex items-center">
+                    <Crown className="w-5 h-5 mr-2" />
+                    Premium Content
+                  </CardTitle>
+                  <CardDescription>
+                    Extended case studies and advanced applications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
                   <div className="space-y-6">
                     {/* Extended Case Studies */}
                     {theory.premiumContent.extendedCaseStudies && (
@@ -347,11 +365,9 @@ export function TheoryDetailView({
                       </div>
                     )}
                   </div>
-                ) : (
-                  <PremiumGate />
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </PremiumGate>
           )}
         </div>
 
@@ -454,21 +470,7 @@ export function TheoryDetailView({
 
 
 
-// Premium Gate Component
-function PremiumGate() {
-  return (
-    <div className="bg-gradient-to-br from-yellow-500/10 to-orange-500/10 rounded-lg p-6 text-center border border-yellow-500/20">
-      <Crown className="w-12 h-12 text-yellow-400 mx-auto mb-4" />
-      <h3 className="text-lg font-semibold text-yellow-400 mb-2">Premium Content</h3>
-      <p className="text-gray-400 mb-4">
-        Unlock extended case studies, downloadable resources, and advanced applications with a premium subscription.
-      </p>
-      <Button className="bg-yellow-500 hover:bg-yellow-600 text-black">
-        Upgrade to Premium
-      </Button>
-    </div>
-  );
-}
+
 
 // Loading Skeleton
 function TheoryDetailViewSkeleton() {

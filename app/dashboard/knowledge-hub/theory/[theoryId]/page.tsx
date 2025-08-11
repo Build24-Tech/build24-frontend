@@ -1,7 +1,9 @@
 'use client';
 
+import { useBookmarkManager } from '@/components/knowledge-hub/BookmarkManager';
 import { TheoryDetailView } from '@/components/knowledge-hub/TheoryDetailView';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 import { loadTheory } from '@/lib/theories';
 import { AccessLevel, Theory } from '@/types/knowledge-hub';
 import Link from 'next/link';
@@ -19,7 +21,7 @@ export default function TheoryPage() {
   const { isBookmarked, toggleBookmark } = useBookmarkManager();
 
   // Determine user access level based on user profile
-  const userAccess = userProfile?.status === 'premium' ? AccessLevel.PREMIUM : AccessLevel.FREE;
+  const userAccess = userProfile?.subscription?.tier === 'premium' ? AccessLevel.PREMIUM : AccessLevel.FREE;
 
   useEffect(() => {
     async function fetchTheory() {

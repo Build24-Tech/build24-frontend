@@ -1,9 +1,11 @@
 'use client';
 
+import BadgeNotification from '@/components/knowledge-hub/BadgeNotification';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProgressTracker } from '@/hooks/use-progress-tracker';
 import { href } from '@/lib/language-utils';
 import { UserLanguage } from '@/types/user';
 import {

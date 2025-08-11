@@ -4,7 +4,7 @@ import { MarkdownRenderer } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ExampleType, InteractiveExample } from '@/types/knowledge-hub';
+import { ExampleType, type InteractiveExample } from '@/types/knowledge-hub';
 import {
   ChevronLeft,
   ChevronRight,

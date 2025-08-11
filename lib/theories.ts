@@ -209,6 +209,13 @@ export class TheoryService {
   }
 
   /**
+   * Get all available theories
+   */
+  async getAllTheories(): Promise<Theory[]> {
+    return this.loadAllTheories();
+  }
+
+  /**
    * Preload theories for better performance
    */
   async preloadTheories(theoryIds: string[]): Promise<void> {
@@ -540,6 +547,13 @@ export async function getTheoryMetadata(theoryId: string): Promise<TheoryMetadat
  */
 export async function preloadTheories(theoryIds: string[]): Promise<void> {
   return theoryService.preloadTheories(theoryIds);
+}
+
+/**
+ * Get all available theories
+ */
+export async function getAllTheories(): Promise<Theory[]> {
+  return theoryService.getAllTheories();
 }
 
 /**
