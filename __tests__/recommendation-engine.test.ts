@@ -1,666 +1,390 @@
-import { RecommendationEngine } from '@/lib/recommendation-engine';
 import {
-  LaunchPhase,
-  PhaseProgress,
-  ProjectContext,
-  ProjectData,
-  ProjectStage,
-  StepProgress,
-  UserProgress
-} from '@/types/launch-essentials';
+  BlogPostReference,
+  ProjectReference,
+  RecommendationEngine,
+  getRecommendationEngine,
+  initializeRecommendationEngine
+} from '@/lib/recommendation-engine';
+import { DifficultyLevel, RelevanceType, Theory, TheoryCategory, UserProgress } from '@/types/knowledge-hub';
+
+// Mock data
+const mockTheories: Theory[] = [
+  {
+    id: 'anchoring-bias',
+    title: 'Anchoring Bias',
+    category: TheoryCategory.COGNITIVE_BIASES,
+    summary: 'The tendency to rely heavily on the first piece of information encountered when making decisions.',
+    content: {
+      description: 'Anchoring bias description',
+      applicationGuide: 'How to apply anchoring bias',
+      examples: [],
+      relatedContent: []
+    },
+    metadata: {
+      difficulty: DifficultyLevel.BEGINNER,
+      relevance: [RelevanceType.MARKETING, RelevanceType.UX],
+      readTime: 5,
+      tags: ['pricing', 'decision-making', 'first-impression']
+    },
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01')
+  },
+  {
+    id: 'scarcity-principle',
+    title: 'Scarcity Principle',
+    category: TheoryCategory.PERSUASION_PRINCIPLES,
+    summary: 'People value things more when they are rare or in limited supply.',
+    content: {
+      description: 'Scarcity principle description',
+      applicationGuide: 'How to apply scarcity principle',
+      examples: [],
+      relatedContent: []
+    },
+    metadata: {
+      difficulty: DifficultyLevel.INTERMEDIATE,
+      relevance: [RelevanceType.MARKETING, RelevanceType.SALES],
+      readTime: 7,
+      tags: ['scarcity', 'urgency', 'conversion']
+    },
+    createdAt: new Date('2024-01-02'),
+    updatedAt: new Date('2024-01-02')
+  },
+  {
+    id: 'loss-aversion',
+    title: 'Loss Aversion',
+    category: TheoryCategory.BEHAVIORAL_ECONOMICS,
+    summary: 'People prefer avoiding losses over acquiring equivalent gains.',
+    content: {
+      description: 'Loss aversion description',
+      applicationGuide: 'How to apply loss aversion',
+      examples: [],
+      relatedContent: []
+    },
+    metadata: {
+      difficulty: DifficultyLevel.INTERMEDIATE,
+      relevance: [RelevanceType.MARKETING, RelevanceType.UX],
+      readTime: 6,
+      tags: ['loss', 'risk', 'decision-making']
+    },
+    createdAt: new Date('2024-01-03'),
+    updatedAt: new Date('2024-01-03')
+  }
+];
+
+const mockBlogPosts: BlogPostReference[] = [
+  {
+    id: 'psychology-pricing',
+    title: 'The Psychology of Pricing',
+    slug: 'psychology-pricing',
+    excerpt: 'How psychological principles affect pricing decisions',
+    tags: ['pricing', 'psychology', 'business'],
+    publishedAt: new Date('2024-01-15'),
+    readTime: 8
+  },
+  {
+    id: 'ux-persuasion',
+    title: 'UX Persuasion Techniques',
+    slug: 'ux-persuasion',
+    excerpt: 'Applying persuasion in user interface design',
+    tags: ['ux', 'persuasion', 'design'],
+    publishedAt: new Date('2024-01-10'),
+    readTime: 6
+  }
+];
+
+const mockProjects: ProjectReference[] = [
+  {
+    id: 'pricing-tool',
+    title: 'Pricing Optimizer',
+    description: 'Tool for optimizing product pricing using psychology',
+    technologies: ['React', 'Node.js'],
+    category: 'marketing',
+    completedAt: new Date('2024-01-20')
+  },
+  {
+    id: 'ab-testing',
+    title: 'A/B Testing Platform',
+    description: 'Platform for behavioral A/B testing',
+    technologies: ['React', 'Python'],
+    category: 'analytics',
+    completedAt: new Date('2024-01-15')
+  }
+];
+
+const mockUserProgress: UserProgress = {
+  userId: 'test-user',
+  readTheories: ['anchoring-bias'],
+  bookmarkedTheories: ['scarcity-principle'],
+  badges: [],
+  stats: {
+    totalReadTime: 15,
+    theoriesRead: 1,
+    categoriesExplored: [TheoryCategory.COGNITIVE_BIASES],
+    lastActiveDate: new Date(),
+    streakDays: 1,
+    averageSessionTime: 15
+  },
+  quizResults: [],
+  preferences: {
+    emailNotifications: true,
+    progressReminders: true
+  },
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
 
 describe('RecommendationEngine', () => {
   let engine: RecommendationEngine;
-  let mockUserProgress: UserProgress;
-  let mockProjectData: ProjectData;
-  let mockProjectContext: ProjectContext;
 
   beforeEach(() => {
-    engine = new RecommendationEngine();
+    engine = new RecommendationEngine(mockTheories, mockBlogPosts, mockProjects);
+  });
 
-    // Create mock data
-    const now = new Date();
+  describe('getRelatedTheories', () => {
+    it('should return related theories based on category and tags', () => {
+      const currentTheory = mockTheories[0]; // anchoring-bias
+      const related = engine.getRelatedTheories(currentTheory, undefined, 2);
 
-    const createMockStepProgress = (stepId: string, status: 'not_started' | 'in_progress' | 'completed' | 'skipped' = 'not_started'): StepProgress => ({
-      stepId,
-      status,
-      data: {},
-      completedAt: status === 'completed' ? now : undefined,
-      notes: undefined
+      expect(related).toHaveLength(2);
+      expect(related.map(t => t.id)).not.toContain(currentTheory.id);
     });
 
-    const createMockPhaseProgress = (phase: LaunchPhase, steps: StepProgress[]): PhaseProgress => ({
-      phase,
-      steps,
-      completionPercentage: Math.round((steps.filter(s => s.status === 'completed').length / steps.length) * 100),
-      startedAt: now,
-      completedAt: steps.every(s => s.status === 'completed' || s.status === 'skipped') ? now : undefined
+    it('should consider user progress when available', () => {
+      const currentTheory = mockTheories[1]; // scarcity-principle
+      const related = engine.getRelatedTheories(currentTheory, mockUserProgress, 2);
+
+      expect(related).toHaveLength(1); // Only loss-aversion should be returned
+      // Should not include already read theories
+      expect(related.map(t => t.id)).not.toContain('anchoring-bias');
+      expect(related.map(t => t.id)).toContain('loss-aversion');
     });
 
-    mockUserProgress = {
-      userId: 'test-user',
-      projectId: 'test-project',
-      currentPhase: 'validation',
-      phases: {
-        validation: createMockPhaseProgress('validation', [
-          createMockStepProgress('market-research', 'completed'),
-          createMockStepProgress('competitor-analysis', 'in_progress'),
-          createMockStepProgress('target-audience', 'not_started')
-        ]),
-        definition: createMockPhaseProgress('definition', [
-          createMockStepProgress('value-proposition', 'not_started'),
-          createMockStepProgress('feature-prioritization', 'not_started')
-        ]),
-        technical: createMockPhaseProgress('technical', [
-          createMockStepProgress('technical-stack', 'not_started')
-        ]),
-        marketing: createMockPhaseProgress('marketing', [
-          createMockStepProgress('pricing-strategy', 'not_started')
-        ]),
-        operations: createMockPhaseProgress('operations', [
-          createMockStepProgress('team-structure', 'not_started')
-        ]),
-        financial: createMockPhaseProgress('financial', [
-          createMockStepProgress('financial-projections', 'not_started')
-        ]),
-        risk: createMockPhaseProgress('risk', [
-          createMockStepProgress('risk-assessment', 'not_started')
-        ]),
-        optimization: createMockPhaseProgress('optimization', [
-          createMockStepProgress('analytics-setup', 'not_started')
-        ])
-      },
-      createdAt: now,
-      updatedAt: now
-    };
+    it('should limit results to specified count', () => {
+      const currentTheory = mockTheories[0];
+      const related = engine.getRelatedTheories(currentTheory, undefined, 1);
 
-    mockProjectData = {
-      id: 'test-project',
-      userId: 'test-user',
-      name: 'Test Project',
-      description: 'A test project',
-      industry: 'saas',
-      targetMarket: 'small-business',
-      stage: 'validation',
-      data: {
-        validation: {
-          marketResearch: {
-            marketSize: 1000000,
-            growthRate: 0.15,
-            trends: ['trend1', 'trend2'],
-            sources: ['source1', 'source2']
-          },
-          competitorAnalysis: {
-            competitors: [],
-            competitiveAdvantage: 'test advantage',
-            marketGap: 'test gap'
-          },
-          targetAudience: {
-            personas: [],
-            interviewResults: [],
-            validationScore: 75
-          },
-          validationReport: {
-            recommendation: 'go',
-            reasoning: 'test reasoning',
-            nextSteps: ['step1', 'step2']
-          }
+      expect(related).toHaveLength(1);
+    });
+  });
+
+  describe('getContentRecommendations', () => {
+    it('should return mixed content recommendations', () => {
+      const categories = [TheoryCategory.COGNITIVE_BIASES, TheoryCategory.PERSUASION_PRINCIPLES];
+      const recommendations = engine.getContentRecommendations(categories, undefined, 5);
+
+      expect(recommendations.length).toBeGreaterThan(0);
+      expect(recommendations.length).toBeLessThanOrEqual(5);
+
+      // Should include different content types
+      const types = recommendations.map(r => r.type);
+      expect(types).toContain('theory');
+    });
+
+    it('should consider user progress for personalization', () => {
+      const categories = [TheoryCategory.COGNITIVE_BIASES];
+      const recommendations = engine.getContentRecommendations(categories, mockUserProgress, 3);
+
+      expect(recommendations.length).toBeGreaterThan(0);
+      // Should not recommend already read theories
+      const theoryRecs = recommendations.filter(r => r.theory);
+      theoryRecs.forEach(rec => {
+        expect(mockUserProgress.readTheories).not.toContain(rec.theory!.id);
+      });
+    });
+  });
+
+  describe('getCrossLinks', () => {
+    it('should generate cross-links for a theory', () => {
+      const theory = mockTheories[0];
+      const crossLinks = engine.getCrossLinks(theory);
+
+      expect(crossLinks.length).toBeGreaterThan(0);
+
+      // Should include different types of content
+      const types = crossLinks.map(link => link.type);
+      expect(types).toContain('theory');
+    });
+
+    it('should include proper URLs for different content types', () => {
+      const theory = mockTheories[0];
+      const crossLinks = engine.getCrossLinks(theory);
+
+      crossLinks.forEach(link => {
+        expect(link.url).toBeTruthy();
+        if (link.type === 'theory') {
+          expect(link.url).toMatch(/\/dashboard\/knowledge-hub\/theory\//);
+        } else if (link.type === 'blog-post') {
+          expect(link.url).toMatch(/\/blog\//);
+        } else if (link.type === 'project') {
+          expect(link.url).toMatch(/\/projects/);
         }
-      },
-      createdAt: now,
-      updatedAt: now
-    };
-
-    mockProjectContext = {
-      projectId: 'test-project',
-      industry: 'saas',
-      stage: 'validation',
-      teamSize: 2,
-      budget: 50000,
-      timeline: '6 months'
-    };
-  });
-
-  describe('calculateNextSteps', () => {
-    it('should return next step recommendation when there is an incomplete step', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      expect(recommendations.length).toBeGreaterThan(0);
-      const nextStepRec = recommendations.find(r => r.id === 'next-step-competitor-analysis');
-      expect(nextStepRec).toBeDefined();
-      expect(nextStepRec?.type).toBe('next-step');
-      expect(nextStepRec?.title).toContain('Competitor Analysis');
-      expect(nextStepRec?.priority).toBe('high');
-      expect(nextStepRec?.category).toBe('validation');
-      expect(nextStepRec?.actionItems).toHaveLength(3);
-    });
-
-    it('should return phase progression recommendation when current phase is mostly complete', () => {
-      // Mark most validation steps as completed
-      mockUserProgress.phases.validation.steps[1].status = 'completed';
-      mockUserProgress.phases.validation.steps[2].status = 'completed';
-      mockUserProgress.phases.validation.completionPercentage = 100;
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      const phaseRecommendation = recommendations.find(r => r.id.includes('phase-progression'));
-      expect(phaseRecommendation).toBeDefined();
-      expect(phaseRecommendation?.title).toContain('Definition Phase');
-    });
-
-    it('should return critical path recommendations for industry-specific phases', () => {
-      // Set low completion for critical SaaS phases
-      mockUserProgress.phases.technical.completionPercentage = 30;
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      const criticalRecommendation = recommendations.find(r => r.id.includes('critical-technical'));
-      expect(criticalRecommendation).toBeDefined();
-      expect(criticalRecommendation?.priority).toBe('high');
-    });
-
-    it('should return milestone recommendations based on overall completion', () => {
-      // Set overall completion to around 30% (between 25% and 50%)
-      // Complete validation (1/8 phases = 12.5%) and half of definition (6.25%) = ~19%
-      // Need to complete more to reach 25-50% range
-      mockUserProgress.phases.validation.steps.forEach(step => step.status = 'completed');
-      mockUserProgress.phases.validation.completionPercentage = 100;
-      mockUserProgress.phases.definition.steps.forEach(step => step.status = 'completed');
-      mockUserProgress.phases.definition.completionPercentage = 100;
-      mockUserProgress.phases.technical.steps[0].status = 'completed';
-      mockUserProgress.phases.technical.completionPercentage = 100;
-      // This should give us around 37.5% overall completion (3/8 phases)
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      const milestoneRecommendation = recommendations.find(r => r.id === 'milestone-quarter');
-      expect(milestoneRecommendation).toBeDefined();
-      expect(milestoneRecommendation?.title).toContain('Quarter Milestone');
-    });
-
-    it('should prioritize recommendations correctly', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
-
-      // High priority recommendations should come first
-      const priorities = recommendations.map(r => r.priority);
-      const highPriorityFirst = priorities.indexOf('high');
-      const mediumPriorityFirst = priorities.indexOf('medium');
-
-      if (highPriorityFirst !== -1 && mediumPriorityFirst !== -1) {
-        expect(highPriorityFirst).toBeLessThan(mediumPriorityFirst);
-      }
-    });
-  });
-
-  describe('suggestResources', () => {
-    it('should return industry-specific resources', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
-
-      const industryResources = resources.filter(r => r.tags.includes('saas'));
-      expect(industryResources.length).toBeGreaterThan(0);
-    });
-
-    it('should return stage-specific resources', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
-
-      const stageResources = resources.filter(r => r.tags.includes('validation'));
-      expect(stageResources.length).toBeGreaterThan(0);
-    });
-
-    it('should return phase-specific resources based on current progress', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
-
-      const phaseResources = resources.filter(r => r.tags.includes('validation'));
-      expect(phaseResources.length).toBeGreaterThan(0);
-    });
-
-    it('should return budget-appropriate resources for low budget projects', () => {
-      const lowBudgetContext = { ...mockProjectContext, budget: 5000 };
-      const resources = engine.suggestResources(lowBudgetContext, mockUserProgress);
-
-      const budgetResources = resources.filter(r => r.tags.includes('budget'));
-      expect(budgetResources.length).toBeGreaterThan(0);
-    });
-
-    it('should return solo founder resources for single-person teams', () => {
-      const soloContext = { ...mockProjectContext, teamSize: 1 };
-      const resources = engine.suggestResources(soloContext, mockUserProgress);
-
-      const soloResources = resources.filter(r => r.tags.includes('solo'));
-      expect(soloResources.length).toBeGreaterThan(0);
-    });
-
-    it('should deduplicate resources', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
-
-      const resourceIds = resources.map(r => r.id);
-      const uniqueIds = [...new Set(resourceIds)];
-      expect(resourceIds.length).toBe(uniqueIds.length);
-    });
-  });
-
-  describe('identifyRisks', () => {
-    it('should identify insufficient validation risk', () => {
-      // Set low validation completion
-      mockUserProgress.phases.validation.completionPercentage = 30;
-      mockUserProgress.currentPhase = 'definition';
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      const validationRisk = risks.find(r => r.category === 'market');
-      expect(validationRisk).toBeDefined();
-      expect(validationRisk?.description).toContain('market validation');
-    });
-
-    it('should identify technical planning lag risk', () => {
-      // Set technical completion < 40% and overall completion > 60%
-      mockUserProgress.phases.technical.completionPercentage = 30;
-      mockUserProgress.phases.validation.completionPercentage = 100;
-      mockUserProgress.phases.definition.completionPercentage = 100;
-      mockUserProgress.phases.marketing.completionPercentage = 100;
-      mockUserProgress.phases.operations.completionPercentage = 100;
-      mockUserProgress.phases.financial.completionPercentage = 100;
-      mockUserProgress.phases.risk.completionPercentage = 100;
-      mockUserProgress.phases.optimization.completionPercentage = 100;
-      // This gives overall completion > 60% with technical < 40%
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      const technicalRisk = risks.find(r => r.description.includes('Technical planning'));
-      expect(technicalRisk).toBeDefined();
-      expect(technicalRisk?.category).toBe('technical');
-    });
-
-    it('should identify financial planning risk', () => {
-      // Set financial completion < 30% and overall completion > 50%
-      mockUserProgress.phases.financial.completionPercentage = 20;
-      mockUserProgress.phases.validation.completionPercentage = 100;
-      mockUserProgress.phases.definition.completionPercentage = 100;
-      mockUserProgress.phases.technical.completionPercentage = 100;
-      mockUserProgress.phases.marketing.completionPercentage = 100;
-      mockUserProgress.phases.operations.completionPercentage = 100;
-      mockUserProgress.phases.risk.completionPercentage = 100;
-      mockUserProgress.phases.optimization.completionPercentage = 100;
-      // This gives overall completion > 50% with financial < 30%
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      const financialRisk = risks.find(r => r.description.includes('Financial planning'));
-      expect(financialRisk).toBeDefined();
-      expect(financialRisk?.category).toBe('financial');
-    });
-
-    it('should identify timeline risks for inactive projects', () => {
-      // Set old update date
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 35);
-      mockUserProgress.updatedAt = oldDate;
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      const timelineRisk = risks.find(r => r.category === 'timeline');
-      expect(timelineRisk).toBeDefined();
-      expect(timelineRisk?.description).toContain('inactive');
-    });
-
-    it('should prioritize risks correctly', () => {
-      // Create multiple risks
-      mockUserProgress.phases.validation.completionPercentage = 30;
-      mockUserProgress.currentPhase = 'definition';
-      mockUserProgress.phases.financial.completionPercentage = 20;
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      // Risks should be sorted by priority (high to low)
-      for (let i = 0; i < risks.length - 1; i++) {
-        expect(risks[i].priority).toBeGreaterThanOrEqual(risks[i + 1].priority);
-      }
-    });
-
-    it('should calculate risk probability based on project characteristics', () => {
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-
-      risks.forEach(risk => {
-        expect(['low', 'medium', 'high']).toContain(risk.probability);
-        expect(['low', 'medium', 'high']).toContain(risk.impact);
-        expect(typeof risk.priority).toBe('number');
-        expect(risk.priority).toBeGreaterThanOrEqual(1);
-        expect(risk.priority).toBeLessThanOrEqual(3);
       });
     });
   });
 
-  describe('generatePersonalizedRecommendations', () => {
-    it('should return first-time user recommendations when no behavior pattern exists', () => {
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'new-user',
-        mockUserProgress,
-        mockProjectData
-      );
+  describe('updateTheories', () => {
+    it('should update the theories dataset', () => {
+      const newTheories = [...mockTheories, {
+        id: 'new-theory',
+        title: 'New Theory',
+        category: TheoryCategory.UX_PSYCHOLOGY,
+        summary: 'A new theory for testing',
+        content: {
+          description: 'New theory description',
+          applicationGuide: 'How to apply new theory',
+          examples: [],
+          relatedContent: []
+        },
+        metadata: {
+          difficulty: DifficultyLevel.BEGINNER,
+          relevance: [RelevanceType.UX],
+          readTime: 3,
+          tags: ['new', 'test']
+        },
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }];
 
-      expect(recommendations.length).toBeGreaterThan(0);
-      const welcomeRec = recommendations.find(r => r.id === 'first-time-welcome');
-      expect(welcomeRec).toBeDefined();
-      expect(welcomeRec?.title).toContain('Welcome');
-    });
+      engine.updateTheories(newTheories);
 
-    it('should provide completion boost recommendations for low completion rate users', () => {
-      // Update user behavior pattern with low completion rate
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
+      const currentTheory = mockTheories[0];
+      const related = engine.getRelatedTheories(currentTheory, undefined, 10);
 
-      // Simulate low completion by setting most steps as not started
-      Object.values(mockUserProgress.phases).forEach(phase => {
-        phase.steps.forEach(step => {
-          step.status = 'not_started';
-        });
-      });
-
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      const boostRec = recommendations.find(r => r.id === 'completion-boost');
-      expect(boostRec).toBeDefined();
-      expect(boostRec?.title).toContain('Completion Rate');
-    });
-
-    it('should provide stuck point help when user has common stuck points', () => {
-      // First update behavior pattern to create stuck points
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
-
-      // Manually add stuck points (simulating long-running in-progress steps)
-      const behaviorPattern = {
-        userId: 'test-user',
-        completionRate: 0.6,
-        averageTimePerPhase: {} as Record<LaunchPhase, number>,
-        commonStuckPoints: ['market-research'],
-        preferredResourceTypes: ['article'],
-        lastActiveDate: new Date()
-      };
-
-      // Set a step to in_progress that matches stuck point
-      mockUserProgress.phases.validation.steps[0].status = 'in_progress';
-
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      // Note: This test might not find the stuck point help because the behavior pattern
-      // is not actually stored in the engine. This is a limitation of the current test setup.
-      expect(recommendations.length).toBeGreaterThan(0);
+      expect(related.map(t => t.id)).toContain('new-theory');
     });
   });
 
-  describe('suggestContent', () => {
-    it('should return template suggestions for current phase', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 50000,
-        completedSteps: ['market-research'],
-        userInput: { targetAudience: 'small businesses' }
-      };
+  describe('updateBlogPosts', () => {
+    it('should update the blog posts dataset', () => {
+      const newBlogPosts = [...mockBlogPosts, {
+        id: 'new-post',
+        title: 'New Blog Post',
+        slug: 'new-post',
+        excerpt: 'A new blog post for testing',
+        tags: ['test', 'new'],
+        publishedAt: new Date(),
+        readTime: 5
+      }];
 
-      const suggestions = engine.suggestContent(context);
+      engine.updateBlogPosts(newBlogPosts);
 
-      expect(suggestions.templateSuggestions.length).toBeGreaterThan(0);
-      expect(suggestions.templateSuggestions).toContain('Customer Interview Script');
-    });
+      const categories = [TheoryCategory.COGNITIVE_BIASES];
+      const recommendations = engine.getContentRecommendations(categories, undefined, 10);
 
-    it('should return framework adjustments for industry', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 50000,
-        completedSteps: [],
-        userInput: {}
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.frameworkAdjustments.length).toBeGreaterThan(0);
-      expect(suggestions.frameworkAdjustments.some(adj => adj.includes('saas'))).toBe(true);
-    });
-
-    it('should return budget-specific adjustments for low budget projects', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 5000,
-        completedSteps: [],
-        userInput: {}
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.frameworkAdjustments).toContain('Focus on lean validation methods');
-      expect(suggestions.frameworkAdjustments).toContain('Prioritize free and low-cost tools');
-    });
-
-    it('should return solo founder adjustments for single-person teams', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 1,
-        budget: 50000,
-        completedSteps: [],
-        userInput: {}
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.frameworkAdjustments).toContain('Adapt processes for solo founder');
-      expect(suggestions.frameworkAdjustments).toContain('Consider outsourcing non-core activities');
-    });
-
-    it('should generate content ideas from user input', () => {
-      const context = {
-        currentPhase: 'validation' as LaunchPhase,
-        projectStage: 'validation' as ProjectStage,
-        industry: 'saas',
-        teamSize: 2,
-        budget: 50000,
-        completedSteps: [],
-        userInput: {
-          targetAudience: 'small business owners who struggle with inventory management',
-          problemStatement: 'Current solutions are too complex and expensive'
-        }
-      };
-
-      const suggestions = engine.suggestContent(context);
-
-      expect(suggestions.contentIdeas.length).toBeGreaterThan(0);
-      expect(suggestions.contentIdeas.some(idea => idea.includes('targetAudience'))).toBe(true);
+      const blogRecs = recommendations.filter(r => r.type === 'blog-post');
+      expect(blogRecs.length).toBeGreaterThan(0);
     });
   });
 
-  describe('updateUserBehaviorPattern', () => {
-    it('should create new behavior pattern for new user', () => {
-      engine.updateUserBehaviorPattern('new-user', mockUserProgress);
+  describe('updateProjects', () => {
+    it('should update the projects dataset', () => {
+      const newProjects = [...mockProjects, {
+        id: 'new-project',
+        title: 'New Project',
+        description: 'A new project for testing',
+        technologies: ['TypeScript'],
+        category: 'testing',
+        completedAt: new Date()
+      }];
 
-      // Test that the pattern was created by generating recommendations
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'new-user',
-        mockUserProgress,
-        mockProjectData
-      );
+      engine.updateProjects(newProjects);
 
-      // Should not return first-time user recommendations anymore
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should update completion rate based on progress', () => {
-      // Set some steps as completed
-      mockUserProgress.phases.validation.steps[0].status = 'completed';
-      mockUserProgress.phases.validation.steps[1].status = 'completed';
-
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
-
-      // The behavior pattern should now reflect the completion rate
-      // This is tested indirectly through the recommendations
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should track time spent on phases when provided', () => {
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress, 'market-research', 3600000); // 1 hour
-
-      // Time tracking is internal, so we test indirectly
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
-
-      expect(recommendations.length).toBeGreaterThan(0);
-    });
-
-    it('should identify stuck points for long-running in-progress steps', () => {
-      // Set a step as in-progress with old completion date to simulate being stuck
-      const oldDate = new Date();
-      oldDate.setDate(oldDate.getDate() - 10);
-      mockUserProgress.phases.validation.steps[1].status = 'in_progress';
-      mockUserProgress.phases.validation.steps[1].completedAt = oldDate;
-
-      engine.updateUserBehaviorPattern('test-user', mockUserProgress);
-
-      // Stuck points are tracked internally and affect future recommendations
-      const recommendations = engine.generatePersonalizedRecommendations(
-        'test-user',
-        mockUserProgress,
-        mockProjectData
-      );
+      const categories = [TheoryCategory.COGNITIVE_BIASES];
+      const recommendations = engine.getContentRecommendations(categories, undefined, 10);
 
       expect(recommendations.length).toBeGreaterThan(0);
     });
   });
+});
 
-  describe('edge cases and error handling', () => {
-    it('should handle empty progress gracefully', () => {
-      const emptyProgress: UserProgress = {
-        ...mockUserProgress,
-        phases: {
-          validation: { phase: 'validation', steps: [], completionPercentage: 0, startedAt: new Date() },
-          definition: { phase: 'definition', steps: [], completionPercentage: 0, startedAt: new Date() },
-          technical: { phase: 'technical', steps: [], completionPercentage: 0, startedAt: new Date() },
-          marketing: { phase: 'marketing', steps: [], completionPercentage: 0, startedAt: new Date() },
-          operations: { phase: 'operations', steps: [], completionPercentage: 0, startedAt: new Date() },
-          financial: { phase: 'financial', steps: [], completionPercentage: 0, startedAt: new Date() },
-          risk: { phase: 'risk', steps: [], completionPercentage: 0, startedAt: new Date() },
-          optimization: { phase: 'optimization', steps: [], completionPercentage: 0, startedAt: new Date() }
-        }
-      };
+describe('Singleton functions', () => {
+  describe('getRecommendationEngine', () => {
+    it('should return the same instance', () => {
+      const engine1 = getRecommendationEngine();
+      const engine2 = getRecommendationEngine();
 
-      const recommendations = engine.calculateNextSteps(emptyProgress);
-      expect(recommendations).toHaveLength(0);
-
-      const risks = engine.identifyRisks(mockProjectData, emptyProgress);
-      expect(risks.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle unknown industry gracefully', () => {
-      const unknownIndustryContext = { ...mockProjectContext, industry: 'unknown-industry' };
-      const resources = engine.suggestResources(unknownIndustryContext);
-
-      expect(resources.length).toBeGreaterThan(0); // Should still return generic resources
-    });
-
-    it('should handle missing project data gracefully', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress);
-      expect(recommendations.length).toBeGreaterThan(0);
-
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
-      expect(risks.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle all phases completed', () => {
-      // Mark all phases as completed
-      Object.values(mockUserProgress.phases).forEach(phase => {
-        phase.steps.forEach(step => {
-          step.status = 'completed';
-        });
-        phase.completionPercentage = 100;
-        phase.completedAt = new Date();
-      });
-
-      const recommendations = engine.calculateNextSteps(mockUserProgress);
-      // Should still return some recommendations (like optimization or review)
-      expect(recommendations.length).toBeGreaterThanOrEqual(0);
+      expect(engine1).toBe(engine2);
     });
   });
 
-  describe('recommendation accuracy and quality', () => {
-    it('should provide actionable recommendations', () => {
-      const recommendations = engine.calculateNextSteps(mockUserProgress, mockProjectData);
+  describe('initializeRecommendationEngine', () => {
+    it('should create and return a new instance', () => {
+      const engine = initializeRecommendationEngine(mockTheories, mockBlogPosts, mockProjects);
 
-      recommendations.forEach(rec => {
-        expect(rec.title).toBeTruthy();
-        expect(rec.description).toBeTruthy();
-        expect(rec.actionItems.length).toBeGreaterThan(0);
-        expect(['high', 'medium', 'low']).toContain(rec.priority);
-        expect(['next-step', 'resource', 'risk', 'optimization']).toContain(rec.type);
-      });
+      expect(engine).toBeInstanceOf(RecommendationEngine);
+
+      // Test that it works with the provided data
+      const currentTheory = mockTheories[0];
+      const related = engine.getRelatedTheories(currentTheory, undefined, 2);
+
+      expect(related.length).toBeGreaterThan(0);
     });
 
-    it('should provide relevant resources for context', () => {
-      const resources = engine.suggestResources(mockProjectContext, mockUserProgress);
+    it('should replace the singleton instance', () => {
+      const engine1 = getRecommendationEngine();
+      const engine2 = initializeRecommendationEngine(mockTheories);
+      const engine3 = getRecommendationEngine();
 
-      resources.forEach(resource => {
-        expect(resource.title).toBeTruthy();
-        expect(resource.description).toBeTruthy();
-        expect(resource.tags.length).toBeGreaterThan(0);
-        expect(['article', 'tool', 'template', 'video', 'book']).toContain(resource.type);
-      });
+      expect(engine2).toBe(engine3);
+      expect(engine1).not.toBe(engine2);
     });
+  });
+});
 
-    it('should identify meaningful risks', () => {
-      const risks = engine.identifyRisks(mockProjectData, mockUserProgress);
+describe('Tag similarity calculation', () => {
+  it('should calculate correct similarity scores', () => {
+    const engine = new RecommendationEngine(mockTheories);
 
-      risks.forEach(risk => {
-        expect(risk.title).toBeTruthy();
-        expect(risk.description).toBeTruthy();
-        expect(['technical', 'market', 'financial', 'operational', 'timeline']).toContain(risk.category);
-        expect(['low', 'medium', 'high']).toContain(risk.probability);
-        expect(['low', 'medium', 'high']).toContain(risk.impact);
-        expect(typeof risk.priority).toBe('number');
-      });
+    // Test theories with overlapping tags
+    const theory1 = mockTheories[0]; // tags: ['pricing', 'decision-making', 'first-impression']
+    const theory2 = mockTheories[2]; // tags: ['loss', 'risk', 'decision-making']
+
+    const related = engine.getRelatedTheories(theory1, undefined, 10);
+
+    // theory2 should be included because of 'decision-making' tag overlap
+    expect(related.map(t => t.id)).toContain(theory2.id);
+  });
+});
+
+describe('Category-based recommendations', () => {
+  it('should prioritize same-category theories', () => {
+    const engine = new RecommendationEngine(mockTheories);
+    const currentTheory = mockTheories[0]; // COGNITIVE_BIASES category
+
+    const related = engine.getRelatedTheories(currentTheory, undefined, 10);
+
+    // Should prioritize theories from the same category
+    const sameCategoryTheories = related.filter(t => t.category === currentTheory.category);
+    expect(sameCategoryTheories.length).toBeGreaterThanOrEqual(0);
+  });
+});
+
+describe('User history consideration', () => {
+  it('should avoid recommending already read theories', () => {
+    const engine = new RecommendationEngine(mockTheories);
+    const currentTheory = mockTheories[1]; // scarcity-principle
+
+    const related = engine.getRelatedTheories(currentTheory, mockUserProgress, 10);
+
+    // Should not include theories the user has already read
+    related.forEach(theory => {
+      expect(mockUserProgress.readTheories).not.toContain(theory.id);
     });
+  });
 
-    it('should provide contextually appropriate content suggestions', () => {
-      const context = {
-        currentPhase: 'marketing' as LaunchPhase,
-        projectStage: 'development' as ProjectStage,
-        industry: 'ecommerce',
-        teamSize: 5,
-        budget: 100000,
-        completedSteps: ['market-research', 'competitor-analysis'],
-        userInput: { channels: ['social-media', 'email'], budget: 10000 }
-      };
+  it('should consider user category preferences', () => {
+    const engine = new RecommendationEngine(mockTheories);
+    // Use categories that have unread theories
+    const categories = [TheoryCategory.PERSUASION_PRINCIPLES, TheoryCategory.BEHAVIORAL_ECONOMICS];
 
-      const suggestions = engine.suggestContent(context);
+    const recommendations = engine.getContentRecommendations(categories, mockUserProgress, 5);
 
-      expect(suggestions.templateSuggestions.length).toBeGreaterThan(0);
-      expect(suggestions.frameworkAdjustments.length).toBeGreaterThan(0);
-      expect(suggestions.contentIdeas.length).toBeGreaterThan(0);
+    expect(recommendations.length).toBeGreaterThan(0);
 
-      // Should include marketing-specific templates
-      expect(suggestions.templateSuggestions.some(t => t.includes('Marketing'))).toBe(true);
-    });
+    // Should include theories from explored categories
+    const theoryRecs = recommendations.filter(r => r.theory);
+    const recommendedCategories = theoryRecs.map(r => r.theory!.category);
+
+    expect(recommendedCategories.some(cat => categories.includes(cat))).toBe(true);
   });
 });

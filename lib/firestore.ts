@@ -2,6 +2,7 @@ import { ThemePreference, UserLanguage, UserProfile, UserStatus } from '@/types/
 import { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { getDefaultSubscription } from './subscription-service';
 
 /**
  * Creates or updates a user profile in Firestore
@@ -24,6 +25,7 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
         emailUpdates,
         language,
         theme,
+        subscription: getDefaultSubscription(),
         createdAt: timestamp,
         updatedAt: timestamp,
       };
