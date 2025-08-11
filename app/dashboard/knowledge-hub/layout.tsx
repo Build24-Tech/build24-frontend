@@ -73,6 +73,13 @@ export default function KnowledgeHubLayout({
   const currentLang = (params?.lang as UserLanguage) || 'en';
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Progress tracking
+  const {
+    userProgress,
+    newBadges,
+    dismissBadgeNotifications
+  } = useProgressTracker();
+
   // Redirect to login if not authenticated
   useEffect(() => {
     if (!loading && !user) {
@@ -175,8 +182,8 @@ export default function KnowledgeHubLayout({
                         key={item.id}
                         href={item.href}
                         className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm transition-colors ${active
-                            ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/20'
-                            : 'text-gray-400 hover:text-white hover:bg-gray-800'
+                          ? 'bg-yellow-400/10 text-yellow-400 border border-yellow-400/20'
+                          : 'text-gray-400 hover:text-white hover:bg-gray-800'
                           }`}
                       >
                         <IconComponent className="w-4 h-4" />
@@ -193,21 +200,32 @@ export default function KnowledgeHubLayout({
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-400">Theories Read</span>
                       <Badge variant="secondary" className="bg-gray-800 text-gray-300">
-                        0/30
+                        {userProgress?.stats.theoriesRead || 0}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-400">Bookmarks</span>
                       <Badge variant="secondary" className="bg-gray-800 text-gray-300">
-                        0
+                        {userProgress?.bookmarkedTheories.length || 0}
                       </Badge>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm text-gray-400">Badges</span>
                       <Badge variant="secondary" className="bg-gray-800 text-gray-300">
-                        0
+                        {userProgress?.badges.length || 0}
                       </Badge>
                     </div>
+                    {userProgress?.stats.totalReadTime && userProgress.stats.totalReadTime > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-400">Time Spent</span>
+                        <Badge variant="secondary" className="bg-gray-800 text-gray-300">
+                          {userProgress.stats.totalReadTime < 60
+                            ? `${userProgress.stats.totalReadTime}m`
+                            : `${Math.floor(userProgress.stats.totalReadTime / 60)}h ${userProgress.stats.totalReadTime % 60}m`
+                          }
+                        </Badge>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -220,6 +238,12 @@ export default function KnowledgeHubLayout({
           </div>
         </div>
       </div>
+
+      {/* Badge notifications */}
+      <BadgeNotification
+        badges={newBadges}
+        onDismiss={dismissBadgeNotifications}
+      />
     </div>
   );
 }

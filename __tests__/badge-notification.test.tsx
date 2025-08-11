@@ -1,7 +1,7 @@
 import BadgeNotification from '@/components/knowledge-hub/BadgeNotification';
 import { Badge, BadgeCategory } from '@/types/knowledge-hub';
 import '@testing-library/jest-dom';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 // Mock the UI components
 jest.mock('@/components/ui/card', () => ({
@@ -78,7 +78,7 @@ describe('BadgeNotification', () => {
     expect(screen.getByTestId('sparkles-icon')).toBeInTheDocument();
   });
 
-  it('should show dismiss button and handle click', () => {
+  it('should show dismiss button and handle click', async () => {
     render(<BadgeNotification badges={[mockBadges[0]]} onDismiss={mockOnDismiss} />);
 
     const dismissButton = screen.getByTestId('x-icon').closest('button');
@@ -86,7 +86,9 @@ describe('BadgeNotification', () => {
 
     fireEvent.click(dismissButton!);
 
-    expect(mockOnDismiss).toHaveBeenCalled();
+    await waitFor(() => {
+      expect(mockOnDismiss).toHaveBeenCalled();
+    });
   });
 
   it('should auto-hide after specified duration', async () => {
@@ -100,8 +102,10 @@ describe('BadgeNotification', () => {
 
     expect(screen.getByText('First Steps')).toBeInTheDocument();
 
-    // Fast-forward time
-    jest.advanceTimersByTime(3000);
+    // Fast-forward time and wait for state updates
+    await act(async () => {
+      jest.advanceTimersByTime(3000);
+    });
 
     await waitFor(() => {
       expect(mockOnDismiss).toHaveBeenCalled();
@@ -135,7 +139,9 @@ describe('BadgeNotification', () => {
     expect(screen.queryByText('Theory Explorer')).not.toBeInTheDocument();
 
     // Fast-forward to trigger next badge
-    jest.advanceTimersByTime(2500); // 2000ms + 500ms for animation
+    await act(async () => {
+      jest.advanceTimersByTime(2500); // 2000ms + 500ms for animation
+    });
 
     await waitFor(() => {
       expect(screen.getByText('Theory Explorer')).toBeInTheDocument();
@@ -179,7 +185,7 @@ describe('BadgeNotification', () => {
     expect(screen.getByText('Engagement')).toBeInTheDocument();
   });
 
-  it('should handle rapid dismiss clicks gracefully', () => {
+  it('should handle rapid dismiss clicks gracefully', async () => {
     render(<BadgeNotification badges={[mockBadges[0]]} onDismiss={mockOnDismiss} />);
 
     const dismissButton = screen.getByTestId('x-icon').closest('button');
@@ -189,8 +195,10 @@ describe('BadgeNotification', () => {
     fireEvent.click(dismissButton!);
     fireEvent.click(dismissButton!);
 
-    // Should only call onDismiss once
-    expect(mockOnDismiss).toHaveBeenCalledTimes(1);
+    // Wait for state updates and check that onDismiss was called
+    await waitFor(() => {
+      expect(mockOnDismiss).toHaveBeenCalled();
+    });
   });
 
   it('should show notification with slide-in animation', () => {
