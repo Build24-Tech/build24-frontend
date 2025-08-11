@@ -10,7 +10,6 @@ import {
   AccessLevel,
   DIFFICULTY_LEVEL_COLORS,
   DIFFICULTY_LEVEL_LABELS,
-  InteractiveExample,
   RELEVANCE_TYPE_LABELS,
   Theory,
   THEORY_CATEGORY_LABELS
@@ -23,9 +22,7 @@ import {
   Crown,
   ExternalLink,
   FileText,
-  Image as ImageIcon,
   Lightbulb,
-  Play,
   Share2
 } from 'lucide-react';
 import Link from 'next/link';
@@ -274,10 +271,15 @@ export function TheoryDetailView({
                   See this theory in action with real-world examples
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-6">
-                {theory.content.examples.map((example) => (
-                  <ExampleRenderer key={example.id} example={example} />
-                ))}
+              <CardContent>
+                <InteractiveExample
+                  examples={theory.content.examples}
+                  showNavigation={theory.content.examples.length > 1}
+                  onExampleChange={(exampleId) => {
+                    // Track example interaction for analytics
+                    console.log('Example viewed:', exampleId);
+                  }}
+                />
               </CardContent>
             </Card>
           )}
@@ -450,80 +452,7 @@ export function TheoryDetailView({
   );
 }
 
-// Example Renderer Component
-function ExampleRenderer({ example }: { example: InteractiveExample }) {
-  const [imageError, setImageError] = useState({ before: false, after: false });
 
-  return (
-    <div className="space-y-4">
-      <div>
-        <h4 className="font-semibold text-yellow-400 mb-2">{example.title}</h4>
-        <p className="text-gray-400 text-sm mb-4">{example.description}</p>
-      </div>
-
-      {example.type === 'before-after' && example.beforeImage && example.afterImage ? (
-        <div className="grid md:grid-cols-2 gap-4">
-          <div>
-            <h5 className="text-sm font-medium text-gray-300 mb-2">Before</h5>
-            {!imageError.before ? (
-              <img
-                src={example.beforeImage}
-                alt="Before example"
-                onError={() => setImageError(prev => ({ ...prev, before: true }))}
-                className="w-full h-auto rounded-lg border border-gray-700"
-              />
-            ) : (
-              <div className="bg-gray-800 rounded-lg p-6 text-center border border-gray-700">
-                <ImageIcon className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Image not available</p>
-              </div>
-            )}
-          </div>
-          <div>
-            <h5 className="text-sm font-medium text-gray-300 mb-2">After</h5>
-            {!imageError.after ? (
-              <img
-                src={example.afterImage}
-                alt="After example"
-                onError={() => setImageError(prev => ({ ...prev, after: true }))}
-                className="w-full h-auto rounded-lg border border-gray-700"
-              />
-            ) : (
-              <div className="bg-gray-800 rounded-lg p-6 text-center border border-gray-700">
-                <ImageIcon className="w-8 h-8 text-gray-500 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">Image not available</p>
-              </div>
-            )}
-          </div>
-        </div>
-      ) : example.type === 'case-study' && example.caseStudyContent ? (
-        <div className="bg-gray-800 rounded-lg p-6">
-          <MarkdownRenderer content={example.caseStudyContent} />
-        </div>
-      ) : example.type === 'interactive-demo' ? (
-        <div className="bg-gray-800 rounded-lg p-6 text-center">
-          <div className="text-gray-400 mb-4">
-            <Play className="w-8 h-8 mx-auto mb-2" />
-            Interactive demo will be displayed here
-          </div>
-          <p className="text-sm text-gray-500">
-            {example.interactiveComponent || 'Interactive component loading...'}
-          </p>
-        </div>
-      ) : (
-        <div className="bg-gray-800 rounded-lg p-6 text-center">
-          <div className="text-gray-400 mb-4">
-            <ExternalLink className="w-8 h-8 mx-auto mb-2" />
-            Example content will be displayed here
-          </div>
-          <p className="text-sm text-gray-500">
-            {example.description}
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // Premium Gate Component
 function PremiumGate() {
