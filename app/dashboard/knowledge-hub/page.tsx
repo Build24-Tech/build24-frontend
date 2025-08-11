@@ -17,7 +17,8 @@ const categories = [
     description: 'Understanding how the mind makes decisions and shortcuts',
     icon: Brain,
     count: 8,
-    color: 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+    color: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+    category: TheoryCategory.COGNITIVE_BIASES
   },
   {
     id: 'persuasion-principles',
@@ -25,7 +26,8 @@ const categories = [
     description: 'Proven techniques for influencing behavior and decisions',
     icon: Users,
     count: 6,
-    color: 'bg-green-500/10 text-green-400 border-green-500/20'
+    color: 'bg-green-500/10 text-green-400 border-green-500/20',
+    category: TheoryCategory.PERSUASION_PRINCIPLES
   },
   {
     id: 'behavioral-economics',
@@ -33,7 +35,8 @@ const categories = [
     description: 'How psychology affects economic decisions',
     icon: TrendingUp,
     count: 5,
-    color: 'bg-purple-500/10 text-purple-400 border-purple-500/20'
+    color: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+    category: TheoryCategory.BEHAVIORAL_ECONOMICS
   },
   {
     id: 'ux-psychology',
@@ -41,7 +44,8 @@ const categories = [
     description: 'Psychological principles for better user experiences',
     icon: Zap,
     count: 7,
-    color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
+    color: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20',
+    category: TheoryCategory.UX_PSYCHOLOGY
   },
   {
     id: 'emotional-triggers',
@@ -49,7 +53,8 @@ const categories = [
     description: 'Understanding and leveraging emotional responses',
     icon: BookOpen,
     count: 4,
-    color: 'bg-red-500/10 text-red-400 border-red-500/20'
+    color: 'bg-red-500/10 text-red-400 border-red-500/20',
+    category: TheoryCategory.EMOTIONAL_TRIGGERS
   }
 ];
 
@@ -144,6 +149,15 @@ export default function KnowledgeHubPage() {
             <CardDescription>Applications</CardDescription>
           </CardHeader>
         </Card>
+      </div>
+
+      {/* Content Recommendations */}
+      <div className="mt-12">
+        <ContentRecommendationPanel
+          categories={categories.map(cat => cat.category)}
+          maxRecommendations={6}
+          showTrending={true}
+        />
       </div>
 
       {/* Getting Started */}

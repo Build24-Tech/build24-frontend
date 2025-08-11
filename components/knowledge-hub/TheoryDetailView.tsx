@@ -30,6 +30,7 @@ import { useEffect, useState } from 'react';
 import InteractiveExample from './InteractiveExample';
 import { PremiumContentPreview } from './PremiumContentPreview';
 import { PremiumGate } from './PremiumGate';
+import { RelatedContent } from './RelatedContent';
 
 interface TheoryDetailViewProps {
   theory: Theory;
@@ -53,7 +54,9 @@ export function TheoryDetailView({
   const [hasMarkedAsRead, setHasMarkedAsRead] = useState(false);
 
   const { markTheoryAsRead, updateBookmark } = useProgressTracker();
-  const hasPremiumAccess = useHasPremiumAccess();
+
+  // Check if user has premium access based on userAccess prop
+  const hasPremiumAccess = userAccess === AccessLevel.PREMIUM;
 
   const categoryLabel = THEORY_CATEGORY_LABELS[theory.category];
   const difficultyLabel = DIFFICULTY_LEVEL_LABELS[theory.metadata.difficulty];
@@ -463,6 +466,16 @@ export function TheoryDetailView({
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* Cross-Linked Related Content */}
+      <div className="mt-12">
+        <RelatedContent
+          theory={theory}
+          maxItems={8}
+          showPersonalized={true}
+          className="border-t border-gray-800 pt-8"
+        />
       </div>
     </div>
   );
