@@ -1,5 +1,6 @@
 'use client';
 
+import { Build24Integration } from '@/components/knowledge-hub/Build24Integration';
 import { MarkdownRenderer } from '@/components/markdown/MarkdownRenderer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -497,19 +498,24 @@ export function TheoryDetailView({
               </div>
             </CardContent>
           </Card>
+        </aside>
+      </div>
+
+      {/* Build24 Integration */}
+      <div className="mt-12">
+        <Build24Integration theory={theory} />
+      </div>
+
+      {/* Cross-Linked Related Content */}
+      <div className="mt-12">
+        <RelatedContent
+          theory={theory}
+          maxItems={8}
+          showPersonalized={true}
+          className="border-t border-gray-800 pt-8"
+        />
       </div>
     </div>
-
-      {/* Cross-Linked Related Content */ }
-  <div className="mt-12">
-    <RelatedContent
-      theory={theory}
-      maxItems={8}
-      showPersonalized={true}
-      className="border-t border-gray-800 pt-8"
-    />
-  </div>
-    </div >
   );
 }
 

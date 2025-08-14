@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 interface ErrorState {
   hasError: boolean;
-  error: Error | null;
+  error: AppError | null;
   errorMessage: string;
 }
 
@@ -32,19 +32,30 @@ export function useErrorHandling(options: UseErrorHandlingOptions = {}) {
     errorMessage: ''
   });
 
-  const handleError = useCallback((error: Error | string, context?: string) => {
-    const errorObj = typeof error === 'string' ? new Error(error) : error;
-    const message = errorObj.message || fallbackMessage;
+  const handleError = useCallback((error: Error | AppError | string, context?: string) => {
+    let appError: AppError;
+
+    if (typeof error === 'string') {
+      appError = ErrorHandler.createError(ErrorType.UNKNOWN, error, undefined, { context });
+    } else if ('type' in error && 'userMessage' in error) {
+      // Already an AppError
+      appError = error as AppError;
+    } else {
+      // Regular Error object
+      appError = ErrorHandler.createError(ErrorType.UNKNOWN, error.message, error, { context });
+    }
+
+    const message = appError.userMessage || fallbackMessage;
 
     // Log error for debugging
     if (logErrors) {
-      console.error(`Error${context ? ` in ${context}` : ''}:`, errorObj);
+      ErrorHandler.logError(appError);
     }
 
     // Update error state
     setErrorState({
       hasError: true,
-      error: errorObj,
+      error: appError,
       errorMessage: message
     });
 
@@ -74,11 +85,35 @@ export function useErrorHandling(options: UseErrorHandlingOptions = {}) {
     }
   }, [handleError, clearError]);
 
+  const handleTheoryError = useCallback((error: Error, theoryId?: string) => {
+    const appError = ErrorHandler.handleTheoryLoadError(error, theoryId);
+    handleError(appError);
+  }, [handleError]);
+
+  const handleSearchError = useCallback((error: Error, query?: string) => {
+    const appError = ErrorHandler.handleSearchError(error, query);
+    handleError(appError);
+  }, [handleError]);
+
+  const handleBookmarkError = useCallback((error: Error, theoryId?: string) => {
+    const appError = ErrorHandler.handleBookmarkError(error, theoryId);
+    handleError(appError);
+  }, [handleError]);
+
+  const handleProgressError = useCallback((error: Error, userId?: string) => {
+    const appError = ErrorHandler.handleProgressError(error, userId);
+    handleError(appError);
+  }, [handleError]);
+
   return {
     ...errorState,
     handleError,
     clearError,
-    retryWithErrorHandling
+    retryWithErrorHandling,
+    handleTheoryError,
+    handleSearchError,
+    handleBookmarkError,
+    handleProgressError
   };
 }
 

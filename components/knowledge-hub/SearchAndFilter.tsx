@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
 import {
   DEFAULT_FILTER_STATE,
   DIFFICULTY_LEVEL_LABELS,
@@ -27,6 +28,27 @@ export function SearchAndFilter({
 }: SearchAndFilterProps) {
   const [localSearchQuery, setLocalSearchQuery] = useState(filters.searchQuery);
   const [searchDebounceTimer, setSearchDebounceTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Search suggestions
+  const { suggestions, isLoading: suggestionsLoading, getSuggestions, clearSuggestions } = useSearchSuggestions(
+    async (query: string) => {
+      // Mock suggestions - in real app, this would call an API
+      const mockSuggestions = [
+        'anchoring bias',
+        'social proof',
+        'scarcity principle',
+        'loss aversion',
+        'cognitive bias',
+        'persuasion techniques',
+        'behavioral economics',
+        'ux psychology'
+      ];
+      return mockSuggestions.filter(s =>
+        s.toLowerCase().includes(query.toLowerCase())
+      ).slice(0, 5);
+    }
+  );
 
   // Debounced search handling
   useEffect(() => {
@@ -45,12 +67,19 @@ export function SearchAndFilter({
 
     setSearchDebounceTimer(timer);
 
+    // Get suggestions for non-empty queries
+    if (localSearchQuery.length >= 2) {
+      getSuggestions(localSearchQuery);
+    } else {
+      clearSuggestions();
+    }
+
     return () => {
       if (timer) {
         clearTimeout(timer);
       }
     };
-  }, [localSearchQuery]);
+  }, [localSearchQuery, getSuggestions, clearSuggestions]);
 
   // Update local search when filters change externally
   useEffect(() => {
@@ -116,21 +145,54 @@ export function SearchAndFilter({
           type="text"
           placeholder="Search theories, concepts, or tags..."
           value={localSearchQuery}
-          onChange={(e) => setLocalSearchQuery(e.target.value)}
+          onChange={(e) => {
+            setLocalSearchQuery(e.target.value);
+            setShowSuggestions(true);
+          }}
+          onFocus={() => setShowSuggestions(true)}
+          onBlur={() => {
+            // Delay hiding suggestions to allow clicking
+            setTimeout(() => setShowSuggestions(false), 200);
+          }}
           className="pl-10 bg-gray-900 border-gray-700 text-white placeholder-gray-400 focus:border-yellow-400 text-sm sm:text-base"
           disabled={isLoading}
           aria-label="Search theories"
+          autoComplete="off"
         />
         {localSearchQuery && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setLocalSearchQuery('')}
+            onClick={() => {
+              setLocalSearchQuery('');
+              clearSuggestions();
+              setShowSuggestions(false);
+            }}
             className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 text-gray-400 hover:text-white focus:outline-none focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 focus:ring-offset-gray-900 touch-manipulation"
             aria-label="Clear search"
           >
             <X className="w-4 h-4" />
           </Button>
+        )}
+
+        {/* Search Suggestions */}
+        {showSuggestions && suggestions.length > 0 && (
+          <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-50 max-h-48 overflow-y-auto">
+            {suggestions.map((suggestion, index) => (
+              <button
+                key={index}
+                className="w-full px-3 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white focus:bg-gray-700 focus:text-white focus:outline-none first:rounded-t-md last:rounded-b-md"
+                onClick={() => {
+                  setLocalSearchQuery(suggestion);
+                  setShowSuggestions(false);
+                }}
+                onMouseDown={(e) => e.preventDefault()} // Prevent blur
+              >
+                <Search className="inline w-3 h-3 mr-2 text-gray-500" />
+                {suggestion}
+              </button>
+            ))}
+          </div>
         )}
       </div>
 

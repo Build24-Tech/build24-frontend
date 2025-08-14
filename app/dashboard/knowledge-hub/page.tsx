@@ -1,16 +1,19 @@
 'use client';
 
 import { ContentRecommendationPanel } from '@/components/knowledge-hub/ContentRecommendationPanel';
+import { PerformanceMonitor } from '@/components/knowledge-hub/PerformanceMonitor';
+import { PopularContent } from '@/components/knowledge-hub/PopularContent';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/AuthContext';
 import { href } from '@/lib/language-utils';
+
 import { TheoryCategory } from '@/types/knowledge-hub';
 import { UserLanguage } from '@/types/user';
 import { BookOpen, Brain, TrendingUp, Users, Zap } from 'lucide-react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const categories = [
   {
@@ -65,6 +68,13 @@ export default function KnowledgeHubPage() {
   const router = useRouter();
   const params = useParams();
   const currentLang = (params?.lang as UserLanguage) || 'en';
+  const [showPerformanceMonitor, setShowPerformanceMonitor] = useState(false);
+
+  // Initialize performance optimizations
+  useEffect(() => {
+    // Performance optimizations can be added here
+    console.log('Knowledge Hub initialized');
+  }, []);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -211,6 +221,12 @@ export default function KnowledgeHubPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Performance Monitor */}
+      <PerformanceMonitor
+        isVisible={showPerformanceMonitor}
+        onToggle={() => setShowPerformanceMonitor(!showPerformanceMonitor)}
+      />
     </div>
   );
 }

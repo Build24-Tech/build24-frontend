@@ -178,14 +178,14 @@ export class CrossLinkingService {
     theory: Theory,
     limit: number
   ): Promise<BlogPostReference[]> {
-    // Mock blog posts - in real implementation, this would query your blog API
+    // Enhanced blog posts with Build24-specific content
     const mockBlogPosts: BlogPostReference[] = [
       {
         id: 'psychology-of-pricing',
         title: 'The Psychology of Pricing: How to Price Your Product',
         slug: 'psychology-of-pricing',
-        excerpt: 'Understanding cognitive biases in pricing decisions can dramatically impact your product success.',
-        tags: ['pricing', 'psychology', 'business'],
+        excerpt: 'Understanding cognitive biases in pricing decisions can dramatically impact your product success. Learn from 24-hour build experiments.',
+        tags: ['pricing', 'psychology', 'business', 'build24'],
         publishedAt: new Date('2024-01-15'),
         readTime: 8
       },
@@ -193,8 +193,8 @@ export class CrossLinkingService {
         id: 'ux-persuasion-techniques',
         title: 'UX Persuasion Techniques That Actually Work',
         slug: 'ux-persuasion-techniques',
-        excerpt: 'Learn how to apply persuasion principles in your user interface design.',
-        tags: ['ux', 'persuasion', 'design'],
+        excerpt: 'Learn how to apply persuasion principles in your user interface design during rapid prototyping sessions.',
+        tags: ['ux', 'persuasion', 'design', 'rapid-prototyping'],
         publishedAt: new Date('2024-01-10'),
         readTime: 6
       },
@@ -202,10 +202,28 @@ export class CrossLinkingService {
         id: 'behavioral-economics-startups',
         title: 'Behavioral Economics for Startups',
         slug: 'behavioral-economics-startups',
-        excerpt: 'How understanding user behavior can give your startup a competitive edge.',
+        excerpt: 'How understanding user behavior can give your startup a competitive edge in the first 24 hours.',
         tags: ['behavioral-economics', 'startups', 'user-behavior'],
         publishedAt: new Date('2024-01-05'),
         readTime: 10
+      },
+      {
+        id: 'building-with-psychology',
+        title: 'Building Products with Psychology in Mind',
+        slug: 'building-with-psychology',
+        excerpt: 'Real examples from Build24 projects showing how psychological principles shaped product decisions.',
+        tags: ['psychology', 'product-development', 'build24', 'case-study'],
+        publishedAt: new Date('2024-01-20'),
+        readTime: 12
+      },
+      {
+        id: 'rapid-user-research',
+        title: 'Rapid User Research: Psychology Insights in 24 Hours',
+        slug: 'rapid-user-research',
+        excerpt: 'How to gather psychological insights about your users during time-constrained build sessions.',
+        tags: ['user-research', 'psychology', 'rapid-prototyping', 'build24'],
+        publishedAt: new Date('2024-01-12'),
+        readTime: 7
       }
     ];
 
@@ -234,13 +252,13 @@ export class CrossLinkingService {
     theory: Theory,
     limit: number
   ): Promise<ProjectReference[]> {
-    // Mock projects - in real implementation, this would query your projects API
+    // Enhanced Build24 projects with psychological principles integration
     const mockProjects: ProjectReference[] = [
       {
         id: 'pricing-optimizer',
         title: 'Pricing Optimizer Tool',
-        description: 'A tool that uses psychological pricing principles to optimize product pricing.',
-        technologies: ['React', 'Node.js', 'Psychology APIs'],
+        description: 'A 24-hour build that uses psychological pricing principles like anchoring bias and loss aversion to optimize product pricing.',
+        technologies: ['React', 'Node.js', 'Psychology APIs', 'Tailwind CSS'],
         category: 'marketing',
         completedAt: new Date('2024-01-20'),
         githubUrl: 'https://github.com/build24/pricing-optimizer',
@@ -249,8 +267,8 @@ export class CrossLinkingService {
       {
         id: 'persuasion-dashboard',
         title: 'Persuasion Analytics Dashboard',
-        description: 'Dashboard for tracking the effectiveness of persuasion techniques in web design.',
-        technologies: ['Next.js', 'D3.js', 'Analytics'],
+        description: 'Built in 24 hours: Dashboard for tracking the effectiveness of persuasion techniques in web design using real user behavior data.',
+        technologies: ['Next.js', 'D3.js', 'Analytics', 'Firebase'],
         category: 'analytics',
         completedAt: new Date('2024-01-15'),
         githubUrl: 'https://github.com/build24/persuasion-dashboard'
@@ -258,11 +276,40 @@ export class CrossLinkingService {
       {
         id: 'behavioral-ab-testing',
         title: 'Behavioral A/B Testing Platform',
-        description: 'A/B testing platform focused on behavioral economics principles.',
-        technologies: ['React', 'Python', 'Machine Learning'],
+        description: 'A/B testing platform focused on behavioral economics principles, built during a 24-hour sprint with real-time psychological insights.',
+        technologies: ['React', 'Python', 'Machine Learning', 'PostgreSQL'],
         category: 'analytics',
         completedAt: new Date('2024-01-10'),
         liveUrl: 'https://ab-testing.build24.dev'
+      },
+      {
+        id: 'cognitive-bias-detector',
+        title: 'Cognitive Bias Detector',
+        description: 'A tool that analyzes user interfaces and detects potential cognitive biases in design decisions. Built in one intense 24-hour session.',
+        technologies: ['Vue.js', 'TensorFlow.js', 'Computer Vision'],
+        category: 'design-tools',
+        completedAt: new Date('2024-01-25'),
+        githubUrl: 'https://github.com/build24/cognitive-bias-detector',
+        liveUrl: 'https://bias-detector.build24.dev'
+      },
+      {
+        id: 'emotional-trigger-analyzer',
+        title: 'Emotional Trigger Analyzer',
+        description: 'Analyze marketing copy and website content for emotional triggers. A rapid prototype exploring the intersection of NLP and psychology.',
+        technologies: ['Python', 'FastAPI', 'NLP', 'React'],
+        category: 'marketing',
+        completedAt: new Date('2024-01-18'),
+        githubUrl: 'https://github.com/build24/emotional-trigger-analyzer'
+      },
+      {
+        id: 'scarcity-timer-widget',
+        title: 'Scarcity Timer Widget',
+        description: 'A customizable widget that implements scarcity principle with ethical design patterns. Built and tested in 24 hours.',
+        technologies: ['Vanilla JS', 'CSS3', 'Web Components'],
+        category: 'widgets',
+        completedAt: new Date('2024-01-08'),
+        githubUrl: 'https://github.com/build24/scarcity-timer-widget',
+        liveUrl: 'https://scarcity-widget.build24.dev'
       }
     ];
 

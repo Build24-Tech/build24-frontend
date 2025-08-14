@@ -9,7 +9,16 @@
     "lint": "next lint",
     "test": "jest",
     "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
+    "test:coverage": "jest --coverage",
+    "test:unit": "node __tests__/test-runner.js unit",
+    "test:integration": "node __tests__/test-runner.js integration",
+    "test:e2e": "node __tests__/test-runner.js e2e",
+    "test:accessibility": "node __tests__/test-runner.js accessibility",
+    "test:performance": "node __tests__/test-runner.js performance",
+    "test:knowledge-hub": "node __tests__/test-runner.js knowledgeHub",
+    "test:all": "node __tests__/test-runner.js",
+    "test:ci": "jest --coverage --watchAll=false --passWithNoTests",
+    "seed-theories": "tsx scripts/seed-theory-content.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.0",
@@ -93,6 +102,7 @@
     "@types/react-syntax-highlighter": "^15.5.13",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",
-    "ts-jest": "^29.4.0"
+    "ts-jest": "^29.4.0",
+    "tsx": "^4.20.4"
   }
 }

@@ -1,6 +1,7 @@
 export { AnalyticsDashboard } from './AnalyticsDashboard';
 export { default as BadgeNotification } from './BadgeNotification';
 export { BookmarkManager } from './BookmarkManager';
+export { Build24Integration } from './Build24Integration';
 export { CategoryNavigation } from './CategoryNavigation';
 export { CategoryNavigationDemo } from './CategoryNavigationDemo';
 export { ContentRecommendationPanel } from './ContentRecommendationPanel';
@@ -22,4 +23,15 @@ export { TheoryCard } from './TheoryCard';
 export { TheoryCardSkeleton } from './TheoryCardSkeleton';
 export { TheoryDetailView } from './TheoryDetailView';
 export { TheoryList } from './TheoryList';
+
+// Error handling and loading states
+export { ErrorBoundary } from './ErrorBoundary';
+export { ErrorHandlingWrapper } from './ErrorHandlingWrapper';
+export { AuthenticationError, ContentNotFoundError, ErrorMessage, NetworkError } from './ErrorMessages';
+export {
+  BookmarkLoading, InlineLoading, LoadingSpinner, PageLoading, ProgressLoading, SearchLoading, TheoryContentLoading,
+  TheoryListLoading
+} from './LoadingStates';
+export { SearchErrorBoundary } from './SearchErrorBoundary';
+export { TheoryContentErrorBoundary } from './TheoryContentErrorBoundary';
 

@@ -4,6 +4,7 @@ import BadgeNotification from '@/components/knowledge-hub/BadgeNotification';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProgressTracker } from '@/hooks/use-progress-tracker';
 import { href } from '@/lib/language-utils';
@@ -14,6 +15,7 @@ import {
   BookOpen,
   Brain,
   Home,
+  Menu,
   Search,
   TrendingUp,
   User,

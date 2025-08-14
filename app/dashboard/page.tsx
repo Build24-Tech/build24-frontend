@@ -105,10 +105,26 @@ export default function DashboardPage() {
               </div>
 
               <div className="bg-gray-800 border border-gray-700 rounded-lg p-6">
-                <h2 className="text-xl font-bold mb-4">Knowledge Hub</h2>
+                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                  <span className="text-yellow-400">🧠</span>
+                  Knowledge Hub
+                </h2>
                 <p className="text-gray-400 text-sm mb-4">
                   Explore psychological theories and persuasion techniques to enhance your product building.
                 </p>
+                <div className="space-y-2 mb-4">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-gray-500">30+ Theories</span>
+                    <span className="text-gray-500">5 Categories</span>
+                  </div>
+                  <div className="flex gap-1">
+                    <div className="h-1 bg-blue-500 rounded flex-1"></div>
+                    <div className="h-1 bg-green-500 rounded flex-1"></div>
+                    <div className="h-1 bg-purple-500 rounded flex-1"></div>
+                    <div className="h-1 bg-yellow-500 rounded flex-1"></div>
+                    <div className="h-1 bg-red-500 rounded flex-1"></div>
+                  </div>
+                </div>
                 <Button asChild className="w-full bg-blue-600 text-white hover:bg-blue-500">
                   <Link href="/dashboard/knowledge-hub">
                     Explore Knowledge Hub

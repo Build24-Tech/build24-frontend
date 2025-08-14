@@ -83,6 +83,16 @@ export const useProgressTracker = (): UseProgressTrackerReturn => {
 
       setUserProgress(result.updatedProgress);
 
+      // Sync with user profile
+      await KnowledgeHubIntegrationService.syncProgressWithProfile(user, result.updatedProgress);
+
+      // Track engagement
+      await KnowledgeHubIntegrationService.trackEngagement(
+        user,
+        'theory_view',
+        { theoryId, category, readTime }
+      );
+
       // Show badge notifications if new badges were earned
       if (result.newBadges.length > 0) {
         setNewBadges(prev => [...prev, ...result.newBadges]);
@@ -109,6 +119,16 @@ export const useProgressTracker = (): UseProgressTrackerReturn => {
       );
 
       setUserProgress(result.updatedProgress);
+
+      // Sync with user profile
+      await KnowledgeHubIntegrationService.syncProgressWithProfile(user, result.updatedProgress);
+
+      // Track engagement
+      await KnowledgeHubIntegrationService.trackEngagement(
+        user,
+        isBookmarked ? 'bookmark_add' : 'bookmark_remove',
+        { theoryId }
+      );
 
       // Show badge notifications if new badges were earned
       if (result.newBadges.length > 0) {

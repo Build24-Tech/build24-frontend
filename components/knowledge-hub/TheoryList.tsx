@@ -15,6 +15,8 @@ interface TheoryListProps {
   className?: string;
   emptyStateMessage?: string;
   loadingCount?: number;
+  enableVirtualization?: boolean;
+  virtualizationThreshold?: number;
 }
 
 export function TheoryList({
@@ -26,8 +28,22 @@ export function TheoryList({
   showPremiumBadges = true,
   className,
   emptyStateMessage = "No theories found matching your criteria.",
-  loadingCount = 6
+  loadingCount = 6,
+  enableVirtualization = true,
+  virtualizationThreshold = 50
 }: TheoryListProps) {
+  // Use virtualization for large lists
+  if (enableVirtualization && theories.length > virtualizationThreshold && !isLoading) {
+    return (
+      <VirtualizedTheoryList
+        theories={theories}
+        isLoading={isLoading}
+        onTheoryClick={(theory) => onTheoryClick(theory.id)}
+        className={className}
+      />
+    );
+  }
+
   // Show loading skeletons
   if (isLoading) {
     return (

@@ -38,7 +38,13 @@ const mockUserProfile: UserProfile = {
 };
 
 // Create a mock AuthContext
-const AuthContext = createContext<any>(null);
+const AuthContext = createContext<any>({
+  user: null,
+  loading: false,
+  signIn: jest.fn(),
+  signOut: jest.fn(),
+  signUp: jest.fn(),
+});
 
 const mockAuthContextValue = {
   user: mockUser as User,
