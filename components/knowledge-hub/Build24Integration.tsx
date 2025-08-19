@@ -35,6 +35,7 @@ export function Build24Integration({ theory, className = '' }: Build24Integratio
           maxBlogPosts: 3,
           maxProjects: 3
         });
+
         setRelatedContent(content);
       } catch (error) {
         console.error('Error loading related content:', error);
