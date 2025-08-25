@@ -10,6 +10,7 @@ export type LaunchPhase =
 
 export type ProjectStage =
   | 'concept'
+  | 'validation'
   | 'development'
   | 'testing'
   | 'launch'
@@ -18,7 +19,8 @@ export type ProjectStage =
 export type StepStatus =
   | 'not_started'
   | 'in_progress'
-  | 'completed';
+  | 'completed'
+  | 'skipped';
 
 export interface StepProgress {
   stepId: string;
