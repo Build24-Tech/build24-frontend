@@ -376,103 +376,38 @@ export function useFocusTrap(
 
     document.addEventListener('keydown', handleTabKey);
 
+    // Focus first element when trap becomes active
+    firstElement?.focus();
+
     return () => {
       document.removeEventListener('keydown', handleTabKey);
-
+      
       // Restore focus to the previously focused element
       if (lastFocusedElement.current) {
         lastFocusedElement.current.focus();
       }
     };
-  }, [isActive, containerRef]);
+  }, [isActive]);
 }
 
-// Hook for managing roving tabindex
-export function useRovingTabIndex(
-  containerRef: React.RefObject<HTMLElement>,
-  orientation: 'horizontal' | 'vertical' = 'vertical'
-) {
-  const [activeIndex, setActiveIndex] = useState(0);
+/**
+ * Hook for announcing content changes to screen readers
+ */
+export function useScreenReaderAnnouncement() {
+  const announce = useCallback((message: string, priority: 'polite' | 'assertive' = 'polite') => {
+    const announcement = document.createElement('div');
+    announcement.setAttribute('aria-live', priority);
+    announcement.setAttribute('aria-atomic', 'true');
+    announcement.setAttribute('class', 'sr-only');
+    announcement.textContent = message;
 
-  const updateTabIndices = useCallback(() => {
-    if (!containerRef.current) return;
+    document.body.appendChild(announcement);
 
-    const focusableElements = containerRef.current.querySelectorAll(
-      '[role="option"], [role="tab"], [role="menuitem"], [role="radio"]'
-    ) as NodeListOf<HTMLElement>;
+    // Remove after announcement
+    setTimeout(() => {
+      document.body.removeChild(announcement);
+    }, 1000);
+  }, []);
 
-    focusableElements.forEach((element, index) => {
-      element.tabIndex = index === activeIndex ? 0 : -1;
-    });
-  }, [containerRef, activeIndex]);
-
-  useEffect(() => {
-    updateTabIndices();
-  }, [updateTabIndices]);
-
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (!containerRef.current) return;
-
-    const focusableElements = containerRef.current.querySelectorAll(
-      '[role="option"], [role="tab"], [role="menuitem"], [role="radio"]'
-    ) as NodeListOf<HTMLElement>;
-
-    const { key } = event;
-    let newIndex = activeIndex;
-
-    switch (key) {
-      case 'ArrowDown':
-        if (orientation === 'vertical') {
-          event.preventDefault();
-          newIndex = (activeIndex + 1) % focusableElements.length;
-        }
-        break;
-
-      case 'ArrowUp':
-        if (orientation === 'vertical') {
-          event.preventDefault();
-          newIndex = activeIndex === 0 ? focusableElements.length - 1 : activeIndex - 1;
-        }
-        break;
-
-      case 'ArrowRight':
-        if (orientation === 'horizontal') {
-          event.preventDefault();
-          newIndex = (activeIndex + 1) % focusableElements.length;
-        }
-        break;
-
-      case 'ArrowLeft':
-        if (orientation === 'horizontal') {
-          event.preventDefault();
-          newIndex = activeIndex === 0 ? focusableElements.length - 1 : activeIndex - 1;
-        }
-        break;
-
-      case 'Home':
-        event.preventDefault();
-        newIndex = 0;
-        break;
-
-      case 'End':
-        event.preventDefault();
-        newIndex = focusableElements.length - 1;
-        break;
-
-      default:
-        return;
-    }
-
-    if (newIndex !== activeIndex) {
-      setActiveIndex(newIndex);
-      focusableElements[newIndex]?.focus();
-    }
-  }, [containerRef, activeIndex, orientation]);
-
-  return {
-    activeIndex,
-    setActiveIndex,
-    handleKeyDown,
-    updateTabIndices,
-  };
+  return { announce };
 }

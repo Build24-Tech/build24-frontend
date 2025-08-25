@@ -1,0 +1,14 @@
+{
+  "timestamp": "2025-08-14T16:00:34.287Z",
+  "summary": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1
+  },
+  "results": {
+    "unit": {
+      "success": false,
+      "error": "\n> nextjs@0.1.0 test\n> jest --testPathPatterns=__tests__/unit/**/*.test.{ts,tsx} --verbose --passWithNoTests\n\n[dotenv@17.2.1] injecting env (0) from .env -- tip: 📡 auto-backup env with Radar: https://dotenvx.com/radar\n  Invalid testPattern __tests__/unit/**/*.test.{ts,tsx} supplied. Running all tests instead.\n  Invalid testPattern __tests__/unit/**/*.test.{ts,tsx} supplied. Running all tests instead.\n"
+    }
+  }
+}

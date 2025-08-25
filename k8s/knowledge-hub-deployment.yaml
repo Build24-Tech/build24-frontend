@@ -1,0 +1,193 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: knowledge-hub
+  namespace: build24
+  labels:
+    app: knowledge-hub
+    version: v1.0.0
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: knowledge-hub
+  template:
+    metadata:
+      labels:
+        app: knowledge-hub
+        version: v1.0.0
+    spec:
+      containers:
+      - name: knowledge-hub
+        image: build24/knowledge-hub:latest
+        ports:
+        - containerPort: 3000
+          name: http
+        env:
+        - name: NODE_ENV
+          value: "production"
+        - name: NEXT_PUBLIC_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: knowledge-hub-config
+              key: base-url
+        - name: NEXT_PUBLIC_CDN_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: knowledge-hub-config
+              key: cdn-base-url
+        - name: NEXT_PUBLIC_FIREBASE_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: firebase-secrets
+              key: api-key
+        - name: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+          valueFrom:
+            secretKeyRef:
+              name: firebase-secrets
+              key: auth-domain
+        - name: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+          valueFrom:
+            secretKeyRef:
+              name: firebase-secrets
+              key: project-id
+        - name: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+          valueFrom:
+            secretKeyRef:
+              name: firebase-secrets
+              key: storage-bucket
+        - name: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+          valueFrom:
+            secretKeyRef:
+              name: firebase-secrets
+              key: messaging-sender-id
+        - name: NEXT_PUBLIC_FIREBASE_APP_ID
+          valueFrom:
+            secretKeyRef:
+              name: firebase-secrets
+              key: app-id
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /api/health/live
+            port: 3000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /api/health/ready
+            port: 3000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
+        volumeMounts:
+        - name: theory-content
+          mountPath: /app/public/content
+          readOnly: true
+      volumes:
+      - name: theory-content
+        configMap:
+          name: theory-content
+      imagePullSecrets:
+      - name: docker-registry-secret
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: knowledge-hub-service
+  namespace: build24
+  labels:
+    app: knowledge-hub
+spec:
+  selector:
+    app: knowledge-hub
+  ports:
+  - name: http
+    port: 80
+    targetPort: 3000
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: knowledge-hub-ingress
+  namespace: build24
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/rate-limit: "30"
+    nginx.ingress.kubernetes.io/rate-limit-window: "1m"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  tls:
+  - hosts:
+    - build24.dev
+    - www.build24.dev
+    secretName: build24-tls
+  rules:
+  - host: build24.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: knowledge-hub-service
+            port:
+              number: 80
+  - host: www.build24.dev
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: knowledge-hub-service
+            port:
+              number: 80
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: knowledge-hub-config
+  namespace: build24
+data:
+  base-url: "https://build24.dev"
+  cdn-base-url: "https://build24-knowledge-hub-assets.s3-website-us-east-1.amazonaws.com"
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: knowledge-hub-hpa
+  namespace: build24
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: knowledge-hub
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
