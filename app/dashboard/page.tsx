@@ -126,7 +126,7 @@ export default function DashboardPage() {
                   </div>
                 </div>
                 <Button asChild className="w-full bg-blue-600 text-white hover:bg-blue-500">
-                  <Link href="/dashboard/knowledge-hub">
+                  <Link href={href(currentLang, '/dashboard/knowledge-hub')}>
                     Explore Knowledge Hub
                   </Link>
                 </Button>
