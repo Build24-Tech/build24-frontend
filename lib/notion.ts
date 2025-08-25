@@ -145,8 +145,6 @@ export async function getPost(pageId: string): Promise<Post | null> {
 
 
     return post;
-
-    return post;
   } catch (error) {
     console.error("Error getting post:", error);
     return null;

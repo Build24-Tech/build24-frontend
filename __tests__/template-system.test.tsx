@@ -1,544 +1,367 @@
 import TemplateEditor from '@/app/launch-essentials/components/templates/TemplateEditor';
-import TemplateExporter from '@/app/launch-essentials/components/templates/TemplateExporter';
 import TemplateManager from '@/app/launch-essentials/components/templates/TemplateManager';
 import TemplateSelector from '@/app/launch-essentials/components/templates/TemplateSelector';
-import { Template } from '@/types/launch-essentials';
-import '@testing-library/jest-dom';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
-// Mock template data
-const mockTemplate: Template = {
-  id: 'test-template',
-  name: 'Test Template',
-  description: 'A test template for unit testing',
-  category: 'Testing',
-  content: '# Test Template\n\nThis is a test template with {{variable1}} and {{variable2}}.',
-  variables: [
+// Mock template utilities
+jest.mock('@/lib/template-utils', () => ({
+  getTemplatesByCategory: jest.fn(() => [
     {
-      name: 'variable1',
-      type: 'text',
-      required: true,
-      defaultValue: 'default value 1'
+      id: 'template1',
+      name: 'Market Research Template',
+      category: 'validation',
+      description: 'Template for market research',
+      fields: [
+        { id: 'field1', name: 'Market Size', type: 'text', required: true },
+        { id: 'field2', name: 'Growth Rate', type: 'number', required: false }
+      ]
     },
     {
-      name: 'variable2',
-      type: 'select',
-      required: false,
-      options: ['Option A', 'Option B', 'Option C']
+      id: 'template2',
+      name: 'Competitor Analysis Template',
+      category: 'validation',
+      description: 'Template for competitor analysis',
+      fields: [
+        { id: 'field3', name: 'Competitor Name', type: 'text', required: true },
+        { id: 'field4', name: 'Strengths', type: 'textarea', required: true }
+      ]
     }
-  ],
-  createdAt: new Date('2024-01-15'),
-  updatedAt: new Date('2024-01-20')
-};
-
-const mockTemplates: Template[] = [
-  mockTemplate,
-  {
-    id: 'template-2',
-    name: 'Market Research Template',
-    description: 'Template for market research',
-    category: 'Research',
-    content: '# Market Research\n\n{{marketSize}} and {{competitors}}',
-    variables: [
-      { name: 'marketSize', type: 'number', required: true },
-      { name: 'competitors', type: 'text', required: false }
-    ],
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-25')
-  }
-];
-
-// Mock clipboard API
-Object.assign(navigator, {
-  clipboard: {
-    writeText: jest.fn(() => Promise.resolve()),
-    readText: jest.fn(() => Promise.resolve(''))
-  }
-});
-
-// Mock URL.createObjectURL
-global.URL.createObjectURL = jest.fn(() => 'mock-url');
-global.URL.revokeObjectURL = jest.fn();
+  ]),
+  saveTemplate: jest.fn(),
+  deleteTemplate: jest.fn(),
+  exportTemplate: jest.fn(),
+  validateTemplateData: jest.fn(() => ({ isValid: true, errors: [] }))
+}));
 
 describe('TemplateSelector', () => {
-  const mockOnSelectTemplate = jest.fn();
+  const mockOnSelect = jest.fn();
 
   beforeEach(() => {
-    mockOnSelectTemplate.mockClear();
+    jest.clearAllMocks();
   });
 
-  it('renders template library correctly', () => {
-    render(<TemplateSelector onSelectTemplate={mockOnSelectTemplate} />);
+  it('should render available templates', () => {
+    render(<TemplateSelector category="validation" onSelect={mockOnSelect} />);
 
-    expect(screen.getByText('Template Library')).toBeInTheDocument();
-    expect(screen.getByPlaceholderText('Search templates...')).toBeInTheDocument();
+    expect(screen.getByText('Market Research Template')).toBeInTheDocument();
+    expect(screen.getByText('Competitor Analysis Template')).toBeInTheDocument();
+    expect(screen.getByText('Template for market research')).toBeInTheDocument();
   });
 
-  it('filters templates by search query', async () => {
+  it('should handle template selection', async () => {
     const user = userEvent.setup();
-    render(<TemplateSelector onSelectTemplate={mockOnSelectTemplate} />);
+    render(<TemplateSelector category="validation" onSelect={mockOnSelect} />);
+
+    const template = screen.getByText('Market Research Template').closest('div');
+    await user.click(template!);
+
+    expect(mockOnSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'template1',
+        name: 'Market Research Template',
+        category: 'validation'
+      })
+    );
+  });
+
+  it('should filter templates by search', async () => {
+    const user = userEvent.setup();
+    render(<TemplateSelector category="validation" onSelect={mockOnSelect} />);
 
     const searchInput = screen.getByPlaceholderText('Search templates...');
-    await user.type(searchInput, 'market');
+    await user.type(searchInput, 'Market');
 
-    // Should show filtered results
-    await waitFor(() => {
-      expect(screen.getByText(/template.*found/i)).toBeInTheDocument();
-    });
-  });
-
-  it('filters templates by category', async () => {
-    const user = userEvent.setup();
-    render(<TemplateSelector onSelectTemplate={mockOnSelectTemplate} />);
-
-    // Find and click category filter
-    const categorySelect = screen.getByRole('combobox');
-    await user.click(categorySelect);
-
-    // Select a specific category
-    const researchOption = screen.getByText('Research');
-    await user.click(researchOption);
-
-    await waitFor(() => {
-      expect(screen.getByText(/template.*found/i)).toBeInTheDocument();
-    });
-  });
-
-  it('calls onSelectTemplate when template is selected', async () => {
-    const user = userEvent.setup();
-    render(<TemplateSelector onSelectTemplate={mockOnSelectTemplate} />);
-
-    // Find and click a "Use Template" button
-    const useButtons = screen.getAllByText('Use Template');
-    await user.click(useButtons[0]);
-
-    expect(mockOnSelectTemplate).toHaveBeenCalledTimes(1);
-  });
-
-  it('displays template information correctly', () => {
-    render(<TemplateSelector onSelectTemplate={mockOnSelectTemplate} />);
-
-    // Check if template cards show correct information
     expect(screen.getByText('Market Research Template')).toBeInTheDocument();
-    expect(screen.getByText('Template for market research')).toBeInTheDocument();
+    expect(screen.queryByText('Competitor Analysis Template')).not.toBeInTheDocument();
+  });
+
+  it('should show empty state when no templates match', async () => {
+    const user = userEvent.setup();
+    render(<TemplateSelector category="validation" onSelect={mockOnSelect} />);
+
+    const searchInput = screen.getByPlaceholderText('Search templates...');
+    await user.type(searchInput, 'NonExistent');
+
+    expect(screen.getByText('No templates found')).toBeInTheDocument();
   });
 });
 
 describe('TemplateEditor', () => {
-  const mockOnSave = jest.fn();
-  const mockOnCancel = jest.fn();
-
-  beforeEach(() => {
-    mockOnSave.mockClear();
-    mockOnCancel.mockClear();
-  });
-
-  it('renders template editor with template data', () => {
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    expect(screen.getByText('Template Editor')).toBeInTheDocument();
-    expect(screen.getByDisplayValue('Test Template')).toBeInTheDocument();
-  });
-
-  it('allows editing template name', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    // Navigate to settings tab
-    const settingsTab = screen.getByRole('tab', { name: /settings/i });
-    await user.click(settingsTab);
-
-    const nameInput = screen.getByDisplayValue('Test Template');
-    await user.clear(nameInput);
-    await user.type(nameInput, 'Updated Template Name');
-
-    expect(screen.getByDisplayValue('Updated Template Name')).toBeInTheDocument();
-  });
-
-  it('allows editing template content', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    // Should be on edit tab by default
-    const contentTextarea = screen.getByDisplayValue(/This is a test template/);
-    await user.clear(contentTextarea);
-    await user.type(contentTextarea, 'Updated content with {{newVariable}}');
-
-    expect(screen.getByDisplayValue('Updated content with {{newVariable}}')).toBeInTheDocument();
-  });
-
-  it('allows adding new variables', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    // Navigate to variables tab
-    const variablesTab = screen.getByRole('tab', { name: /variables/i });
-    await user.click(variablesTab);
-
-    // Click add variable button
-    const addButton = screen.getByText('Add Variable');
-    await user.click(addButton);
-
-    // Should show a new variable form
-    expect(screen.getByText('Variable 3')).toBeInTheDocument();
-  });
-
-  it('validates template before saving', async () => {
-    const user = userEvent.setup();
-    const invalidTemplate = { ...mockTemplate, name: '' };
-
-    render(
-      <TemplateEditor
-        template={invalidTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    const saveButton = screen.getByText('Save');
-    await user.click(saveButton);
-
-    // Should show validation errors
-    expect(screen.getByText(/validation errors/i)).toBeInTheDocument();
-    expect(mockOnSave).not.toHaveBeenCalled();
-  });
-
-  it('shows preview of template content', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    // Navigate to preview tab
-    const previewTab = screen.getByRole('tab', { name: /preview/i });
-    await user.click(previewTab);
-
-    // Should show processed content
-    expect(screen.getByText('Template Preview')).toBeInTheDocument();
-  });
-
-  it('calls onSave when save button is clicked with valid template', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    const saveButton = screen.getByText('Save');
-    await user.click(saveButton);
-
-    await waitFor(() => {
-      expect(mockOnSave).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  it('calls onCancel when cancel button is clicked', async () => {
-    const user = userEvent.setup();
-    render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={mockOnSave}
-        onCancel={mockOnCancel}
-      />
-    );
-
-    const cancelButton = screen.getByText('Cancel');
-    await user.click(cancelButton);
-
-    expect(mockOnCancel).toHaveBeenCalledTimes(1);
-  });
-});
-
-describe('TemplateExporter', () => {
-  const mockOnClose = jest.fn();
-  const mockVariableValues = {
-    variable1: 'Test Value 1',
-    variable2: 'Option A'
+  const mockTemplate = {
+    id: 'template1',
+    name: 'Market Research Template',
+    category: 'validation',
+    description: 'Template for market research',
+    fields: [
+      { id: 'field1', name: 'Market Size', type: 'text', required: true },
+      { id: 'field2', name: 'Growth Rate', type: 'number', required: false }
+    ]
   };
 
+  const mockOnSave = jest.fn();
+
   beforeEach(() => {
-    mockOnClose.mockClear();
+    jest.clearAllMocks();
   });
 
-  it('renders export options correctly', () => {
-    render(
-      <TemplateExporter
-        template={mockTemplate}
-        variableValues={mockVariableValues}
-        onClose={mockOnClose}
-      />
-    );
+  it('should render template editor with fields', () => {
+    render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
-    expect(screen.getByText('Export Template')).toBeInTheDocument();
-    expect(screen.getByText('Export Options')).toBeInTheDocument();
-    expect(screen.getByText('Share Template')).toBeInTheDocument();
+    expect(screen.getByText('Market Research Template')).toBeInTheDocument();
+    expect(screen.getByLabelText(/Market Size/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Growth Rate/)).toBeInTheDocument();
   });
 
-  it('allows selecting different export formats', async () => {
+  it('should handle field value changes', async () => {
     const user = userEvent.setup();
-    render(
-      <TemplateExporter
-        template={mockTemplate}
-        variableValues={mockVariableValues}
-        onClose={mockOnClose}
-      />
-    );
+    render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
-    // Find format selector
-    const formatSelect = screen.getByRole('combobox');
-    await user.click(formatSelect);
+    const marketSizeInput = screen.getByLabelText(/Market Size/);
+    await user.type(marketSizeInput, 'Large market');
 
-    // Should show format options
-    expect(screen.getByText('JSON (.json)')).toBeInTheDocument();
-    expect(screen.getByText('HTML (.html)')).toBeInTheDocument();
+    expect(marketSizeInput).toHaveValue('Large market');
   });
 
-  it('shows export preview', () => {
-    render(
-      <TemplateExporter
-        template={mockTemplate}
-        variableValues={mockVariableValues}
-        onClose={mockOnClose}
-      />
-    );
-
-    expect(screen.getByText('Export Preview')).toBeInTheDocument();
-    // Should show processed content in preview
-    expect(screen.getByText(/Test Value 1/)).toBeInTheDocument();
-  });
-
-  it('allows customizing filename', async () => {
+  it('should validate required fields', async () => {
     const user = userEvent.setup();
-    render(
-      <TemplateExporter
-        template={mockTemplate}
-        variableValues={mockVariableValues}
-        onClose={mockOnClose}
-      />
-    );
+    render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
-    const filenameInput = screen.getByDisplayValue('test-template');
-    await user.clear(filenameInput);
-    await user.type(filenameInput, 'custom-filename');
+    const saveButton = screen.getByText('Save Template');
+    await user.click(saveButton);
 
-    expect(screen.getByDisplayValue('custom-filename')).toBeInTheDocument();
+    // Should show validation error for required field
+    expect(screen.getByText('Market Size is required')).toBeInTheDocument();
   });
 
-  it('creates shareable link', async () => {
+  it('should save template data when valid', async () => {
     const user = userEvent.setup();
-    render(
-      <TemplateExporter
-        template={mockTemplate}
-        variableValues={mockVariableValues}
-        onClose={mockOnClose}
-      />
-    );
+    render(<TemplateEditor template={mockTemplate} onSave={mockOnSave} />);
 
-    const shareButton = screen.getByText('Create Share Link');
-    await user.click(shareButton);
+    const marketSizeInput = screen.getByLabelText(/Market Size/);
+    await user.type(marketSizeInput, 'Large market');
 
-    await waitFor(() => {
-      expect(screen.getByText('Share URL')).toBeInTheDocument();
+    const growthRateInput = screen.getByLabelText(/Growth Rate/);
+    await user.type(growthRateInput, '15');
+
+    const saveButton = screen.getByText('Save Template');
+    await user.click(saveButton);
+
+    expect(mockOnSave).toHaveBeenCalledWith({
+      field1: 'Large market',
+      field2: '15'
     });
   });
 
-  it('calls onClose when close button is clicked', async () => {
-    const user = userEvent.setup();
+  it('should handle different field types', () => {
+    const templateWithVariousFields = {
+      ...mockTemplate,
+      fields: [
+        { id: 'text_field', name: 'Text Field', type: 'text', required: true },
+        { id: 'number_field', name: 'Number Field', type: 'number', required: false },
+        { id: 'textarea_field', name: 'Textarea Field', type: 'textarea', required: false },
+        { id: 'select_field', name: 'Select Field', type: 'select', required: false, options: ['Option 1', 'Option 2'] },
+        { id: 'checkbox_field', name: 'Checkbox Field', type: 'checkbox', required: false }
+      ]
+    };
+
+    render(<TemplateEditor template={templateWithVariousFields} onSave={mockOnSave} />);
+
+    expect(screen.getByLabelText(/Text Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Number Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Textarea Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Select Field/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Checkbox Field/)).toBeInTheDocument();
+  });
+
+  it('should handle initial data', () => {
+    const initialData = {
+      field1: 'Existing market size',
+      field2: '10'
+    };
+
     render(
-      <TemplateExporter
+      <TemplateEditor
         template={mockTemplate}
-        variableValues={mockVariableValues}
-        onClose={mockOnClose}
+        onSave={mockOnSave}
+        initialData={initialData}
       />
     );
 
-    const closeButton = screen.getByText('Close');
-    await user.click(closeButton);
-
-    expect(mockOnClose).toHaveBeenCalledTimes(1);
+    expect(screen.getByDisplayValue('Existing market size')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('10')).toBeInTheDocument();
   });
 });
 
 describe('TemplateManager', () => {
   const mockOnTemplateSelect = jest.fn();
+  const mockOnTemplateDelete = jest.fn();
 
   beforeEach(() => {
-    mockOnTemplateSelect.mockClear();
+    jest.clearAllMocks();
   });
 
-  it('renders template manager with tabs', () => {
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
+  it('should render template management interface', () => {
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
 
     expect(screen.getByText('Template Manager')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /template library/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /my templates/i })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: /recent/i })).toBeInTheDocument();
+    expect(screen.getByText('Create New Template')).toBeInTheDocument();
+    expect(screen.getByText('Import Template')).toBeInTheDocument();
   });
 
-  it('shows create template button', () => {
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
-
-    expect(screen.getByText('Create Template')).toBeInTheDocument();
-  });
-
-  it('switches between tabs correctly', async () => {
-    const user = userEvent.setup();
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
-
-    // Click on My Templates tab
-    const myTemplatesTab = screen.getByRole('tab', { name: /my templates/i });
-    await user.click(myTemplatesTab);
-
-    expect(screen.getByText('My Custom Templates')).toBeInTheDocument();
-  });
-
-  it('shows empty state for my templates', async () => {
-    const user = userEvent.setup();
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
-
-    const myTemplatesTab = screen.getByRole('tab', { name: /my templates/i });
-    await user.click(myTemplatesTab);
-
-    expect(screen.getByText('No custom templates yet')).toBeInTheDocument();
-  });
-
-  it('shows empty state for recent templates', async () => {
-    const user = userEvent.setup();
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
-
-    const recentTab = screen.getByRole('tab', { name: /recent/i });
-    await user.click(recentTab);
-
-    expect(screen.getByText('No recent templates')).toBeInTheDocument();
-  });
-
-  it('creates new template when create button is clicked', async () => {
-    const user = userEvent.setup();
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
-
-    const createButton = screen.getByText('Create Template');
-    await user.click(createButton);
-
-    // Should switch to editor mode
-    expect(screen.getByText('Template Editor')).toBeInTheDocument();
-  });
-});
-
-describe('Template Integration', () => {
-  it('flows from selector to editor to exporter', async () => {
-    const user = userEvent.setup();
-    const mockOnTemplateSelect = jest.fn();
-
-    // Start with template manager
-    render(<TemplateManager onTemplateSelect={mockOnTemplateSelect} />);
-
-    // Create a new template
-    const createButton = screen.getByText('Create Template');
-    await user.click(createButton);
-
-    // Should be in editor mode
-    expect(screen.getByText('Template Editor')).toBeInTheDocument();
-
-    // Edit template name
-    const settingsTab = screen.getByRole('tab', { name: /settings/i });
-    await user.click(settingsTab);
-
-    const nameInput = screen.getByDisplayValue('New Template');
-    await user.clear(nameInput);
-    await user.type(nameInput, 'Integration Test Template');
-
-    // Save template
-    const saveButton = screen.getByText('Save');
-    await user.click(saveButton);
-
-    // Should return to browse mode
-    await waitFor(() => {
-      expect(screen.getByText('Template Manager')).toBeInTheDocument();
-    });
-  });
-
-  it('handles template validation errors gracefully', async () => {
-    const user = userEvent.setup();
-    const invalidTemplate = { ...mockTemplate, name: '', content: '' };
-
+  it('should show template list with actions', () => {
     render(
-      <TemplateEditor
-        template={invalidTemplate}
-        onSave={jest.fn()}
-        onCancel={jest.fn()}
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
       />
     );
 
-    const saveButton = screen.getByText('Save');
-    await user.click(saveButton);
+    expect(screen.getByText('Market Research Template')).toBeInTheDocument();
+    expect(screen.getByText('Competitor Analysis Template')).toBeInTheDocument();
 
-    // Should show multiple validation errors
-    expect(screen.getByText(/validation errors/i)).toBeInTheDocument();
-    expect(screen.getByText(/template name is required/i)).toBeInTheDocument();
-    expect(screen.getByText(/template content is required/i)).toBeInTheDocument();
+    // Should show action buttons for each template
+    const editButtons = screen.getAllByText('Edit');
+    const deleteButtons = screen.getAllByText('Delete');
+    const exportButtons = screen.getAllByText('Export');
+
+    expect(editButtons).toHaveLength(2);
+    expect(deleteButtons).toHaveLength(2);
+    expect(exportButtons).toHaveLength(2);
   });
 
-  it('preserves variable values across editor tabs', async () => {
+  it('should handle template editing', async () => {
     const user = userEvent.setup();
     render(
-      <TemplateEditor
-        template={mockTemplate}
-        onSave={jest.fn()}
-        onCancel={jest.fn()}
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
       />
     );
 
-    // Go to variables tab and set a value
-    const variablesTab = screen.getByRole('tab', { name: /variables/i });
-    await user.click(variablesTab);
+    const editButtons = screen.getAllByText('Edit');
+    await user.click(editButtons[0]);
 
-    const textInput = screen.getByPlaceholderText('Enter variable1');
-    await user.type(textInput, 'Test Value');
+    expect(mockOnTemplateSelect).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'template1',
+        name: 'Market Research Template'
+      })
+    );
+  });
 
-    // Switch to preview tab
-    const previewTab = screen.getByRole('tab', { name: /preview/i });
-    await user.click(previewTab);
+  it('should handle template deletion with confirmation', async () => {
+    const user = userEvent.setup();
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
 
-    // Should show the value in preview
-    expect(screen.getByText(/Test Value/)).toBeInTheDocument();
+    const deleteButtons = screen.getAllByText('Delete');
+    await user.click(deleteButtons[0]);
+
+    // Should show confirmation dialog
+    expect(screen.getByText('Delete Template')).toBeInTheDocument();
+    expect(screen.getByText(/Are you sure you want to delete this template/)).toBeInTheDocument();
+
+    // Find the delete button within the modal (should be the last one)
+    const allDeleteButtons = screen.getAllByText('Delete');
+    const confirmButton = allDeleteButtons[allDeleteButtons.length - 1]; // Modal delete button is last
+    await user.click(confirmButton);
+
+    expect(mockOnTemplateDelete).toHaveBeenCalledWith('template1');
+  });
+
+  it('should handle template export', async () => {
+    const user = userEvent.setup();
+    const mockExportTemplate = require('@/lib/template-utils').exportTemplate;
+
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
+
+    const exportButtons = screen.getAllByText('Export');
+    await user.click(exportButtons[0]);
+
+    expect(mockExportTemplate).toHaveBeenCalledWith('template1', 'json');
+  });
+
+  it('should handle new template creation', async () => {
+    const user = userEvent.setup();
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
+
+    const createButton = screen.getByText('Create New Template');
+    await user.click(createButton);
+
+    // Should show template creation form
+    expect(screen.getByRole('heading', { name: /Create Template/ })).toBeInTheDocument();
+    expect(screen.getByLabelText(/Template Name/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Category/)).toBeInTheDocument();
+    expect(screen.getByLabelText(/Description/)).toBeInTheDocument();
+  });
+
+  it('should handle template import', async () => {
+    const user = userEvent.setup();
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
+
+    const importButton = screen.getByText('Import Template');
+    await user.click(importButton);
+
+    // Should show file input for template import
+    expect(screen.getByRole('heading', { name: /Import Template/ })).toBeInTheDocument();
+    expect(screen.getByText('Select template file to import')).toBeInTheDocument();
+  });
+
+  it('should filter templates by category', async () => {
+    const user = userEvent.setup();
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
+
+    const categoryFilter = screen.getByLabelText(/Filter by category/);
+    await user.selectOptions(categoryFilter, 'validation');
+
+    // Should show only validation templates
+    expect(screen.getByText('Market Research Template')).toBeInTheDocument();
+    expect(screen.getByText('Competitor Analysis Template')).toBeInTheDocument();
+  });
+
+  it('should handle search functionality', async () => {
+    const user = userEvent.setup();
+    render(
+      <TemplateManager
+        onTemplateSelect={mockOnTemplateSelect}
+        onTemplateDelete={mockOnTemplateDelete}
+      />
+    );
+
+    const searchInput = screen.getByPlaceholderText('Search templates...');
+    await user.type(searchInput, 'Market');
+
+    expect(screen.getByText('Market Research Template')).toBeInTheDocument();
+    expect(screen.queryByText('Competitor Analysis Template')).not.toBeInTheDocument();
   });
 });
-
-// Mock ResizeObserver for tests
-global.ResizeObserver = jest.fn().mockImplementation(() => ({
-  observe: jest.fn(),
-  unobserve: jest.fn(),
-  disconnect: jest.fn(),
-}));

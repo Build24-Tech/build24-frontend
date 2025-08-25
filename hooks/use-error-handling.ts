@@ -1,195 +1,345 @@
 'use client';
 
-import { useCallback, useState } from 'react';
-import { toast } from 'sonner';
+import {
+  classifyError,
+  ErrorLogger,
+  FrameworkError,
+  NetworkError,
+  OfflineManager,
+  PersistenceError,
+  RetryManager,
+  ValidationError
+} from '@/lib/error-handling';
+import { useCallback, useEffect, useState } from 'react';
 
 interface ErrorState {
-  hasError: boolean;
-  error: AppError | null;
-  errorMessage: string;
+  error: Error | null;
+  isLoading: boolean;
+  isRetrying: boolean;
+  retryCount: number;
+  errorId: string | null;
 }
 
 interface UseErrorHandlingOptions {
-  showToast?: boolean;
-  logErrors?: boolean;
-  fallbackMessage?: string;
+  maxRetries?: number;
+  onError?: (error: Error, errorId: string) => void;
+  onRetry?: (retryCount: number) => void;
+  onSuccess?: () => void;
 }
 
-/**
- * Custom hook for consistent error handling across components
- * Provides error state management and user-friendly error messages
- */
 export function useErrorHandling(options: UseErrorHandlingOptions = {}) {
-  const {
-    showToast = true,
-    logErrors = true,
-    fallbackMessage = 'Something went wrong. Please try again.'
-  } = options;
+  const { maxRetries = 3, onError, onRetry, onSuccess } = options;
 
   const [errorState, setErrorState] = useState<ErrorState>({
-    hasError: false,
     error: null,
-    errorMessage: ''
+    isLoading: false,
+    isRetrying: false,
+    retryCount: 0,
+    errorId: null,
   });
 
-  const handleError = useCallback((error: Error | AppError | string, context?: string) => {
-    let appError: AppError;
+  const [isOnline, setIsOnline] = useState(OfflineManager.getStatus());
 
-    if (typeof error === 'string') {
-      appError = ErrorHandler.createError(ErrorType.UNKNOWN, error, undefined, { context });
-    } else if ('type' in error && 'userMessage' in error) {
-      // Already an AppError
-      appError = error as AppError;
-    } else {
-      // Regular Error object
-      appError = ErrorHandler.createError(ErrorType.UNKNOWN, error.message, error, { context });
-    }
-
-    const message = appError.userMessage || fallbackMessage;
-
-    // Log error for debugging
-    if (logErrors) {
-      ErrorHandler.logError(appError);
-    }
-
-    // Update error state
-    setErrorState({
-      hasError: true,
-      error: appError,
-      errorMessage: message
-    });
-
-    // Show toast notification
-    if (showToast) {
-      toast.error(message);
-    }
-  }, [showToast, logErrors, fallbackMessage]);
-
-  const clearError = useCallback(() => {
-    setErrorState({
-      hasError: false,
-      error: null,
-      errorMessage: ''
-    });
+  // Listen for online/offline status changes
+  useEffect(() => {
+    const unsubscribe = OfflineManager.onStatusChange(setIsOnline);
+    return unsubscribe;
   }, []);
 
-  const retryWithErrorHandling = useCallback(async (
-    operation: () => Promise<void>,
-    context?: string
-  ) => {
-    try {
-      clearError();
-      await operation();
-    } catch (error) {
-      handleError(error as Error, context);
-    }
-  }, [handleError, clearError]);
-
-  const handleTheoryError = useCallback((error: Error, theoryId?: string) => {
-    const appError = ErrorHandler.handleTheoryLoadError(error, theoryId);
-    handleError(appError);
-  }, [handleError]);
-
-  const handleSearchError = useCallback((error: Error, query?: string) => {
-    const appError = ErrorHandler.handleSearchError(error, query);
-    handleError(appError);
-  }, [handleError]);
-
-  const handleBookmarkError = useCallback((error: Error, theoryId?: string) => {
-    const appError = ErrorHandler.handleBookmarkError(error, theoryId);
-    handleError(appError);
-  }, [handleError]);
-
-  const handleProgressError = useCallback((error: Error, userId?: string) => {
-    const appError = ErrorHandler.handleProgressError(error, userId);
-    handleError(appError);
-  }, [handleError]);
-
-  return {
-    ...errorState,
-    handleError,
-    clearError,
-    retryWithErrorHandling,
-    handleTheoryError,
-    handleSearchError,
-    handleBookmarkError,
-    handleProgressError
-  };
-}
-
-/**
- * Hook for handling async operations with loading and error states
- */
-export function useAsyncOperation<T = any>() {
-  const [isLoading, setIsLoading] = useState(false);
-  const { handleError, clearError, hasError, errorMessage } = useErrorHandling();
-
-  const execute = useCallback(async (
-    operation: () => Promise<T>,
-    context?: string
-  ): Promise<T | null> => {
-    try {
-      setIsLoading(true);
-      clearError();
-      const result = await operation();
-      return result;
-    } catch (error) {
-      handleError(error as Error, context);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, [handleError, clearError]);
-
-  return {
-    execute,
-    isLoading,
-    hasError,
-    errorMessage,
-    clearError
-  };
-}
-
-/**
- * Hook for handling form validation errors
- */
-export function useFormErrorHandling() {
-  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
-
-  const setFieldError = useCallback((field: string, message: string) => {
-    setFieldErrors(prev => ({
+  const clearError = useCallback(() => {
+    setErrorState(prev => ({
       ...prev,
-      [field]: message
+      error: null,
+      errorId: null,
+      isRetrying: false,
     }));
   }, []);
 
-  const clearFieldError = useCallback((field: string) => {
-    setFieldErrors(prev => {
-      const newErrors = { ...prev };
-      delete newErrors[field];
-      return newErrors;
-    });
+  const logError = useCallback((error: Error, context: Record<string, any> = {}) => {
+    const { severity } = classifyError(error);
+    const errorId = ErrorLogger.log(error, severity, context);
+
+    setErrorState(prev => ({
+      ...prev,
+      error,
+      errorId,
+      isLoading: false,
+      isRetrying: false,
+    }));
+
+    if (onError) {
+      onError(error, errorId);
+    }
+
+    return errorId;
+  }, [onError]);
+
+  const executeWithErrorHandling = useCallback(async <T>(
+    operation: () => Promise<T>,
+    context: Record<string, any> = {}
+  ): Promise<T | null> => {
+    setErrorState(prev => ({
+      ...prev,
+      isLoading: true,
+      error: null,
+      errorId: null,
+    }));
+
+    try {
+      const result = await RetryManager.withRetry(
+        operation,
+        maxRetries,
+        1000
+      );
+
+      setErrorState(prev => ({
+        ...prev,
+        isLoading: false,
+        retryCount: 0,
+      }));
+
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      return result;
+    } catch (error) {
+      logError(error as Error, context);
+      return null;
+    }
+  }, [maxRetries, logError, onSuccess]);
+
+  const retry = useCallback(async <T>(
+    operation: () => Promise<T>,
+    context: Record<string, any> = {}
+  ): Promise<T | null> => {
+    if (errorState.retryCount >= maxRetries) {
+      return null;
+    }
+
+    setErrorState(prev => ({
+      ...prev,
+      isRetrying: true,
+      retryCount: prev.retryCount + 1,
+    }));
+
+    if (onRetry) {
+      onRetry(errorState.retryCount + 1);
+    }
+
+    try {
+      const result = await operation();
+
+      setErrorState(prev => ({
+        ...prev,
+        error: null,
+        errorId: null,
+        isRetrying: false,
+        isLoading: false,
+      }));
+
+      if (onSuccess) {
+        onSuccess();
+      }
+
+      return result;
+    } catch (error) {
+      logError(error as Error, { ...context, isRetry: true });
+      return null;
+    }
+  }, [errorState.retryCount, maxRetries, onRetry, onSuccess, logError]);
+
+  const validateField = useCallback((
+    value: any,
+    rules: ValidationRule[]
+  ): ValidationResult => {
+    const errors: string[] = [];
+    const suggestions: string[] = [];
+
+    for (const rule of rules) {
+      const result = rule.validate(value);
+      if (!result.isValid) {
+        errors.push(result.message);
+        if (result.suggestion) {
+          suggestions.push(result.suggestion);
+        }
+      }
+    }
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      suggestions,
+    };
   }, []);
 
-  const clearAllErrors = useCallback(() => {
-    setFieldErrors({});
+  const createValidationError = useCallback((
+    field: string,
+    message: string,
+    suggestions: string[] = []
+  ) => {
+    return new ValidationError(field, message, 'VALIDATION_FAILED', suggestions);
   }, []);
 
-  const hasFieldError = useCallback((field: string) => {
-    return Boolean(fieldErrors[field]);
-  }, [fieldErrors]);
+  const createNetworkError = useCallback((
+    message: string,
+    status?: number,
+    retryable: boolean = true
+  ) => {
+    return new NetworkError(message, status, retryable);
+  }, []);
 
-  const getFieldError = useCallback((field: string) => {
-    return fieldErrors[field] || '';
-  }, [fieldErrors]);
+  const createPersistenceError = useCallback((
+    operation: string,
+    originalError: Error,
+    retryable: boolean = true
+  ) => {
+    return new PersistenceError(operation, originalError, retryable);
+  }, []);
+
+  const createFrameworkError = useCallback((
+    frameworkId: string,
+    message: string,
+    recoverable: boolean = true
+  ) => {
+    return new FrameworkError(frameworkId, message, recoverable);
+  }, []);
 
   return {
-    fieldErrors,
-    setFieldError,
-    clearFieldError,
-    clearAllErrors,
-    hasFieldError,
-    getFieldError,
-    hasErrors: Object.keys(fieldErrors).length > 0
+    // State
+    error: errorState.error,
+    isLoading: errorState.isLoading,
+    isRetrying: errorState.isRetrying,
+    retryCount: errorState.retryCount,
+    errorId: errorState.errorId,
+    isOnline,
+    canRetry: errorState.retryCount < maxRetries,
+
+    // Actions
+    executeWithErrorHandling,
+    retry,
+    clearError,
+    logError,
+    validateField,
+
+    // Error creators
+    createValidationError,
+    createNetworkError,
+    createPersistenceError,
+    createFrameworkError,
+
+    // Utilities
+    classifyError: (error: Error) => classifyError(error),
   };
 }
+
+// Validation rule interface and common rules
+export interface ValidationRule {
+  validate: (value: any) => ValidationResult;
+}
+
+export interface ValidationResult {
+  isValid: boolean;
+  errors: string[];
+  suggestions: string[];
+}
+
+export const commonValidationRules = {
+  required: (fieldName: string): ValidationRule => ({
+    validate: (value: any) => ({
+      isValid: value !== null && value !== undefined && value !== '',
+      errors: value === null || value === undefined || value === ''
+        ? [`${fieldName} is required`]
+        : [],
+      suggestions: value === null || value === undefined || value === ''
+        ? [`Please provide a value for ${fieldName}`]
+        : [],
+    }),
+  }),
+
+  minLength: (min: number, fieldName: string): ValidationRule => ({
+    validate: (value: string) => ({
+      isValid: !value || value.length >= min,
+      errors: value && value.length < min
+        ? [`${fieldName} must be at least ${min} characters long`]
+        : [],
+      suggestions: value && value.length < min
+        ? [`Add ${min - value.length} more characters`]
+        : [],
+    }),
+  }),
+
+  maxLength: (max: number, fieldName: string): ValidationRule => ({
+    validate: (value: string) => ({
+      isValid: !value || value.length <= max,
+      errors: value && value.length > max
+        ? [`${fieldName} must be no more than ${max} characters long`]
+        : [],
+      suggestions: value && value.length > max
+        ? [`Remove ${value.length - max} characters`]
+        : [],
+    }),
+  }),
+
+  email: (fieldName: string = 'Email'): ValidationRule => ({
+    validate: (value: string) => {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return {
+        isValid: !value || emailRegex.test(value),
+        errors: value && !emailRegex.test(value)
+          ? [`${fieldName} must be a valid email address`]
+          : [],
+        suggestions: value && !emailRegex.test(value)
+          ? ['Please enter a valid email address (e.g., user@example.com)']
+          : [],
+      };
+    },
+  }),
+
+  url: (fieldName: string = 'URL'): ValidationRule => ({
+    validate: (value: string) => {
+      try {
+        if (!value) return { isValid: true, errors: [], suggestions: [] };
+        new URL(value);
+        return { isValid: true, errors: [], suggestions: [] };
+      } catch {
+        return {
+          isValid: false,
+          errors: [`${fieldName} must be a valid URL`],
+          suggestions: ['Please enter a valid URL (e.g., https://example.com)'],
+        };
+      }
+    },
+  }),
+
+  numeric: (fieldName: string): ValidationRule => ({
+    validate: (value: any) => {
+      const isNumeric = !isNaN(Number(value)) && isFinite(Number(value));
+      return {
+        isValid: !value || isNumeric,
+        errors: value && !isNumeric
+          ? [`${fieldName} must be a valid number`]
+          : [],
+        suggestions: value && !isNumeric
+          ? ['Please enter a numeric value']
+          : [],
+      };
+    },
+  }),
+
+  range: (min: number, max: number, fieldName: string): ValidationRule => ({
+    validate: (value: number) => {
+      const numValue = Number(value);
+      const inRange = numValue >= min && numValue <= max;
+      return {
+        isValid: value === null || value === undefined || value === '' || inRange,
+        errors: value !== null && value !== undefined && value !== '' && !inRange
+          ? [`${fieldName} must be between ${min} and ${max}`]
+          : [],
+        suggestions: value !== null && value !== undefined && value !== '' && !inRange
+          ? [`Please enter a value between ${min} and ${max}`]
+          : [],
+      };
+    },
+  }),
+};

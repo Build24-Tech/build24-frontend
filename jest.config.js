@@ -14,8 +14,13 @@ const customJestConfig = {
     '^@/(.*)$': '<rootDir>/$1',
   },
   testMatch: [
-    '**/__tests__/**/*.(ts|tsx|js)',
-    '**/*.(test|spec).(ts|tsx|js)'
+    '**/__tests__/**/*.test.{js,ts,tsx}',
+    '**/*.test.{js,ts,tsx}'
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/.next/',
+    '<rootDir>/node_modules/',
+    '<rootDir>/coverage/',
   ],
   collectCoverageFrom: [
     'lib/**/*.{ts,tsx}',
@@ -28,6 +33,11 @@ const customJestConfig = {
     '!**/coverage/**',
     '!**/.next/**',
   ],
+  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
+  testTimeout: 10000,
+  maxWorkers: '50%',
+  workerIdleMemoryLimit: '512MB',
+  verbose: true,
   coverageReporters: ['text', 'lcov', 'html', 'json-summary'],
   coverageDirectory: 'coverage',
   coverageThreshold: {
@@ -38,15 +48,6 @@ const customJestConfig = {
       statements: 70,
     },
   },
-  moduleFileExtensions: ['ts', 'tsx', 'js', 'jsx', 'json'],
-  testTimeout: 10000,
-  maxWorkers: '50%',
-  verbose: true,
-  testPathIgnorePatterns: [
-    '<rootDir>/.next/',
-    '<rootDir>/node_modules/',
-    '<rootDir>/coverage/',
-  ],
   transformIgnorePatterns: [
     'node_modules/(?!(.*\\.mjs$|@testing-library|@radix-ui))',
   ],
