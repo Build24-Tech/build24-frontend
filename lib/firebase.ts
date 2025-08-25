@@ -16,21 +16,31 @@ const firebaseConfig = {
 };
 
 // Validate required configuration
-//const requiredEnvVars = [
-//  'FIREBASE_API_KEY',
-//  'FIREBASE_AUTH_DOMAIN',
-//  'FIREBASE_PROJECT_ID',
-//  'FIREBASE_STORAGE_BUCKET',
-//  'FIREBASE_MESSAGING_SENDER_ID',
-//  'FIREBASE_APP_ID',
-//];
+const requiredEnvVars = [
+  'FIREBASE_API_KEY',
+  'FIREBASE_AUTH_DOMAIN',
+  'FIREBASE_PROJECT_ID',
+  'FIREBASE_STORAGE_BUCKET',
+  'FIREBASE_MESSAGING_SENDER_ID',
+  'FIREBASE_APP_ID',
+];
 
-//const missingEnvVars = requiredEnvVars.filter(envVar => !process.env[envVar]);
+const missingEnvVars = requiredEnvVars.filter(envVar =>
+  !process.env[`NEXT_PUBLIC_${envVar}`] && !process.env[envVar]
+);
 
 //if (missingEnvVars.length > 0) {
 //  console.error('Missing required Firebase environment variables:', missingEnvVars);
 //  throw new Error(`Missing required Firebase configuration: ${missingEnvVars.join(', ')}`);
 //}
+
+// Log Firebase config for debugging (without sensitive data)
+console.log('Firebase Config Status:', {
+  hasApiKey: !!firebaseConfig.apiKey,
+  authDomain: firebaseConfig.authDomain,
+  projectId: firebaseConfig.projectId,
+  hasAppId: !!firebaseConfig.appId
+});
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -38,8 +48,17 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firebase Auth
 export const auth = getAuth(app);
 
-// Initialize Firestore
+// Initialize Firestore with settings for development
 export const db = getFirestore(app);
+
+// Enable Firestore offline persistence and configure for development
+if (typeof window !== 'undefined') {
+  // Only run on client side
+  import('firebase/firestore').then(({ connectFirestoreEmulator, enableNetwork }) => {
+    // Force enable network connectivity
+    enableNetwork(db).catch(console.error);
+  });
+}
 
 // Auth providers
 export const googleProvider = new GoogleAuthProvider();
