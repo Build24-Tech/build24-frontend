@@ -1,581 +1,494 @@
+import { db } from '@/lib/firebase';
 import {
-  LaunchPhase,
-  StepProgress,
-  StepStatus,
+  Badge,
+  BADGE_THRESHOLDS,
+  BadgeCategory,
+  TheoryCategory,
   UserProgress,
-  ValidationResult
-} from '@/types/launch-essentials';
-import { UserProgressService } from './launch-essentials-firestore';
-import {
-  calculateOverallProgress,
-  calculatePhaseCompletion,
-  getNextPhase,
-  getNextStep
-} from './launch-essentials-utils';
+  UserStats
+} from '@/types/knowledge-hub';
+import { doc, getDoc, serverTimestamp, setDoc, updateDoc } from 'firebase/firestore';
 
-// Error classes for progress tracking
-export class ProgressTrackingError extends Error {
-  constructor(
-    public operation: string,
-    public originalError: Error,
-    public context?: any
-  ) {
-    super(`Progress tracking failed during ${operation}: ${originalError.message}`);
-    this.name = 'ProgressTrackingError';
-  }
-}
+export class ProgressTrackerService {
+  private static instance: ProgressTrackerService;
 
-export class ValidationError extends Error {
-  constructor(
-    public field: string,
-    public message: string,
-    public code: string
-  ) {
-    super(`Validation error in ${field}: ${message}`);
-    this.name = 'ValidationError';
-  }
-}
-
-// Auto-save configuration
-interface AutoSaveConfig {
-  enabled: boolean;
-  debounceMs: number;
-  maxRetries: number;
-  retryDelayMs: number;
-}
-
-// Progress update options
-interface ProgressUpdateOptions {
-  autoSave?: boolean;
-  optimistic?: boolean;
-  validateData?: boolean;
-  retryOnFailure?: boolean;
-}
-
-// Progress calculation result
-interface ProgressCalculation {
-  phaseCompletion: Record<LaunchPhase, number>;
-  overallCompletion: number;
-  completedSteps: number;
-  totalSteps: number;
-  nextStep: StepProgress | null;
-  nextPhase: LaunchPhase | null;
-}
-
-/**
- * Core progress tracking service that manages user progress across frameworks
- */
-export class ProgressTracker {
-  private autoSaveConfig: AutoSaveConfig;
-  private pendingUpdates: Map<string, NodeJS.Timeout> = new Map();
-  private optimisticUpdates: Map<string, UserProgress> = new Map();
-  private retryQueue: Map<string, { operation: () => Promise<void>; retries: number }> = new Map();
-
-  constructor(autoSaveConfig?: Partial<AutoSaveConfig>) {
-    this.autoSaveConfig = {
-      enabled: true,
-      debounceMs: 2000,
-      maxRetries: 3,
-      retryDelayMs: 1000,
-      ...autoSaveConfig
-    };
-  }
-
-  /**
-   * Initialize progress tracking for a user and project
-   */
-  async initializeProgress(
-    userId: string,
-    projectId: string,
-    initialPhase: LaunchPhase = 'validation'
-  ): Promise<UserProgress> {
-    try {
-      // Check if progress already exists
-      const existingProgress = await UserProgressService.getUserProgress(userId, projectId);
-      if (existingProgress) {
-        return existingProgress;
-      }
-
-      // Create new progress
-      const progress = await UserProgressService.createUserProgress(userId, projectId, initialPhase);
-
-      // Initialize optimistic cache
-      const progressKey = this.getProgressKey(userId, projectId);
-      this.optimisticUpdates.set(progressKey, progress);
-
-      return progress;
-    } catch (error) {
-      throw new ProgressTrackingError('initialize', error as Error, { userId, projectId });
+  static getInstance(): ProgressTrackerService {
+    if (!ProgressTrackerService.instance) {
+      ProgressTrackerService.instance = new ProgressTrackerService();
     }
+    return ProgressTrackerService.instance;
   }
 
   /**
-   * Get current progress with optimistic updates applied
+   * Initialize user progress document if it doesn't exist
    */
-  async getProgress(userId: string, projectId: string): Promise<UserProgress | null> {
-    try {
-      const progressKey = this.getProgressKey(userId, projectId);
+  async initializeUserProgress(userId: string): Promise<UserProgress> {
+    const userProgressRef = doc(db, 'userProgress', userId);
+    const userProgressDoc = await getDoc(userProgressRef);
 
-      // Return optimistic update if available
-      if (this.optimisticUpdates.has(progressKey)) {
-        return this.optimisticUpdates.get(progressKey)!;
-      }
-
-      // Fetch from database
-      const progress = await UserProgressService.getUserProgress(userId, projectId);
-      if (progress) {
-        this.optimisticUpdates.set(progressKey, progress);
-      }
-
-      return progress;
-    } catch (error) {
-      throw new ProgressTrackingError('get', error as Error, { userId, projectId });
-    }
-  }
-
-  /**
-   * Update step progress with auto-save and optimistic updates
-   */
-  async updateStepProgress(
-    userId: string,
-    projectId: string,
-    phase: LaunchPhase,
-    stepId: string,
-    status: StepStatus,
-    data?: any,
-    notes?: string,
-    options: ProgressUpdateOptions = {}
-  ): Promise<UserProgress> {
-    const {
-      autoSave = this.autoSaveConfig.enabled,
-      optimistic = true,
-      validateData = true,
-      retryOnFailure = true
-    } = options;
-
-    try {
-      const progressKey = this.getProgressKey(userId, projectId);
-      let currentProgress = await this.getProgress(userId, projectId);
-
-      if (!currentProgress) {
-        currentProgress = await this.initializeProgress(userId, projectId, phase);
-      }
-
-      // Validate data if requested
-      if (validateData && data !== undefined) {
-        const validation = this.validateStepData(stepId, data);
-        if (!validation.isValid) {
-          throw new ValidationError(stepId, validation.errors[0]?.message || 'Invalid data', 'VALIDATION_FAILED');
+    if (!userProgressDoc.exists()) {
+      const initialProgress: Omit<UserProgress, 'createdAt' | 'updatedAt'> = {
+        userId,
+        readTheories: [],
+        bookmarkedTheories: [],
+        badges: [],
+        stats: {
+          totalReadTime: 0,
+          theoriesRead: 0,
+          categoriesExplored: [],
+          lastActiveDate: new Date(),
+          streakDays: 1,
+          averageSessionTime: 0
+        },
+        quizResults: [],
+        preferences: {
+          emailNotifications: true,
+          progressReminders: true
         }
-      }
-
-      // Create updated progress
-      const updatedProgress = this.createUpdatedProgress(
-        currentProgress,
-        phase,
-        stepId,
-        status,
-        data,
-        notes
-      );
-
-      // Apply optimistic update
-      if (optimistic) {
-        this.optimisticUpdates.set(progressKey, updatedProgress);
-      }
-
-      // Handle persistence
-      if (autoSave) {
-        this.scheduleAutoSave(userId, projectId, phase, stepId, status, data, notes, retryOnFailure);
-      } else {
-        await this.persistStepUpdate(userId, projectId, phase, stepId, status, data, notes);
-      }
-
-      return updatedProgress;
-    } catch (error) {
-      throw new ProgressTrackingError('updateStep', error as Error, {
-        userId, projectId, phase, stepId, status
-      });
-    }
-  }
-
-  /**
-   * Update current phase
-   */
-  async updateCurrentPhase(
-    userId: string,
-    projectId: string,
-    newPhase: LaunchPhase,
-    options: ProgressUpdateOptions = {}
-  ): Promise<UserProgress> {
-    const { optimistic = true, retryOnFailure = true } = options;
-
-    try {
-      const progressKey = this.getProgressKey(userId, projectId);
-      let currentProgress = await this.getProgress(userId, projectId);
-
-      if (!currentProgress) {
-        throw new Error('Progress not found');
-      }
-
-      // Create updated progress
-      const updatedProgress = {
-        ...currentProgress,
-        currentPhase: newPhase,
-        updatedAt: new Date()
       };
 
-      // Apply optimistic update
-      if (optimistic) {
-        this.optimisticUpdates.set(progressKey, updatedProgress);
-      }
-
-      // Persist change
-      const persistOperation = async () => {
-        await UserProgressService.updateCurrentPhase(userId, projectId, newPhase);
-      };
-
-      if (retryOnFailure) {
-        await this.executeWithRetry(progressKey, persistOperation);
-      } else {
-        await persistOperation();
-      }
-
-      return updatedProgress;
-    } catch (error) {
-      throw new ProgressTrackingError('updatePhase', error as Error, {
-        userId, projectId, newPhase
+      await setDoc(userProgressRef, {
+        ...initialProgress,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
       });
-    }
-  }
-
-  /**
-   * Calculate comprehensive progress metrics
-   */
-  calculateProgress(progress: UserProgress): ProgressCalculation {
-    const phaseCompletion: Record<LaunchPhase, number> = {} as Record<LaunchPhase, number>;
-    let totalSteps = 0;
-    let completedSteps = 0;
-
-    // Calculate phase completions
-    Object.entries(progress.phases).forEach(([phase, phaseProgress]) => {
-      const completion = calculatePhaseCompletion(phaseProgress.steps);
-      phaseCompletion[phase as LaunchPhase] = completion;
-
-      totalSteps += phaseProgress.steps.length;
-      completedSteps += phaseProgress.steps.filter(step => step.status === 'completed').length;
-    });
-
-    const overallCompletion = calculateOverallProgress(progress);
-    const nextStep = getNextStep(progress);
-    const nextPhase = getNextPhase(progress);
-
-    return {
-      phaseCompletion,
-      overallCompletion,
-      completedSteps,
-      totalSteps,
-      nextStep,
-      nextPhase
-    };
-  }
-
-  /**
-   * Get progress summary with recommendations
-   */
-  async getProgressSummary(userId: string, projectId: string): Promise<{
-    progress: UserProgress;
-    calculation: ProgressCalculation;
-    recommendations: string[];
-    risks: string[];
-  }> {
-    try {
-      const progress = await this.getProgress(userId, projectId);
-      if (!progress) {
-        throw new Error('Progress not found');
-      }
-
-      const calculation = this.calculateProgress(progress);
-      const recommendations = this.generateRecommendations(progress, calculation);
-      const risks = this.identifyRisks(progress, calculation);
 
       return {
-        progress,
-        calculation,
-        recommendations,
-        risks
+        ...initialProgress,
+        createdAt: new Date(),
+        updatedAt: new Date()
       };
-    } catch (error) {
-      throw new ProgressTrackingError('getSummary', error as Error, { userId, projectId });
     }
+
+    const data = userProgressDoc.data();
+    return {
+      ...data,
+      createdAt: data.createdAt?.toDate() || new Date(),
+      updatedAt: data.updatedAt?.toDate() || new Date(),
+      stats: {
+        ...data.stats,
+        lastActiveDate: data.stats.lastActiveDate?.toDate() || new Date()
+      },
+      badges: data.badges?.map((badge: any) => ({
+        ...badge,
+        earnedAt: badge.earnedAt?.toDate() || new Date()
+      })) || []
+    } as UserProgress;
   }
 
   /**
-   * Force save all pending changes
+   * Get user progress from Firestore
    */
-  async forceSave(userId: string, projectId: string): Promise<void> {
-    const progressKey = this.getProgressKey(userId, projectId);
+  async getUserProgress(userId: string): Promise<UserProgress | null> {
+    try {
+      const userProgressRef = doc(db, 'userProgress', userId);
+      const userProgressDoc = await getDoc(userProgressRef);
 
-    // Cancel pending auto-save
-    const pendingTimeout = this.pendingUpdates.get(progressKey);
-    if (pendingTimeout) {
-      clearTimeout(pendingTimeout);
-      this.pendingUpdates.delete(progressKey);
-    }
-
-    // Execute any queued retry operations
-    const retryOperation = this.retryQueue.get(progressKey);
-    if (retryOperation) {
-      await retryOperation.operation();
-      this.retryQueue.delete(progressKey);
-    }
-  }
-
-  /**
-   * Clear optimistic updates and refresh from database
-   */
-  async refreshProgress(userId: string, projectId: string): Promise<UserProgress | null> {
-    const progressKey = this.getProgressKey(userId, projectId);
-
-    // Clear optimistic updates
-    this.optimisticUpdates.delete(progressKey);
-
-    // Fetch fresh data
-    return await UserProgressService.getUserProgress(userId, projectId);
-  }
-
-  /**
-   * Subscribe to real-time progress updates
-   */
-  subscribeToProgress(
-    userId: string,
-    projectId: string,
-    callback: (progress: UserProgress | null) => void
-  ): () => void {
-    return UserProgressService.subscribeToUserProgress(userId, projectId, (progress) => {
-      if (progress) {
-        const progressKey = this.getProgressKey(userId, projectId);
-        // Update optimistic cache with fresh data
-        this.optimisticUpdates.set(progressKey, progress);
+      if (!userProgressDoc.exists()) {
+        return null;
       }
-      callback(progress);
+
+      const data = userProgressDoc.data();
+      return {
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        stats: {
+          ...data.stats,
+          lastActiveDate: data.stats.lastActiveDate?.toDate() || new Date()
+        },
+        badges: data.badges?.map((badge: any) => ({
+          ...badge,
+          earnedAt: badge.earnedAt?.toDate() || new Date()
+        })) || []
+      } as UserProgress;
+    } catch (error) {
+      console.error('Error fetching user progress:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Mark a theory as read and update progress
+   */
+  async markTheoryAsRead(
+    userId: string,
+    theoryId: string,
+    category: TheoryCategory,
+    readTime: number
+  ): Promise<{ newBadges: Badge[]; updatedProgress: UserProgress }> {
+    const userProgress = await this.getUserProgress(userId) || await this.initializeUserProgress(userId);
+
+    // Don't add if already read
+    if (userProgress.readTheories.includes(theoryId)) {
+      return { newBadges: [], updatedProgress: userProgress };
+    }
+
+    // Update read theories
+    const updatedReadTheories = [...userProgress.readTheories, theoryId];
+
+    // Update categories explored
+    const updatedCategoriesExplored = userProgress.stats.categoriesExplored.includes(category)
+      ? userProgress.stats.categoriesExplored
+      : [...userProgress.stats.categoriesExplored, category];
+
+    // Update stats
+    const updatedStats: UserStats = {
+      ...userProgress.stats,
+      totalReadTime: userProgress.stats.totalReadTime + readTime,
+      theoriesRead: updatedReadTheories.length,
+      categoriesExplored: updatedCategoriesExplored,
+      lastActiveDate: new Date(),
+      streakDays: this.calculateStreakDays(userProgress.stats.lastActiveDate),
+      averageSessionTime: this.calculateAverageSessionTime(
+        userProgress.stats.totalReadTime + readTime,
+        userProgress.stats.theoriesRead + 1
+      )
+    };
+
+    // Check for new badges
+    const newBadges = this.checkForNewBadges(userProgress, {
+      readTheories: updatedReadTheories,
+      stats: updatedStats,
+      bookmarkedTheories: userProgress.bookmarkedTheories
+    });
+
+    // Update progress object
+    const updatedProgress: UserProgress = {
+      ...userProgress,
+      readTheories: updatedReadTheories,
+      stats: updatedStats,
+      badges: [...userProgress.badges, ...newBadges],
+      updatedAt: new Date()
+    };
+
+    // Save to Firestore
+    await this.saveUserProgress(updatedProgress);
+
+    return { newBadges, updatedProgress };
+  }
+
+  /**
+   * Add or remove bookmark and update progress
+   */
+  async updateBookmark(
+    userId: string,
+    theoryId: string,
+    isBookmarked: boolean
+  ): Promise<{ newBadges: Badge[]; updatedProgress: UserProgress }> {
+    const userProgress = await this.getUserProgress(userId) || await this.initializeUserProgress(userId);
+
+    let updatedBookmarks: string[];
+    if (isBookmarked) {
+      updatedBookmarks = userProgress.bookmarkedTheories.includes(theoryId)
+        ? userProgress.bookmarkedTheories
+        : [...userProgress.bookmarkedTheories, theoryId];
+    } else {
+      updatedBookmarks = userProgress.bookmarkedTheories.filter(id => id !== theoryId);
+    }
+
+    // Check for new badges
+    const newBadges = this.checkForNewBadges(userProgress, {
+      readTheories: userProgress.readTheories,
+      stats: userProgress.stats,
+      bookmarkedTheories: updatedBookmarks
+    });
+
+    // Update progress object
+    const updatedProgress: UserProgress = {
+      ...userProgress,
+      bookmarkedTheories: updatedBookmarks,
+      badges: [...userProgress.badges, ...newBadges],
+      updatedAt: new Date()
+    };
+
+    // Save to Firestore
+    await this.saveUserProgress(updatedProgress);
+
+    return { newBadges, updatedProgress };
+  }
+
+  /**
+   * Save user progress to Firestore
+   */
+  private async saveUserProgress(userProgress: UserProgress): Promise<void> {
+    const userProgressRef = doc(db, 'userProgress', userProgress.userId);
+    await updateDoc(userProgressRef, {
+      ...userProgress,
+      updatedAt: serverTimestamp()
     });
   }
 
-  // Private helper methods
-
-  private getProgressKey(userId: string, projectId: string): string {
-    return `${userId}_${projectId}`;
-  }
-
-  private createUpdatedProgress(
+  /**
+   * Check for new badges based on updated progress
+   */
+  private checkForNewBadges(
     currentProgress: UserProgress,
-    phase: LaunchPhase,
-    stepId: string,
-    status: StepStatus,
-    data?: any,
-    notes?: string
-  ): UserProgress {
-    const updatedProgress = { ...currentProgress };
-    const phaseProgress = { ...updatedProgress.phases[phase] };
-
-    // Update or add step
-    const existingStepIndex = phaseProgress.steps.findIndex(step => step.stepId === stepId);
-    const stepProgress: StepProgress = {
-      stepId,
-      status,
-      data: data || {},
-      completedAt: status === 'completed' ? new Date() : undefined,
-      notes
-    };
-
-    if (existingStepIndex >= 0) {
-      phaseProgress.steps = [...phaseProgress.steps];
-      phaseProgress.steps[existingStepIndex] = stepProgress;
-    } else {
-      phaseProgress.steps = [...phaseProgress.steps, stepProgress];
+    updatedData: {
+      readTheories: string[];
+      stats: UserStats;
+      bookmarkedTheories: string[];
     }
+  ): Badge[] {
+    const newBadges: Badge[] = [];
+    const existingBadgeIds = new Set(currentProgress.badges.map(badge => badge.id));
 
-    // Recalculate phase completion
-    phaseProgress.completionPercentage = calculatePhaseCompletion(phaseProgress.steps);
-
-    // Mark phase as completed if all steps are done
-    if (phaseProgress.completionPercentage === 100 && !phaseProgress.completedAt) {
-      phaseProgress.completedAt = new Date();
-    }
-
-    updatedProgress.phases = {
-      ...updatedProgress.phases,
-      [phase]: phaseProgress
-    };
-    updatedProgress.updatedAt = new Date();
-
-    return updatedProgress;
-  }
-
-  private scheduleAutoSave(
-    userId: string,
-    projectId: string,
-    phase: LaunchPhase,
-    stepId: string,
-    status: StepStatus,
-    data?: any,
-    notes?: string,
-    retryOnFailure: boolean = true
-  ): void {
-    const progressKey = this.getProgressKey(userId, projectId);
-
-    // Cancel existing timeout
-    const existingTimeout = this.pendingUpdates.get(progressKey);
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
-    }
-
-    // Schedule new save
-    const timeout = setTimeout(async () => {
-      try {
-        await this.persistStepUpdate(userId, projectId, phase, stepId, status, data, notes);
-        this.pendingUpdates.delete(progressKey);
-      } catch (error) {
-        if (retryOnFailure) {
-          this.scheduleRetry(progressKey, async () => {
-            await this.persistStepUpdate(userId, projectId, phase, stepId, status, data, notes);
-          });
-        }
+    // Reading badges
+    const theoriesReadCount = updatedData.readTheories.length;
+    const readingBadges = [
+      {
+        id: 'first-theory',
+        name: 'First Steps',
+        description: 'Read your first theory',
+        category: BadgeCategory.READING,
+        threshold: BADGE_THRESHOLDS.FIRST_THEORY
+      },
+      {
+        id: 'theory-explorer',
+        name: 'Theory Explorer',
+        description: 'Read 5 theories',
+        category: BadgeCategory.READING,
+        threshold: BADGE_THRESHOLDS.THEORY_EXPLORER
+      },
+      {
+        id: 'theory-enthusiast',
+        name: 'Theory Enthusiast',
+        description: 'Read 15 theories',
+        category: BadgeCategory.READING,
+        threshold: BADGE_THRESHOLDS.THEORY_ENTHUSIAST
+      },
+      {
+        id: 'theory-master',
+        name: 'Theory Master',
+        description: 'Read 50 theories',
+        category: BadgeCategory.READING,
+        threshold: BADGE_THRESHOLDS.THEORY_MASTER
       }
-    }, this.autoSaveConfig.debounceMs);
+    ];
 
-    this.pendingUpdates.set(progressKey, timeout);
-  }
-
-  private async persistStepUpdate(
-    userId: string,
-    projectId: string,
-    phase: LaunchPhase,
-    stepId: string,
-    status: StepStatus,
-    data?: any,
-    notes?: string
-  ): Promise<void> {
-    await UserProgressService.updateStepProgress(
-      userId,
-      projectId,
-      phase,
-      stepId,
-      status,
-      data || {},
-      notes
-    );
-  }
-
-  private scheduleRetry(progressKey: string, operation: () => Promise<void>): void {
-    const existingRetry = this.retryQueue.get(progressKey);
-    const retries = existingRetry ? existingRetry.retries + 1 : 1;
-
-    if (retries <= this.autoSaveConfig.maxRetries) {
-      setTimeout(async () => {
-        try {
-          await operation();
-          this.retryQueue.delete(progressKey);
-        } catch (error) {
-          this.scheduleRetry(progressKey, operation);
-        }
-      }, this.autoSaveConfig.retryDelayMs * retries);
-
-      this.retryQueue.set(progressKey, { operation, retries });
-    } else {
-      // Max retries exceeded, remove from queue
-      this.retryQueue.delete(progressKey);
-      console.error(`Max retries exceeded for progress update: ${progressKey}`);
-    }
-  }
-
-  private async executeWithRetry(progressKey: string, operation: () => Promise<void>): Promise<void> {
-    let retries = 0;
-
-    while (retries <= this.autoSaveConfig.maxRetries) {
-      try {
-        await operation();
-        return;
-      } catch (error) {
-        retries++;
-        if (retries > this.autoSaveConfig.maxRetries) {
-          throw error;
-        }
-        await new Promise(resolve => setTimeout(resolve, this.autoSaveConfig.retryDelayMs * retries));
+    for (const badgeTemplate of readingBadges) {
+      if (theoriesReadCount >= badgeTemplate.threshold && !existingBadgeIds.has(badgeTemplate.id)) {
+        newBadges.push({
+          ...badgeTemplate,
+          earnedAt: new Date(),
+          requirements: {
+            type: 'theories_read',
+            threshold: badgeTemplate.threshold
+          }
+        });
       }
     }
+
+    // Exploration badges
+    const categoriesExploredCount = updatedData.stats.categoriesExplored.length;
+    const explorationBadges = [
+      {
+        id: 'category-explorer',
+        name: 'Category Explorer',
+        description: 'Explore 3 different categories',
+        category: BadgeCategory.EXPLORATION,
+        threshold: BADGE_THRESHOLDS.CATEGORY_EXPLORER
+      },
+      {
+        id: 'category-master',
+        name: 'Category Master',
+        description: 'Explore all 5 categories',
+        category: BadgeCategory.EXPLORATION,
+        threshold: BADGE_THRESHOLDS.CATEGORY_MASTER
+      }
+    ];
+
+    for (const badgeTemplate of explorationBadges) {
+      if (categoriesExploredCount >= badgeTemplate.threshold && !existingBadgeIds.has(badgeTemplate.id)) {
+        newBadges.push({
+          ...badgeTemplate,
+          earnedAt: new Date(),
+          requirements: {
+            type: 'categories_explored',
+            threshold: badgeTemplate.threshold
+          }
+        });
+      }
+    }
+
+    // Time spent badges
+    const totalReadTime = updatedData.stats.totalReadTime;
+    const timeSpentBadges = [
+      {
+        id: 'hour-scholar',
+        name: 'Hour Scholar',
+        description: 'Spend 1 hour reading theories',
+        category: BadgeCategory.ENGAGEMENT,
+        threshold: BADGE_THRESHOLDS.TIME_SPENT_HOUR
+      },
+      {
+        id: 'day-scholar',
+        name: 'Day Scholar',
+        description: 'Spend 8 hours reading theories',
+        category: BadgeCategory.ENGAGEMENT,
+        threshold: BADGE_THRESHOLDS.TIME_SPENT_DAY
+      }
+    ];
+
+    for (const badgeTemplate of timeSpentBadges) {
+      if (totalReadTime >= badgeTemplate.threshold && !existingBadgeIds.has(badgeTemplate.id)) {
+        newBadges.push({
+          ...badgeTemplate,
+          earnedAt: new Date(),
+          requirements: {
+            type: 'time_spent',
+            threshold: badgeTemplate.threshold
+          }
+        });
+      }
+    }
+
+    // Bookmark badges
+    const bookmarkCount = updatedData.bookmarkedTheories.length;
+    const bookmarkBadges = [
+      {
+        id: 'bookmark-collector',
+        name: 'Bookmark Collector',
+        description: 'Bookmark 10 theories',
+        category: BadgeCategory.ENGAGEMENT,
+        threshold: BADGE_THRESHOLDS.BOOKMARK_COLLECTOR
+      },
+      {
+        id: 'bookmark-curator',
+        name: 'Bookmark Curator',
+        description: 'Bookmark 25 theories',
+        category: BadgeCategory.ENGAGEMENT,
+        threshold: BADGE_THRESHOLDS.BOOKMARK_CURATOR
+      }
+    ];
+
+    for (const badgeTemplate of bookmarkBadges) {
+      if (bookmarkCount >= badgeTemplate.threshold && !existingBadgeIds.has(badgeTemplate.id)) {
+        newBadges.push({
+          ...badgeTemplate,
+          earnedAt: new Date(),
+          requirements: {
+            type: 'bookmarks_created',
+            threshold: badgeTemplate.threshold
+          }
+        });
+      }
+    }
+
+    return newBadges;
   }
 
-  private validateStepData(stepId: string, data: any): ValidationResult {
-    // Basic validation - can be extended with specific step schemas
-    const errors: any[] = [];
+  /**
+   * Calculate streak days based on last active date
+   */
+  private calculateStreakDays(lastActiveDate: Date): number {
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
 
-    if (data === null) {
-      errors.push({
-        field: stepId,
-        message: 'Step data cannot be null',
-        code: 'REQUIRED'
-      });
-    }
+    const lastActive = new Date(lastActiveDate);
+    const daysDiff = Math.floor((today.getTime() - lastActive.getTime()) / (1000 * 60 * 60 * 24));
 
-    return {
-      isValid: errors.length === 0,
-      errors
-    };
-  }
-
-  private generateRecommendations(progress: UserProgress, calculation: ProgressCalculation): string[] {
-    const recommendations: string[] = [];
-
-    // Next step recommendation
-    if (calculation.nextStep) {
-      recommendations.push(`Complete step: ${calculation.nextStep.stepId}`);
-    }
-
-    // Phase progression recommendation
-    if (calculation.nextPhase && calculation.nextPhase !== progress.currentPhase) {
-      recommendations.push(`Consider moving to ${calculation.nextPhase} phase`);
-    }
-
-    // Completion recommendations
-    if (calculation.overallCompletion < 25) {
-      recommendations.push('Focus on completing validation phase first');
-    } else if (calculation.overallCompletion < 50) {
-      recommendations.push('Define your product clearly before moving to technical planning');
-    } else if (calculation.overallCompletion < 75) {
-      recommendations.push('Start planning your go-to-market strategy');
+    if (daysDiff === 0) {
+      // Same day, maintain streak
+      return 1;
+    } else if (daysDiff === 1) {
+      // Consecutive day, increment streak
+      return 1; // This would need to be calculated based on existing streak
     } else {
-      recommendations.push('Prepare for launch - review all phases for completeness');
+      // Streak broken, reset to 1
+      return 1;
     }
-
-    return recommendations;
   }
 
-  private identifyRisks(progress: UserProgress, calculation: ProgressCalculation): string[] {
-    const risks: string[] = [];
+  /**
+   * Calculate average session time
+   */
+  private calculateAverageSessionTime(totalReadTime: number, theoriesRead: number): number {
+    return theoriesRead > 0 ? Math.round(totalReadTime / theoriesRead) : 0;
+  }
 
-    // Incomplete validation risks
-    const validationCompletion = calculation.phaseCompletion.validation || 0;
-    if (validationCompletion < 80 && progress.currentPhase !== 'validation') {
-      risks.push('Insufficient market validation may lead to product-market fit issues');
-    }
+  /**
+   * Get badge by ID
+   */
+  getBadgeById(badgeId: string): Badge | null {
+    // This would typically come from a badges configuration
+    const badgeTemplates: Record<string, Omit<Badge, 'earnedAt'>> = {
+      'first-theory': {
+        id: 'first-theory',
+        name: 'First Steps',
+        description: 'Read your first theory',
+        category: BadgeCategory.READING,
+        requirements: { type: 'theories_read', threshold: 1 }
+      },
+      'theory-explorer': {
+        id: 'theory-explorer',
+        name: 'Theory Explorer',
+        description: 'Read 5 theories',
+        category: BadgeCategory.READING,
+        requirements: { type: 'theories_read', threshold: 5 }
+      },
+      'theory-enthusiast': {
+        id: 'theory-enthusiast',
+        name: 'Theory Enthusiast',
+        description: 'Read 15 theories',
+        category: BadgeCategory.READING,
+        requirements: { type: 'theories_read', threshold: 15 }
+      },
+      'theory-master': {
+        id: 'theory-master',
+        name: 'Theory Master',
+        description: 'Read 50 theories',
+        category: BadgeCategory.READING,
+        requirements: { type: 'theories_read', threshold: 50 }
+      },
+      'category-explorer': {
+        id: 'category-explorer',
+        name: 'Category Explorer',
+        description: 'Explore 3 different categories',
+        category: BadgeCategory.EXPLORATION,
+        requirements: { type: 'categories_explored', threshold: 3 }
+      },
+      'category-master': {
+        id: 'category-master',
+        name: 'Category Master',
+        description: 'Explore all 5 categories',
+        category: BadgeCategory.EXPLORATION,
+        requirements: { type: 'categories_explored', threshold: 5 }
+      },
+      'hour-scholar': {
+        id: 'hour-scholar',
+        name: 'Hour Scholar',
+        description: 'Spend 1 hour reading theories',
+        category: BadgeCategory.ENGAGEMENT,
+        requirements: { type: 'time_spent', threshold: 60 }
+      },
+      'day-scholar': {
+        id: 'day-scholar',
+        name: 'Day Scholar',
+        description: 'Spend 8 hours reading theories',
+        category: BadgeCategory.ENGAGEMENT,
+        requirements: { type: 'time_spent', threshold: 480 }
+      },
+      'bookmark-collector': {
+        id: 'bookmark-collector',
+        name: 'Bookmark Collector',
+        description: 'Bookmark 10 theories',
+        category: BadgeCategory.ENGAGEMENT,
+        requirements: { type: 'bookmarks_created', threshold: 10 }
+      },
+      'bookmark-curator': {
+        id: 'bookmark-curator',
+        name: 'Bookmark Curator',
+        description: 'Bookmark 25 theories',
+        category: BadgeCategory.ENGAGEMENT,
+        requirements: { type: 'bookmarks_created', threshold: 25 }
+      }
+    };
 
-    // Technical planning risks
-    const technicalCompletion = calculation.phaseCompletion.technical || 0;
-    if (technicalCompletion < 60 && calculation.overallCompletion > 50) {
-      risks.push('Technical architecture planning is lagging behind other phases');
-    }
-
-    // Financial planning risks
-    const financialCompletion = calculation.phaseCompletion.financial || 0;
-    if (financialCompletion < 40 && calculation.overallCompletion > 60) {
-      risks.push('Financial planning needs attention before launch');
-    }
-
-    return risks;
+    const template = badgeTemplates[badgeId];
+    return template ? { ...template, earnedAt: new Date() } : null;
   }
 }
 
-// Export singleton instance
-export const progressTracker = new ProgressTracker();
+export const progressTracker = ProgressTrackerService.getInstance();

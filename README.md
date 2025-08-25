@@ -2,6 +2,8 @@
 
 A modern blog built with Next.js and designed for the Build24 challenge - building 24 projects in 24 hours.
 
+[![Netlify Status](https://api.netlify.com/api/v1/badges/399df09c-06f4-4d18-bdd6-ccd38f215145/deploy-status)](https://app.netlify.com/projects/elegant-fudge-7294a1/deploys)
+
 ## Features
 
 - 🎨 Modern, clean design with black background and yellow accents
