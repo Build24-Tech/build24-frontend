@@ -1,15 +1,26 @@
-// Service Worker for Launch Essentials PWA
-const CACHE_NAME = 'launch-essentials-v1';
-const STATIC_CACHE_NAME = 'launch-essentials-static-v1';
-const DYNAMIC_CACHE_NAME = 'launch-essentials-dynamic-v1';
+// Service Worker for Build24 Frontend
+const CACHE_NAME = 'build24-v1';
+const STATIC_CACHE_NAME = 'build24-static-v1';
+const DYNAMIC_CACHE_NAME = 'build24-dynamic-v1';
+const THEORY_CACHE = 'theory-content-v1';
+const MEDIA_CACHE = 'theory-media-v1';
+
+// Cache strategies
+const CACHE_STRATEGIES = {
+  CACHE_FIRST: 'cache-first',
+  NETWORK_FIRST: 'network-first',
+  STALE_WHILE_REVALIDATE: 'stale-while-revalidate'
+};
 
 // Assets to cache immediately
 const STATIC_ASSETS = [
   '/launch-essentials',
   '/launch-essentials/offline',
+  '/dashboard/knowledge-hub',
+  '/api/theories',
+  '/content/theories/',
   '/favicon.png',
-  '/og-image.png',
-  // Add critical CSS and JS files here
+  '/og-image.png'
 ];
 
 // Assets to cache on first request
@@ -21,26 +32,7 @@ const DYNAMIC_ASSETS = [
   '/launch-essentials/operations',
   '/launch-essentials/financial',
   '/launch-essentials/risk',
-  '/launch-essentials/optimization',
-];
-
-// Service Worker for Knowledge Hub content caching
-const CACHE_NAME = 'knowledge-hub-v1';
-const THEORY_CACHE = 'theory-content-v1';
-const MEDIA_CACHE = 'theory-media-v1';
-
-// Cache strategies
-const CACHE_STRATEGIES = {
-  CACHE_FIRST: 'cache-first',
-  NETWORK_FIRST: 'network-first',
-  STALE_WHILE_REVALIDATE: 'stale-while-revalidate'
-};
-
-// URLs to cache
-const STATIC_ASSETS = [
-  '/dashboard/knowledge-hub',
-  '/api/theories',
-  '/content/theories/'
+  '/launch-essentials/optimization'
 ];
 
 // Install event - cache static assets
@@ -48,19 +40,15 @@ self.addEventListener('install', (event) => {
   console.log('Service Worker installing...');
 
   event.waitUntil(
-    caches.open(STATIC_CACHE_NAME)
-      .then((cache) => {
-        console.log('Caching static assets');
-        return cache.addAll(STATIC_ASSETS);
-      })
-      .then(() => {
-        return self.skipWaiting();
-      })
-  );
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
+    Promise.all([
+      caches.open(STATIC_CACHE_NAME)
+        .then((cache) => {
+          console.log('Caching static assets');
+          return cache.addAll(STATIC_ASSETS);
+        }),
+      caches.open(CACHE_NAME)
+        .then((cache) => cache.addAll(STATIC_ASSETS))
+    ]).then(() => self.skipWaiting())
   );
 });
 
@@ -72,33 +60,18 @@ self.addEventListener('activate', (event) => {
     caches.keys()
       .then((cacheNames) => {
         return Promise.all(
-          cacheNames.map((cacheName) => {
-            if (cacheName !== STATIC_CACHE_NAME &&
-              cacheName !== DYNAMIC_CACHE_NAME &&
-              cacheName !== CACHE_NAME) {
-              console.log('Deleting old cache:', cacheName);
-              return caches.delete(cacheName);
-            }
-          })
-        );
-      })
-      .then(() => {
-        return self.clients.claim();
-      })
-  );
-
-
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => {
-        return Promise.all(
           cacheNames
             .filter((cacheName) =>
+              cacheName !== STATIC_CACHE_NAME &&
+              cacheName !== DYNAMIC_CACHE_NAME &&
               cacheName !== CACHE_NAME &&
               cacheName !== THEORY_CACHE &&
               cacheName !== MEDIA_CACHE
             )
-            .map((cacheName) => caches.delete(cacheName))
+            .map((cacheName) => {
+              console.log('Deleting old cache:', cacheName);
+              return caches.delete(cacheName);
+            })
         );
       })
       .then(() => self.clients.claim())

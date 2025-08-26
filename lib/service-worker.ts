@@ -1,4 +1,5 @@
 // Service Worker registration and management utilities
+import React from 'react';
 
 export interface CacheStats {
   theoryCacheSize: number;
@@ -150,7 +151,8 @@ export class ServiceWorkerManager {
     }
 
     try {
-      return await navigator.serviceWorker.getRegistration();
+      const registration = await navigator.serviceWorker.getRegistration();
+      return registration || null;
     } catch (error) {
       console.error('Failed to get service worker registration:', error);
       return null;
@@ -208,5 +210,3 @@ export function useServiceWorker() {
   };
 }
 
-// Add React import for the hook
-import React from 'react';
