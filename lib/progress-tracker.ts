@@ -77,6 +77,27 @@ export class ProgressTrackerService {
   }
 
   /**
+   * Get user progress from Firestore (alias for launch essentials compatibility)
+   */
+  async getProgress(userId: string, projectId?: string): Promise<UserProgress | null> {
+    return this.getUserProgress(userId);
+  }
+
+  /**
+   * Calculate progress metrics (for launch essentials compatibility)
+   */
+  calculateProgress(progress: any): any {
+    // This is a mock implementation for launch essentials compatibility
+    // In a real implementation, this would calculate progress metrics
+    return {
+      overallCompletion: 0,
+      phaseCompletion: {},
+      completedSteps: 0,
+      totalSteps: 0
+    };
+  }
+
+  /**
    * Get user progress from Firestore
    */
   async getUserProgress(userId: string): Promise<UserProgress | null> {

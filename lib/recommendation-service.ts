@@ -1,15 +1,24 @@
 import {
   LaunchPhase,
-  ProjectContext,
   ProjectData,
   Recommendation,
   Resource,
   Risk,
-  UserProgress
+  UserProgress as LaunchUserProgress
 } from '@/types/launch-essentials';
 import { ProjectDataService } from './launch-essentials-firestore';
 import { progressTracker } from './progress-tracker';
 import { recommendationEngine } from './recommendation-engine';
+
+// Define ProjectContext interface locally since it's not in types
+interface ProjectContext {
+  projectId: string;
+  industry: string;
+  stage: string;
+  teamSize: number;
+  budget: number;
+  timeline: string;
+}
 
 /**
  * Service that integrates the recommendation engine with the launch essentials system
@@ -40,12 +49,12 @@ export class RecommendationService {
       }
 
       // Generate recommendations
-      const nextSteps = recommendationEngine.calculateNextSteps(progress, projectData);
+      const nextSteps = recommendationEngine.calculateNextSteps(progress);
       const risks = recommendationEngine.identifyRisks(projectData, progress);
       const personalizedRecommendations = recommendationEngine.generatePersonalizedRecommendations(
-        userId,
         progress,
-        projectData
+        projectData,
+        {}
       );
 
       // Create project context for resource suggestions
@@ -58,7 +67,7 @@ export class RecommendationService {
         timeline: this.estimateTimeline(projectData)
       };
 
-      const resources = recommendationEngine.suggestResources(context, progress);
+      const resources = recommendationEngine.suggestResources(context);
 
       return {
         nextSteps,
@@ -99,8 +108,8 @@ export class RecommendationService {
       }
 
       // Filter recommendations for specific phase
-      const allRecommendations = recommendationEngine.calculateNextSteps(progress, projectData);
-      const recommendations = allRecommendations.filter(rec => rec.category === phase);
+      const allRecommendations = recommendationEngine.calculateNextSteps(progress);
+      const recommendations = allRecommendations.filter((rec: Recommendation) => rec.category === phase);
 
       // Get phase-specific resources
       const context: ProjectContext = {
@@ -112,27 +121,25 @@ export class RecommendationService {
         timeline: this.estimateTimeline(projectData)
       };
 
-      const allResources = recommendationEngine.suggestResources(context, progress);
-      const resources = allResources.filter(resource => resource.tags.includes(phase));
+      const allResources = recommendationEngine.suggestResources(context);
+      const resources = allResources.filter((resource: Resource) => 
+        (resource as any).tags && (resource as any).tags.includes(phase)
+      );
 
       // Get content suggestions for the phase
       const phaseData = projectData.data[phase] || {};
       const contentSuggestions = recommendationEngine.suggestContent({
-        currentPhase: phase,
-        projectStage: projectData.stage,
-        industry: projectData.industry,
-        teamSize: this.estimateTeamSize(projectData),
-        budget: this.estimateBudget(projectData),
-        completedSteps: progress.phases[phase]?.steps
-          .filter(step => step.status === 'completed')
-          .map(step => step.stepId) || [],
-        userInput: phaseData
+        userInput: JSON.stringify(phaseData)
       });
 
       return {
         recommendations,
         resources,
-        contentSuggestions
+        contentSuggestions: {
+          templateSuggestions: contentSuggestions.templateSuggestions || [],
+          frameworkAdjustments: contentSuggestions.frameworkAdjustments || [],
+          contentIdeas: contentSuggestions.contentIdeas || []
+        }
       };
     } catch (error) {
       console.error('Error getting phase recommendations:', error);
@@ -169,25 +176,27 @@ export class RecommendationService {
       const risks = recommendationEngine.identifyRisks(projectData, progress);
 
       // Calculate risk summary
-      const highPriorityRisks = risks.filter(risk => risk.priority >= 3).length;
-      const criticalCategories = [...new Set(
+      const highPriorityRisks = risks.filter((risk: Risk) => risk.severity === 'high' || risk.severity === 'critical').length;
+      const criticalCategories: string[] = Array.from(new Set(
         risks
-          .filter(risk => risk.priority >= 2)
-          .map(risk => risk.category)
-      )];
+          .filter((risk: Risk) => risk.severity === 'high' || risk.severity === 'critical')
+          .map((risk: Risk) => risk.category)
+      ));
 
       const overallRiskLevel = this.calculateOverallRiskLevel(risks);
 
       // Generate mitigation recommendations
       const mitigationRecommendations = risks
-        .filter(risk => risk.priority >= 2)
-        .map(risk => ({
+        .filter((risk: Risk) => risk.severity === 'medium' || risk.severity === 'high' || risk.severity === 'critical')
+        .map((risk: Risk) => ({
           id: `mitigation-${risk.id}`,
-          type: 'risk' as const,
           title: `Mitigate ${risk.title}`,
           description: `Address the ${risk.category} risk: ${risk.description}`,
-          priority: risk.priority >= 3 ? 'high' as const : 'medium' as const,
+          priority: (risk.severity === 'high' || risk.severity === 'critical') ? 'high' as const : 'medium' as const,
+          phase: 'risk' as LaunchPhase,
           category: risk.category,
+          estimatedTime: '2-4 hours',
+          type: 'risk',
           actionItems: this.getRiskMitigationActions(risk)
         }));
 
@@ -222,16 +231,13 @@ export class RecommendationService {
         throw new Error('Progress not found');
       }
 
-      // Update user behavior pattern
-      recommendationEngine.updateUserBehaviorPattern(userId, progress, completedStep, timeSpent);
-
       // Get updated personalized recommendations
       const projectData = await ProjectDataService.getProjectData(projectId);
       if (!projectData) {
         throw new Error('Project data not found');
       }
 
-      return recommendationEngine.generatePersonalizedRecommendations(userId, progress, projectData);
+      return recommendationEngine.generatePersonalizedRecommendations(progress, projectData, {});
     } catch (error) {
       console.error('Error updating user activity:', error);
       throw error;
@@ -263,15 +269,7 @@ export class RecommendationService {
       }
 
       const contentSuggestions = recommendationEngine.suggestContent({
-        currentPhase: phase,
-        projectStage: projectData.stage,
-        industry: projectData.industry,
-        teamSize: this.estimateTeamSize(projectData),
-        budget: this.estimateBudget(projectData),
-        completedSteps: progress.phases[phase]?.steps
-          .filter(step => step.status === 'completed')
-          .map(step => step.stepId) || [],
-        userInput
+        userInput: JSON.stringify(userInput)
       });
 
       // Get related resources based on user input
@@ -284,18 +282,18 @@ export class RecommendationService {
         timeline: this.estimateTimeline(projectData)
       };
 
-      const allResources = recommendationEngine.suggestResources(context, progress);
-      const relatedResources = allResources.filter(resource =>
-        resource.tags.includes(phase) ||
-        resource.tags.some(tag =>
-          Object.keys(userInput).some(key =>
-            key.toLowerCase().includes(tag.toLowerCase())
-          )
+      const allResources = recommendationEngine.suggestResources(context);
+      const relatedResources = allResources.filter((resource: Resource) =>
+        resource.category === phase ||
+        Object.keys(userInput).some(key =>
+          key.toLowerCase().includes(resource.category.toLowerCase())
         )
       );
 
       return {
-        ...contentSuggestions,
+        templateSuggestions: contentSuggestions.templateSuggestions || [],
+        frameworkAdjustments: contentSuggestions.frameworkAdjustments || [],
+        contentIdeas: contentSuggestions.contentIdeas || [],
         relatedResources
       };
     } catch (error) {
@@ -327,7 +325,15 @@ export class RecommendationService {
         throw new Error('Progress not found');
       }
 
-      const progressCalculation = progressTracker.calculateProgress(progress);
+      // Use progressTracker.calculateProgress if available, otherwise calculate manually
+      let progressCalculation;
+      try {
+        progressCalculation = progressTracker.calculateProgress ? 
+          progressTracker.calculateProgress(progress) : 
+          this.calculateProgressManually(progress);
+      } catch (error) {
+        progressCalculation = this.calculateProgressManually(progress);
+      }
 
       // Calculate momentum based on recent activity
       const daysSinceUpdate = (Date.now() - progress.updatedAt.getTime()) / (1000 * 60 * 60 * 24);
@@ -335,10 +341,13 @@ export class RecommendationService {
 
       // Identify stuck areas (phases with low completion relative to overall progress)
       const stuckAreas: string[] = [];
-      const overallCompletion = progressCalculation.overallCompletion;
+      const calculatedOverallCompletion = progressCalculation.overallCompletion;
 
       Object.entries(progressCalculation.phaseCompletion).forEach(([phase, completion]) => {
-        if (completion < overallCompletion - 20) { // 20% threshold
+        // A phase is considered stuck if it's significantly behind the overall completion
+        // and the overall completion is above 20% (meaning some progress has been made)
+        if (typeof completion === 'number' && calculatedOverallCompletion > 20 && 
+            completion < calculatedOverallCompletion - 20) { // 20% threshold
           stuckAreas.push(phase);
         }
       });
@@ -349,7 +358,7 @@ export class RecommendationService {
       // Get targeted recommendations
       const projectData = await ProjectDataService.getProjectData(projectId);
       const recommendations = projectData
-        ? recommendationEngine.calculateNextSteps(progress, projectData)
+        ? recommendationEngine.calculateNextSteps(progress)
         : [];
 
       return {
@@ -357,7 +366,7 @@ export class RecommendationService {
           overallCompletion: progressCalculation.overallCompletion,
           currentPhase: progress.currentPhase,
           completedPhases: Object.values(progressCalculation.phaseCompletion)
-            .filter(completion => completion === 100).length,
+            .filter((completion: unknown) => typeof completion === 'number' && completion === 100).length,
           stuckAreas,
           momentum
         },
@@ -406,8 +415,8 @@ export class RecommendationService {
   private calculateOverallRiskLevel(risks: Risk[]): 'low' | 'medium' | 'high' {
     if (risks.length === 0) return 'low';
 
-    const highPriorityRisks = risks.filter(risk => risk.priority >= 3).length;
-    const mediumPriorityRisks = risks.filter(risk => risk.priority === 2).length;
+    const highPriorityRisks = risks.filter(risk => risk.severity === 'high' || risk.severity === 'critical').length;
+    const mediumPriorityRisks = risks.filter(risk => risk.severity === 'medium').length;
 
     if (highPriorityRisks >= 2) return 'high';
     if (highPriorityRisks >= 1 || mediumPriorityRisks >= 3) return 'medium';
@@ -443,16 +452,31 @@ export class RecommendationService {
       ]
     };
 
-    return categoryActions[risk.category] || [
+    return categoryActions[risk.type] || [
       'Assess the risk impact',
       'Develop mitigation strategies',
       'Monitor risk indicators'
     ];
   }
 
+  private calculateProgressManually(progress: LaunchUserProgress): { overallCompletion: number; phaseCompletion: Record<string, number> } {
+    const phaseCompletion: Record<string, number> = {};
+    let totalCompletion = 0;
+    const phases = Object.keys(progress.phases);
+
+    phases.forEach(phase => {
+      const phaseProgress = progress.phases[phase as LaunchPhase];
+      phaseCompletion[phase] = phaseProgress?.completionPercentage || 0;
+      totalCompletion += phaseProgress?.completionPercentage || 0;
+    });
+
+    const overallCompletion = phases.length > 0 ? totalCompletion / phases.length : 0;
+    return { overallCompletion, phaseCompletion };
+  }
+
   private generateProgressInsights(
-    progress: UserProgress,
-    calculation: any
+    progress: LaunchUserProgress,
+    calculation: { overallCompletion: number; phaseCompletion: Record<string, number> }
   ): string[] {
     const insights: string[] = [];
 

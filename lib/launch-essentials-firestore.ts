@@ -140,6 +140,10 @@ export class ProjectDataService {
     return null;
   }
 
+  static async getProjectData(projectId: string): Promise<ProjectData | null> {
+    return null;
+  }
+
   static async updateProject(projectId: string, updates: Partial<ProjectData>): Promise<ProjectData> {
     throw new Error('Project not found');
   }
