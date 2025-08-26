@@ -2,9 +2,9 @@ import { RelatedContent, Theory, TheoryCategory, UserProgress } from '@/types/kn
 import {
   BlogPostReference,
   ContentRecommendation,
-  getRecommendationEngine,
+  getKnowledgeHubRecommendationEngine,
   ProjectReference,
-  RecommendationEngine
+  KnowledgeHubRecommendationEngine
 } from './recommendation-engine';
 
 export interface CrossLinkingOptions {
@@ -22,10 +22,10 @@ export interface NavigationPath {
 }
 
 export class CrossLinkingService {
-  private recommendationEngine: RecommendationEngine;
+  private recommendationEngine: KnowledgeHubRecommendationEngine;
 
   constructor() {
-    this.recommendationEngine = getRecommendationEngine();
+    this.recommendationEngine = getKnowledgeHubRecommendationEngine();
   }
 
   /**
