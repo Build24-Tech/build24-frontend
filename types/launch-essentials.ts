@@ -81,8 +81,9 @@ export interface Risk {
   title: string;
   description: string;
   probability: number;
-  impact: number;
+  impact: string;
   severity: 'low' | 'medium' | 'high' | 'critical';
+  category: string;
   mitigation: string;
   owner?: string;
   status: string;

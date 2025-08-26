@@ -40,6 +40,13 @@ export default function Header() {
             <Link href={href(currentLang, '/projects')} className="text-muted-foreground hover:text-foreground transition-colors">
               Projects
             </Link>
+            <Link 
+              href={user ? href(currentLang, '/launch-essentials') : href(currentLang, '/login')} 
+              className="text-muted-foreground hover:text-yellow-400 transition-colors flex items-center gap-1"
+            >
+              <span className="text-sm">🚀</span>
+              Launch Essentials
+            </Link>
             {user && (
               <Link href="/dashboard/knowledge-hub" className="text-muted-foreground hover:text-yellow-400 transition-colors flex items-center gap-1">
                 <span className="text-sm">🧠</span>
@@ -87,6 +94,14 @@ export default function Header() {
                 onClick={() => setIsMenuOpen(false)}
               >
                 Projects
+              </Link>
+              <Link
+                href={user ? href(currentLang, '/launch-essentials') : href(currentLang, '/login')}
+                className="text-muted-foreground hover:text-yellow-400 transition-colors py-2 flex items-center gap-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="text-sm">🚀</span>
+                Launch Essentials
               </Link>
               {user && (
                 <Link
