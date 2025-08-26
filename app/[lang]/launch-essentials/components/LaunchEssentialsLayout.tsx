@@ -2,6 +2,7 @@ import { ChevronRight, Home } from "lucide-react";
 import Link from "next/link";
 import { ReactNode } from "react";
 import { AccessibilityProvider } from "./AccessibilityProvider";
+import { OfflineIndicator, PWAInstaller } from "./PWAInstaller";
 import { NavigationItem, ResponsiveNavigation } from "./ResponsiveNavigation";
 
 // Sample navigation items - would typically come from a data source
