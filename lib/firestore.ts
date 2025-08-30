@@ -15,7 +15,7 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
     const timestamp = Date.now();
 
     if (!userSnap.exists()) {
-      // Create new user profile
+      // Create new user profile with default profile data
       const userData: UserProfile = {
         uid: user.uid,
         email: user.email || '',
@@ -28,6 +28,12 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
         subscription: getDefaultSubscription(),
         createdAt: timestamp,
         updatedAt: timestamp,
+        profile: {
+          showEmail: false,
+          isPublic: true,
+          followerCount: 0,
+          followingCount: 0,
+        },
       };
 
       await setDoc(userRef, userData);
@@ -97,6 +103,22 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
     return null;
   } catch (error) {
     console.error('Error getting user profile:', error);
+    throw error;
+  }
+};
+/**
+ * Updates a user profile in Firestore
+ */
+export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      ...updates,
+      updatedAt: Date.now()
+    });
+    console.log('User profile updated');
+  } catch (error) {
+    console.error('Error updating user profile:', error);
     throw error;
   }
 };

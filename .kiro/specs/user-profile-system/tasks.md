@@ -1,6 +1,6 @@
 # Implementation Plan
 
-- [ ] 1. Extend user types and database schema
+- [x] 1. Extend user types and database schema
   - Create extended TypeScript interfaces for user profiles with social features
   - Add profile data structure to existing UserProfile type
   - Define follow relationship types and public profile view interfaces
