@@ -6,7 +6,7 @@
   - Define follow relationship types and public profile view interfaces
   - _Requirements: 6.1, 6.2_
 
-- [ ] 2. Implement core profile service functions
+- [x] 2. Implement core profile service functions
   - Create profile service with CRUD operations for user profile data
   - Implement profile privacy controls and validation logic
   - Add profile image upload functionality using Firebase Storage

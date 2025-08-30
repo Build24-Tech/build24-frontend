@@ -51,6 +51,9 @@ export const auth = getAuth(app);
 // Initialize Firestore with settings for development
 export const db = getFirestore(app);
 
+// Initialize Firebase Storage
+export const storage = getStorage(app);
+
 // Enable Firestore offline persistence and configure for development
 if (typeof window !== 'undefined') {
   // Only run on client side
