@@ -34,7 +34,7 @@
   - Write unit tests for profile display components
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 6. Implement social features components
+- [x] 6. Implement social features components
   - Create FollowButton component with optimistic updates
   - Build FollowersList and FollowingList components with pagination
   - Implement FollowStats component for displaying counts
