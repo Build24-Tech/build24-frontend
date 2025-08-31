@@ -1,6 +1,6 @@
+import { calculateFinancialProjection } from '@/lib/financial-planning-utils';
 import { LaunchEssentialsUtils } from '@/lib/launch-essentials-firestore';
 import { RecommendationEngine } from '@/lib/recommendation-engine';
-import { calculateFinancialProjection } from '@/lib/financial-planning-utils';
 import { LaunchPhase, ProjectData, ProjectStage, UserProgress } from '@/types/launch-essentials';
 
 // Performance testing utilities
@@ -22,7 +22,7 @@ const measurePerformance = async (fn: () => Promise<any> | any, iterations = 100
   };
 };
 
-const generateLargeUserProgress = (phases: number = stepsPerPhase: number = 10): UserProgress => {
+const generateLargeUserProgress = (phases: number = 8, stepsPerPhase: number = 10): UserProgress => {
   const phaseNames: LaunchPhase[] = ['validation', 'definition', 'technical', 'marketing', 'operations', 'financial', 'risk', 'optimization'];
   const phases_data: any = {};
 

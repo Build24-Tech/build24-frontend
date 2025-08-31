@@ -59,9 +59,17 @@ export default function BlogGrid({ posts, currentLanguage }: BlogGridProps) {
                       <Calendar className="w-4 h-4" />
                       {post.date ? new Date(post.date).toLocaleDateString() : 'No date'}
                     </div>
-                    {post.author && (
+                    {(post.author || post.authorId) && (
                       <div className="flex items-center gap-1">
-                        <span>By {post.author}</span>
+                        <span>By</span>
+                        <AuthorProfileLink
+                          authorId={getAuthorDisplayData(post).authorId}
+                          authorName={getAuthorDisplayData(post).authorName}
+                          authorPhotoURL={getAuthorDisplayData(post).authorPhotoURL}
+                          showAvatar={false}
+                          size="sm"
+                          className="text-sm"
+                        />
                       </div>
                     )}
                   </div>
