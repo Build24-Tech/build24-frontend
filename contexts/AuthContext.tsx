@@ -1,8 +1,8 @@
 'use client';
 
 import { appleProvider, auth, githubProvider, googleProvider } from '@/lib/firebase';
-import { createUserProfile, getUserProfile, updateUserLanguage } from '@/lib/firestore';
-import { UserLanguage, UserProfile } from '@/types/user';
+import { createUserProfile, getUserProfile, updateUserLanguage, updateUserProfileData } from '@/lib/firestore';
+import { UserLanguage, UserProfile, UserProfileData } from '@/types/user';
 import {
   User,
   createUserWithEmailAndPassword,
@@ -27,6 +27,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateLanguage: (language: UserLanguage) => Promise<void>;
+  updateProfileData: (profileData: Partial<UserProfileData>) => Promise<void>;
   refreshUserProfile: () => Promise<void>;
 }
 
@@ -77,8 +78,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
         await updateProfile(result.user, { displayName });
       }
 
-      // Store user information in Firestore with status 'onboarding'
-      await createUserProfile(result.user, 'onboarding');
+      // Store user information in Firestore with status 'onboarding' and default profile settings
+      await createUserProfile(result.user, 'onboarding', false, 'en', 'system');
+
+      // Refresh the user profile to get the complete data including profile settings
+      const profile = await getUserProfile(result.user.uid);
+      setUserProfile(profile);
 
       return result.user;
     } catch (error) {
@@ -101,8 +106,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await signInWithPopup(auth, googleProvider);
 
-      // Store or update user information in Firestore
-      await createUserProfile(result.user);
+      // Store or update user information in Firestore with default profile settings
+      await createUserProfile(result.user, 'active', false, 'en', 'system');
+
+      // Refresh the user profile to get the complete data
+      const profile = await getUserProfile(result.user.uid);
+      setUserProfile(profile);
 
       return result.user;
     } catch (error) {
@@ -115,8 +124,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await signInWithPopup(auth, githubProvider);
 
-      // Store or update user information in Firestore
-      await createUserProfile(result.user);
+      // Store or update user information in Firestore with default profile settings
+      await createUserProfile(result.user, 'active', false, 'en', 'system');
+
+      // Refresh the user profile to get the complete data
+      const profile = await getUserProfile(result.user.uid);
+      setUserProfile(profile);
 
       return result.user;
     } catch (error) {
@@ -129,8 +142,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
     try {
       const result = await signInWithPopup(auth, appleProvider);
 
-      // Store or update user information in Firestore
-      await createUserProfile(result.user);
+      // Store or update user information in Firestore with default profile settings
+      await createUserProfile(result.user, 'active', false, 'en', 'system');
+
+      // Refresh the user profile to get the complete data
+      const profile = await getUserProfile(result.user.uid);
+      setUserProfile(profile);
 
       return result.user;
     } catch (error) {
@@ -167,6 +184,30 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const updateProfileData = async (profileData: Partial<UserProfileData>): Promise<void> => {
+    if (user) {
+      try {
+        await updateUserProfileData(user.uid, profileData);
+        // Update local state
+        if (userProfile) {
+          setUserProfile({
+            ...userProfile,
+            profile: {
+              ...userProfile.profile,
+              ...profileData,
+            },
+            updatedAt: Date.now(),
+          });
+        }
+      } catch (error) {
+        console.error('Error updating profile data:', error);
+        throw error;
+      }
+    } else {
+      throw new Error('User not authenticated');
+    }
+  };
+
   const refreshUserProfile = async (): Promise<void> => {
     if (user) {
       try {
@@ -174,6 +215,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUserProfile(profile);
       } catch (error) {
         console.error('Error refreshing user profile:', error);
+        throw error;
       }
     }
   };
@@ -190,6 +232,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     logout,
     resetPassword,
     updateLanguage,
+    updateProfileData,
     refreshUserProfile,
   };
 

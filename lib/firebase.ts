@@ -52,6 +52,7 @@ export const auth = getAuth(app);
 export const db = getFirestore(app);
 
 // Initialize Firebase Storage
+import { getStorage } from 'firebase/storage';
 export const storage = getStorage(app);
 
 // Enable Firestore offline persistence and configure for development
