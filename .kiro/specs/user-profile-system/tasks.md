@@ -55,7 +55,7 @@
   - Write integration tests for authentication and profile creation
   - _Requirements: 6.1, 6.2, 6.3, 6.4_
 
-- [ ] 9. Create profile pages and routing
+- [x] 9. Create profile pages and routing
   - Build profile page at /profile/[userId] route
   - Implement profile settings page for authenticated users
   - Create profile edit page with form handling
