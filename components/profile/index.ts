@@ -1,3 +1,6 @@
+export { AuthorBadge } from './AuthorBadge';
+export { AuthorCard } from './AuthorCard';
+export { AuthorProfileLink } from './AuthorProfileLink';
 export { FollowButton } from './FollowButton';
 export { FollowersList } from './FollowersList';
 export { FollowingList } from './FollowingList';
