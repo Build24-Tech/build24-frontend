@@ -12,3 +12,7 @@ export { ProfileImageUpload } from './ProfileImageUpload';
 export { ProfileNotFound } from './ProfileNotFound';
 export { PublicProfileView } from './PublicProfileView';
 
+// Error handling components
+export { ProfileErrorBoundary } from './ProfileErrorBoundary';
+export { InlineProfileError, ProfileErrorDisplay } from './ProfileErrorDisplay';
+

@@ -112,29 +112,38 @@ export const profileService: ProfileService = {
    * Get a user's public profile
    */
   async getPublicProfile(userId: string): Promise<PublicProfileView | null> {
-    try {
+    return ProfileRetryManager.withRetry(async () => {
       const userProfile = await getUserProfile(userId);
 
       if (!userProfile) {
-        return null;
+        throw new ProfileErrorClass(
+          ProfileErrorType.PROFILE_NOT_FOUND,
+          'Profile not found',
+          undefined,
+          { userId },
+          false
+        );
       }
 
       return convertToPublicView(userProfile);
-    } catch (error) {
-      console.error('Error getting public profile:', error);
-      throw new Error(ProfileError.PROFILE_NOT_FOUND);
-    }
+    }, `get_public_profile_${userId}`);
   },
 
   /**
    * Update user profile data
    */
   async updateProfile(userId: string, data: Partial<UserProfileData>): Promise<void> {
-    try {
+    return ProfileRetryManager.withRetry(async () => {
       // Validate the data
       const validationErrors = validateProfileData(data);
       if (validationErrors.length > 0) {
-        throw new Error(`${ProfileError.VALIDATION_ERROR}: ${validationErrors.join(', ')}`);
+        throw new ProfileErrorClass(
+          ProfileErrorType.VALIDATION_ERROR,
+          validationErrors.join(', '),
+          undefined,
+          { userId, validationErrors },
+          false
+        );
       }
 
       // Sanitize the data
@@ -143,7 +152,13 @@ export const profileService: ProfileService = {
       // Get current user profile to merge with updates
       const currentProfile = await getUserProfile(userId);
       if (!currentProfile) {
-        throw new Error(ProfileError.PROFILE_NOT_FOUND);
+        throw new ProfileErrorClass(
+          ProfileErrorType.PROFILE_NOT_FOUND,
+          'Profile not found',
+          undefined,
+          { userId },
+          false
+        );
       }
 
       // Merge the updates with existing profile data
@@ -155,16 +170,7 @@ export const profileService: ProfileService = {
       };
 
       await updateUserProfile(userId, updatedProfile);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      if (error instanceof Error && error.message.includes(ProfileError.VALIDATION_ERROR)) {
-        throw error;
-      }
-      if (error instanceof Error && error.message.includes(ProfileError.PROFILE_NOT_FOUND)) {
-        throw error;
-      }
-      throw new Error(ProfileError.VALIDATION_ERROR);
-    }
+    }, `update_profile_${userId}`);
   },
 
   /**
