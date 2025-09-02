@@ -69,7 +69,7 @@
   - Write integration tests for blog post author attribution
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 11. Implement Firestore security rules
+- [x] 11. Implement Firestore security rules
   - Create security rules for user profile access control
   - Implement security rules for follow relationships
   - Add validation rules for profile data updates
