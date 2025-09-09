@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions for validation and authorization
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidEmail(email) {
+      return email.matches('^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$');
+    }
+    
+    function isValidUrl(url) {
+      return url.matches('^https?://[^\\s/$.?#].[^\\s]*$');
+    }
+    
+    function isValidProfileData(data) {
+      return data.keys().hasAll(['showEmail', 'isPublic', 'followerCount', 'followingCount']) &&
+             data.showEmail is bool &&
+             data.isPublic is bool &&
+             data.followerCount is int &&
+             data.followingCount is int &&
+             data.followerCount >= 0 &&
+             data.followingCount >= 0 &&
+             // Optional fields validation
+             (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+             (!('location' in data) || (data.location is string && data.location.size() <= 100)) &&
+             (!('website' in data) || (data.website is string && data.website.size() <= 200 && isValidUrl(data.website))) &&
+             (!('work' in data) || (data.work is string && data.work.size() <= 100)) &&
+             (!('role' in data) || (data.role is string && data.role.size() <= 100));
+    }
+    
+    function isValidUserData(data) {
+      return data.keys().hasAll(['uid', 'email', 'status', 'emailUpdates', 'language', 'theme', 'subscription', 'createdAt', 'updatedAt', 'profile']) &&
+             data.uid is string &&
+             data.email is string &&
+             isValidEmail(data.email) &&
+             data.status in ['active', 'inactive', 'onboarding'] &&
+             data.emailUpdates is bool &&
+             data.language in ['en', 'cn', 'jp', 'vn'] &&
+             data.theme in ['light', 'dark', 'system'] &&
+             data.subscription is map &&
+             data.createdAt is int &&
+             data.updatedAt is int &&
+             data.profile is map &&
+             isValidProfileData(data.profile) &&
+             // Optional fields validation
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() <= 100)) &&
+             (!('photoURL' in data) || (data.photoURL is string && data.photoURL.size() <= 500));
+    }
+    
+    function canViewProfile(resource) {
+      // Profile is public OR user is viewing their own profile
+      return resource.data.profile.isPublic == true || 
+             (isAuthenticated() && request.auth.uid == resource.id);
+    }
+    
+    // Users collection - Extended with profile data
+    match /users/{userId} {
+      // Read access: Own profile OR public profiles
+      allow read: if isOwner(userId) || 
+                     (isAuthenticated() && 
+                      exists(/databases/$(database)/documents/users/$(userId)) &&
+                      get(/databases/$(database)/documents/users/$(userId)).data.profile.isPublic == true);
+      
+      // Create access: Only for own user document during registration
+      allow create: if isOwner(userId) && 
+                       isValidUserData(request.resource.data) &&
+                       request.resource.data.uid == userId;
+      
+      // Update access: Only own profile with valid data
+      allow update: if isOwner(userId) && 
+                       isValidUserData(request.resource.data) &&
+                       request.resource.data.uid == userId &&
+                       // Prevent changing uid and createdAt
+                       request.resource.data.uid == resource.data.uid &&
+                       request.resource.data.createdAt == resource.data.createdAt;
+      
+      // Delete access: Only own profile
+      allow delete: if isOwner(userId);
+    }
+    
+    // User follows collection - For follow relationships
+    match /userFollows/{followId} {
+      // followId format: {followerId}_{followingId}
+      
+      // Read access: Authenticated users can read follow relationships
+      // This allows checking if user A follows user B and displaying follower/following lists
+      allow read: if isAuthenticated();
+      
+      // Create access: Only the follower can create the relationship
+      // Cannot follow yourself
+      allow create: if isAuthenticated() && 
+                       request.resource.data.keys().hasAll(['followerId', 'followingId', 'createdAt', 'status']) &&
+                       request.resource.data.followerId == request.auth.uid &&
+                       request.resource.data.followingId != request.auth.uid &&
+                       request.resource.data.followerId is string &&
+                       request.resource.data.followingId is string &&
+                       request.resource.data.createdAt is int &&
+                       request.resource.data.status in ['active', 'blocked'] &&
+                       followId == request.resource.data.followerId + '_' + request.resource.data.followingId &&
+                       // Ensure both users exist
+                       exists(/databases/$(database)/documents/users/$(request.resource.data.followerId)) &&
+                       exists(/databases/$(database)/documents/users/$(request.resource.data.followingId));
+      
+      // Update access: Only the follower can update (e.g., to block)
+      allow update: if isAuthenticated() && 
+                       resource.data.followerId == request.auth.uid &&
+                       request.resource.data.followerId == resource.data.followerId &&
+                       request.resource.data.followingId == resource.data.followingId &&
+                       request.resource.data.createdAt == resource.data.createdAt &&
+                       request.resource.data.status in ['active', 'blocked'];
+      
+      // Delete access: Only the follower can delete (unfollow)
+      allow delete: if isAuthenticated() && 
+                       resource.data.followerId == request.auth.uid;
+    }
+    
+    // Launch Essentials collections (existing rules)
+    match /launch_essentials_progress/{progressId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId &&
+                       progressId == request.auth.uid + '_' + request.resource.data.projectId;
+      
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == resource.data.userId &&
+                      request.resource.data.keys().hasAll(['userId', 'projectId', 'currentPhase', 'phases']) &&
+                      request.resource.data.userId is string &&
+                      request.resource.data.projectId is string &&
+                      request.resource.data.currentPhase is string;
+    }
+    
+    match /launch_essentials_projects/{projectId} {
+      allow read, write: if isAuthenticated() && 
+                            request.auth.uid == resource.data.userId;
+      
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == request.resource.data.userId;
+      
+      allow write: if isAuthenticated() && 
+                      request.auth.uid == resource.data.userId &&
+                      request.resource.data.keys().hasAll(['userId', 'name', 'description', 'industry', 'targetMarket', 'stage']) &&
+                      request.resource.data.userId is string &&
+                      request.resource.data.name is string &&
+                      request.resource.data.description is string &&
+                      request.resource.data.industry is string &&
+                      request.resource.data.targetMarket is string &&
+                      request.resource.data.stage is string;
+    }
+    
+    match /launch_essentials_frameworks/{frameworkId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Admin only - implement admin role check as needed
+    }
+    
+    match /launch_essentials_templates/{templateId} {
+      allow read: if isAuthenticated();
+      allow write: if false; // Admin only - implement admin role check as needed
+    }
+    
+    // Knowledge Hub collections (if they exist)
+    match /theories/{theoryId} {
+      allow read: if true; // Public read access for theories
+      allow write: if false; // Admin only
+    }
+    
+    match /user_progress/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+    
+    match /bookmarks/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+  }
+}

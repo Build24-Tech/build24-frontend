@@ -2,7 +2,7 @@ require('@testing-library/jest-dom');
 
 // Mock Firebase
 jest.mock('firebase/app', () => ({
-  initializeApp: jest.fn(),
+  initializeApp: jest.fn(() => ({ name: '[DEFAULT]' })),
 }));
 
 jest.mock('firebase/auth', () => ({
@@ -40,6 +40,14 @@ jest.mock('firebase/firestore', () => ({
   writeBatch: jest.fn(),
   onSnapshot: jest.fn(),
   runTransaction: jest.fn(),
+}));
+
+jest.mock('firebase/storage', () => ({
+  getStorage: jest.fn(),
+  ref: jest.fn(),
+  uploadBytes: jest.fn(),
+  getDownloadURL: jest.fn(),
+  deleteObject: jest.fn(),
 }));
 
 // Mock Next.js router

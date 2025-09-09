@@ -3,7 +3,7 @@ import { MarkdownRenderer } from '@/components/markdown';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { getUserLanguage } from '@/lib/language-utils';
-import { fetchPublishedPosts, getPost, getPosts, Post } from '@/lib/notion';
+import { fetchPublishedPosts, getPost, getPosts, getPostWithAuthorProfile, Post } from '@/lib/notion';
 import { UserLanguage } from '@/types/user';
 import { ArrowLeft, Calendar } from 'lucide-react';
 import Link from 'next/link';
@@ -38,7 +38,7 @@ export async function generateStaticParams() {
   }
 }
 
-// Fetch blog post from Notion API
+// Fetch blog post from Notion API with author profile integration
 async function getBlogPost(slug: string, language?: string): Promise<Post | null> {
   try {
     const response = await fetchPublishedPosts();
@@ -54,7 +54,12 @@ async function getBlogPost(slug: string, language?: string): Promise<Post | null
       post = posts.find(post => post.slug === slug && post.language === language);
     }
 
-    return post || null;
+    if (!post) {
+      return null;
+    }
+
+    // Enhance the post with author profile information
+    return await getPostWithAuthorProfile(post.id);
   } catch (error) {
     console.error('Error fetching blog post:', error);
     return null;
@@ -121,8 +126,18 @@ export default async function LangBlogPost({
                 {new Date(post.date).toLocaleDateString()}
               </div>
             )}
-            {post.author && (
-              <div>By {post.author}</div>
+            {(post.author || post.authorId) && (
+              <div className="flex items-center gap-2">
+                <span>By</span>
+                <AuthorProfileLink
+                  authorId={getAuthorDisplayData(post).authorId}
+                  authorName={getAuthorDisplayData(post).authorName}
+                  authorPhotoURL={getAuthorDisplayData(post).authorPhotoURL}
+                  showAvatar={true}
+                  size="sm"
+                  className="text-gray-600 hover:text-black"
+                />
+              </div>
             )}
           </div>
 
@@ -142,6 +157,24 @@ export default async function LangBlogPost({
         <div className="prose prose-lg prose-invert max-w-none">
           <MarkdownRenderer content={post.content} />
         </div>
+
+        {/* Author Card */}
+        {(post.authorId || post.author) && (
+          <div className="mt-12 pt-8 border-t border-gray-800">
+            <h3 className="text-lg font-semibold text-white mb-4">About the Author</h3>
+            <AuthorCard
+              authorId={getAuthorDisplayData(post).authorId}
+              authorName={getAuthorDisplayData(post).authorName}
+              authorPhotoURL={getAuthorDisplayData(post).authorPhotoURL}
+              bio={getAuthorDisplayData(post).bio}
+              location={getAuthorDisplayData(post).location}
+              work={getAuthorDisplayData(post).work}
+              role={getAuthorDisplayData(post).role}
+              website={getAuthorDisplayData(post).website}
+              className="bg-gray-900 border-gray-700"
+            />
+          </div>
+        )}
       </article>
     </div>
   );
