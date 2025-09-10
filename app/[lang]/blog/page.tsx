@@ -2,7 +2,7 @@ import ClientBlogWrapper from '@/components/blog/ClientBlogWrapper';
 import Hero from '@/components/blog/Hero';
 import { Button } from '@/components/ui/button';
 import { filterPostsByLanguage, getUserLanguage, SUPPORTED_LANGUAGES } from '@/lib/language-utils';
-import { fetchPublishedPosts, getPost, Post } from '@/lib/notion';
+import { Post } from '@/lib/notion';
 import { UserLanguage } from '@/types/user';
 
 export async function generateStaticParams() {
@@ -23,20 +23,18 @@ export default async function LangBlogPage({
   let blogPosts: Post[] = [];
 
   try {
-    const response = await fetchPublishedPosts();
-    blogPosts = await Promise.all(
-      response.results.map((page: any) => getPost(page.id))
-    ).then(posts => posts.filter((post): post is Post => post !== null));
+    // Fetch posts with author profile integration
+    const allPosts = await getPostsWithAuthorProfiles();
 
     // Filter posts by language
-    blogPosts = filterPostsByLanguage(blogPosts, currentLanguage);
+    blogPosts = filterPostsByLanguage(allPosts, currentLanguage);
   } catch (error) {
     console.error('Error fetching blog posts:', error);
     // Will render the page with an empty array of posts
   }
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen dark:bg-black dark:text-white bg-white text-black">
       <Hero currentLanguage={currentLanguage} />
 
       <div id="blog-posts" className="container mx-auto px-4 py-16">

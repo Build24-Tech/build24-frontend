@@ -1,12 +1,19 @@
-import { ThemePreference, UserLanguage, UserProfile, UserStatus } from '@/types/user';
+import { ThemePreference, UserLanguage, UserProfile, UserProfileData, UserStatus } from '@/types/user';
 import { User } from 'firebase/auth';
 import { doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
+import { getDefaultSubscription } from './subscription-service';
 
 /**
- * Creates or updates a user profile in Firestore
+ * Creates or updates a user profile in Firestore with complete profile data
  */
-export const createUserProfile = async (user: User, status: UserStatus = 'onboarding', emailUpdates: boolean = false, language: UserLanguage = 'en', theme: ThemePreference = 'system'): Promise<void> => {
+export const createUserProfile = async (
+  user: User,
+  status: UserStatus = 'onboarding',
+  emailUpdates: boolean = false,
+  language: UserLanguage = 'en',
+  theme: ThemePreference = 'system'
+): Promise<void> => {
   try {
     const userRef = doc(db, 'users', user.uid);
     const userSnap = await getDoc(userRef);
@@ -14,7 +21,7 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
     const timestamp = Date.now();
 
     if (!userSnap.exists()) {
-      // Create new user profile
+      // Create new user profile with complete default profile data
       const userData: UserProfile = {
         uid: user.uid,
         email: user.email || '',
@@ -24,20 +31,50 @@ export const createUserProfile = async (user: User, status: UserStatus = 'onboar
         emailUpdates,
         language,
         theme,
+        subscription: getDefaultSubscription(),
         createdAt: timestamp,
         updatedAt: timestamp,
+        profile: {
+          bio: undefined,
+          location: undefined,
+          website: undefined,
+          work: undefined,
+          role: undefined,
+          showEmail: false,
+          isPublic: true,
+          followerCount: 0,
+          followingCount: 0,
+        },
       };
 
       await setDoc(userRef, userData);
-      console.log('User profile created');
+      console.log('User profile created with default profile data');
     } else {
-      // Update existing user profile
-      await updateDoc(userRef, {
+      // Update existing user profile, preserving profile data if it exists
+      const existingData = userSnap.data() as UserProfile;
+      const updateData: Partial<UserProfile> = {
         email: user.email || '',
         displayName: user.displayName || null,
         photoURL: user.photoURL || null,
         updatedAt: timestamp,
-      });
+      };
+
+      // If profile data doesn't exist, add default profile data
+      if (!existingData.profile) {
+        updateData.profile = {
+          bio: undefined,
+          location: undefined,
+          website: undefined,
+          work: undefined,
+          role: undefined,
+          showEmail: false,
+          isPublic: true,
+          followerCount: 0,
+          followingCount: 0,
+        };
+      }
+
+      await updateDoc(userRef, updateData);
       console.log('User profile updated');
     }
   } catch (error) {
@@ -95,6 +132,51 @@ export const getUserProfile = async (userId: string): Promise<UserProfile | null
     return null;
   } catch (error) {
     console.error('Error getting user profile:', error);
+    throw error;
+  }
+};
+/**
+ * Updates a user profile in Firestore
+ */
+export const updateUserProfile = async (userId: string, updates: Partial<UserProfile>): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    await updateDoc(userRef, {
+      ...updates,
+      updatedAt: Date.now()
+    });
+    console.log('User profile updated');
+  } catch (error) {
+    console.error('Error updating user profile:', error);
+    throw error;
+  }
+};
+
+/**
+ * Updates user profile data (the profile sub-object) in Firestore
+ */
+export const updateUserProfileData = async (userId: string, profileData: Partial<UserProfileData>): Promise<void> => {
+  try {
+    const userRef = doc(db, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      throw new Error('User profile not found');
+    }
+
+    const existingData = userSnap.data() as UserProfile;
+    const updatedProfile = {
+      ...existingData.profile,
+      ...profileData,
+    };
+
+    await updateDoc(userRef, {
+      profile: updatedProfile,
+      updatedAt: Date.now()
+    });
+    console.log('User profile data updated');
+  } catch (error) {
+    console.error('Error updating user profile data:', error);
     throw error;
   }
 };

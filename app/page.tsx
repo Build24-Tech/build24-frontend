@@ -4,7 +4,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Clock, Code, Lightbulb, Zap } from 'lucide-react';
 import Link from 'next/link';
 
-import Image from 'next/image';
 
 export default function Home() {
   const featuredProjects = [
@@ -36,7 +35,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-
       {/* Hero Section */}
       <section id="hero" className="relative bg-background text-foreground py-20 md:py-32 hero-glow">
         <div className="absolute inset-0 bg-grid-foreground/20 [mask-image:linear-gradient(to_bottom,white_5%,transparent_90%)] hero-glow-inner"></div>
@@ -51,12 +49,12 @@ export default function Home() {
               Build fast. Ship faster.
             </h1>
 
-            <p className="text-xl sm:text-2xl text-gray-300 mb-12 leading-relaxed">
+            <p className="text-xl sm:text-2xl text-gray mb-12 leading-relaxed">
               One product idea. Built in 24 hours. Documented in public.
             </p>
 
             <div className="mt-12">
-              <p className="text-lg text-gray-300 mb-6 max-w-3xl mx-auto">
+              <p className="text-lg text-gray mb-6 max-w-3xl mx-auto">
                 Follow real-time product builds — from zero to launch — in just 24 hours.
                 <br />Tools, code, insights, and chaos — everything shared in public.
               </p>

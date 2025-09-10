@@ -5,7 +5,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { href } from '@/lib/language-utils';
 import { UserLanguage } from '@/types/user';
 import { Menu, X } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useState } from 'react';
@@ -41,6 +40,19 @@ export default function Header() {
             <Link href={href(currentLang, '/projects')} className="text-muted-foreground hover:text-foreground transition-colors">
               Projects
             </Link>
+            <Link 
+              href={user ? href(currentLang, '/launch-essentials') : href(currentLang, '/login')} 
+              className="text-muted-foreground hover:text-yellow-400 transition-colors flex items-center gap-1"
+            >
+              <span className="text-sm">🚀</span>
+              Launch Essentials
+            </Link>
+            {user && (
+              <Link href="/dashboard/knowledge-hub" className="text-muted-foreground hover:text-yellow-400 transition-colors flex items-center gap-1">
+                <span className="text-sm">🧠</span>
+                Knowledge Hub
+              </Link>
+            )}
             <Link href={href(currentLang, '/about')} className="text-muted-foreground hover:text-foreground transition-colors">
               About
             </Link>
@@ -83,6 +95,24 @@ export default function Header() {
               >
                 Projects
               </Link>
+              <Link
+                href={user ? href(currentLang, '/launch-essentials') : href(currentLang, '/login')}
+                className="text-muted-foreground hover:text-yellow-400 transition-colors py-2 flex items-center gap-2"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                <span className="text-sm">🚀</span>
+                Launch Essentials
+              </Link>
+              {user && (
+                <Link
+                  href="/dashboard/knowledge-hub"
+                  className="text-muted-foreground hover:text-yellow-400 transition-colors py-2 flex items-center gap-2"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  <span className="text-sm">🧠</span>
+                  Knowledge Hub
+                </Link>
+              )}
               <Link
                 href={href(currentLang, '/about')}
                 className="text-muted-foreground hover:text-foreground transition-colors py-2"

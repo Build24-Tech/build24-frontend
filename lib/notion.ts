@@ -17,6 +17,17 @@ export interface Post {
   date: string;
   content: string;
   author?: string;
+  authorId?: string; // Firebase user ID for profile integration
+  authorProfile?: {
+    uid: string;
+    displayName?: string;
+    photoURL?: string;
+    bio?: string;
+    location?: string;
+    work?: string;
+    role?: string;
+    website?: string;
+  };
   tags?: string[];
   category?: string;
   language: PostLanguage;
@@ -145,8 +156,6 @@ export async function getPost(pageId: string): Promise<Post | null> {
 
 
     return post;
-
-    return post;
   } catch (error) {
     console.error("Error getting post:", error);
     return null;
@@ -163,6 +172,38 @@ export async function getPosts(): Promise<Post[]> {
   } catch (error) {
     console.error("Error getting posts:", error);
     return [];
+  }
+}
+
+/**
+ * Get posts with author profile integration
+ */
+export async function getPostsWithAuthorProfiles(): Promise<Post[]> {
+  try {
+    const posts = await getPosts();
+    const { authorIntegrationService } = await import('./author-integration-service');
+    return await authorIntegrationService.enhancePostsWithAuthorProfiles(posts);
+  } catch (error) {
+    console.error("Error getting posts with author profiles:", error);
+    // Fallback to posts without author profiles
+    return await getPosts();
+  }
+}
+
+/**
+ * Get a single post with author profile integration
+ */
+export async function getPostWithAuthorProfile(pageId: string): Promise<Post | null> {
+  try {
+    const post = await getPost(pageId);
+    if (!post) return null;
+
+    const { authorIntegrationService } = await import('./author-integration-service');
+    return await authorIntegrationService.enhancePostWithAuthorProfile(post);
+  } catch (error) {
+    console.error("Error getting post with author profile:", error);
+    // Fallback to post without author profile
+    return await getPost(pageId);
   }
 }
 

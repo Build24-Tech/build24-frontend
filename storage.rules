@@ -1,0 +1,133 @@
+rules_version = '2';
+
+// Firebase Storage Security Rules for User Profile System
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidImageFile() {
+      return request.resource.contentType.matches('image/.*') &&
+             request.resource.size < 5 * 1024 * 1024; // 5MB limit
+    }
+    
+    function isValidImageFormat() {
+      return request.resource.contentType in [
+        'image/jpeg',
+        'image/jpg', 
+        'image/png',
+        'image/webp',
+        'image/gif'
+      ];
+    }
+    
+    // Profile images - users can only upload to their own folder
+    match /profile-images/{userId}/{fileName} {
+      // Read access: Public read for profile images (since profiles can be public)
+      allow read: if true;
+      
+      // Write access: Only the user can upload to their own folder
+      allow write: if isOwner(userId) && 
+                      isValidImageFile() && 
+                      isValidImageFormat();
+      
+      // Delete access: Only the user can delete their own images
+      allow delete: if isOwner(userId);
+    }
+    
+    // Temporary uploads folder for processing
+    match /temp-uploads/{userId}/{fileName} {
+      // Read access: Only the owner
+      allow read: if isOwner(userId);
+      
+      // Write access: Only the owner with valid image files
+      allow write: if isOwner(userId) && 
+                      isValidImageFile() && 
+                      isValidImageFormat();
+      
+      // Delete access: Only the owner
+      allow delete: if isOwner(userId);
+    }
+    
+    // Public assets (logos, default avatars, etc.)
+    match /public/{allPaths=**} {
+      // Read access: Public read
+      allow read: if true;
+      
+      // Write access: Restricted (admin only - implement as needed)
+      allow write: if false;
+    }
+    
+    // Launch Essentials related files (if needed)
+    match /launch-essentials/{userId}/{allPaths=**} {
+      // Read access: Only the owner
+      allow read: if isOwner(userId);
+      
+      // Write access: Only the owner
+      allow write: if isOwner(userId);
+      
+      // Delete access: Only the owner
+      allow delete: if isOwner(userId);
+    }
+    
+    // Knowledge Hub related files (if needed)
+    match /knowledge-hub/{userId}/{allPaths=**} {
+      // Read access: Only the owner
+      allow read: if isOwner(userId);
+      
+      // Write access: Only the owner
+      allow write: if isOwner(userId);
+      
+      // Delete access: Only the owner
+      allow delete: if isOwner(userId);
+    }
+    
+    // Default deny all other paths
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+/*
+Storage Security Rules Explanation:
+
+1. Profile Images (/profile-images/{userId}/{fileName}):
+   - Public read access since profile images may be displayed publicly
+   - Only the user can upload/modify their own profile images
+   - File type and size validation (images only, max 5MB)
+   - Supports common image formats: JPEG, PNG, WebP, GIF
+
+2. Temporary Uploads (/temp-uploads/{userId}/{fileName}):
+   - Private folder for processing uploads before moving to final location
+   - Only the owner can read/write/delete
+   - Same validation as profile images
+
+3. Public Assets (/public/{allPaths}):
+   - Public read access for shared assets
+   - Write access restricted (admin only)
+
+4. User-specific folders:
+   - Launch Essentials and Knowledge Hub folders
+   - Only the owner can access their own files
+   - Supports any file type for these folders
+
+Security Features:
+- File type validation (images only for profile pictures)
+- File size limits (5MB for images)
+- User isolation (users can only access their own files)
+- Public read access for profile images (needed for public profiles)
+- Secure temporary upload handling
+
+To implement admin functionality:
+1. Add admin role checking to your Firestore user documents
+2. Create a helper function to check admin status
+3. Replace 'allow write: if false;' with admin checks where needed
+*/
